@@ -1,4 +1,5 @@
 <template>
+  <NavBar />
   <div>
     <h1 class="title">This is a Title</h1>
     <h2 class="subtitle">This is a subtitle</h2>
@@ -21,6 +22,7 @@
 
 <script setup lang="ts">
 import Button from "./components/Button.vue";
+import NavBar from "./components/NavBar.vue";
 
 const testPrimary = () => {
   console.log("Primary test! :D");

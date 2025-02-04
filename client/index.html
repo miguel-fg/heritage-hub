@@ -1,33 +1,32 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/HH_red.png" id="faviconTag" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heritage Hub</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/HH_red.png" id="faviconTag" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-    rel="stylesheet" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Heritage Hub</title>
-</head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+    <script>
+      const faviconTag = document.getElementById("faviconTag");
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)");
 
-<body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
-  <script>
-    const faviconTag = document.getElementById("faviconTag");
-    const isDark = window.matchMedia("(prefers-color-scheme: dark)");
+      const setFavicon = () => {
+        faviconTag.href = isDark.matches ? "/HH_white.png" : "/HH_red.png";
+      };
 
-    const setFavicon = () => {
-      faviconTag.href = isDark.matches ? "/HH_white.png" : "/HH_red.png";
-    };
+      setFavicon();
 
-    setFavicon();
-
-    isDark.addEventListener("change", setFavicon);
-  </script>
-</body>
-
+      isDark.addEventListener("change", setFavicon);
+    </script>
+  </body>
 </html>
