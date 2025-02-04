@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M11.2501 7.06066L8.03039 10.2803L6.96973 9.21967L12.0001 4.18934L17.0304 9.21967L15.9697 10.2803L12.7501 7.06066L12.7501 16.5L11.2501 16.5L11.2501 7.06066Z" fill="#080341"/>
-<path d="M18 18L18 19.5L6 19.5L6 18L18 18Z" fill="#080341"/>
+<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M7.06262 3.82584L3.03798 7.85039L1.71216 6.52461L8.00012 0.236694L14.288 6.52461L12.9621 7.85039L8.93762 3.82584V15.625H7.06262V3.82584Z" fill="#F2F2F2"/>
+<path d="M15.5 17.5V19.375H0.5V17.5H15.5Z" fill="#F2F2F2"/>
 </svg>
