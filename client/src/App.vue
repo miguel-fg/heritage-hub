@@ -7,36 +7,44 @@
       <p class="body">This is body text</p>
       <div class="tag">This is a tag</div>
       <div class="flex flex-col gap-4">
-        <Button type="primary" @clicked="testPrimary">
+        <Button type="primary" @click="testPrimary">
           <img src="../assets/icons/upload.svg" alt="Upload icon" class="w-3" />
           <span>Upload</span>
         </Button>
-        <Button type="secondary" @clicked="testSecondary">
+        <Button type="secondary" @click="testSecondary">
           <span>Secondary</span>
         </Button>
-        <Button type="ghost" @clicked="testGhost">
+        <Button type="ghost" @click="testGhost">
           <span>Ghost</span>
         </Button>
       </div>
+      <ModelCard
+        v-for="(item, index) in data"
+        :item="item"
+        :key="item.id"
+        :index="index"
+      />
     </div>
     <Footer />
   </div>
 </template>
 
 <script setup lang="ts">
-  import Button from "./components/Button.vue";
-  import NavBar from "./components/NavBar.vue";
-  import Footer from "./components/Footer.vue";
+import Button from "./components/Button.vue";
+import NavBar from "./components/NavBar.vue";
+import Footer from "./components/Footer.vue";
+import ModelCard from "./components/ModelCard.vue";
+import data from "./modelTable.json";
 
-  const testPrimary = () => {
-    console.log("Primary test! :D");
-  };
+const testPrimary = () => {
+  console.log("Primary test! :D");
+};
 
-  const testSecondary = () => {
-    console.log("Secondary test! :)");
-  };
+const testSecondary = () => {
+  console.log("Secondary test! :)");
+};
 
-  const testGhost = () => {
-    console.log("Ghost test! :P");
-  };
+const testGhost = () => {
+  console.log("Ghost test! :P");
+};
 </script>
