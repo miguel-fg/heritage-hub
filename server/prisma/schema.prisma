@@ -14,6 +14,7 @@ model Model {
     caption         String
     description     String
     materials       String[]
+    tags            String[]
     dimensions      Decimal[]
     modelPath       String
     thumbnailPath   String

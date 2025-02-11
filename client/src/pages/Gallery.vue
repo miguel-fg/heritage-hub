@@ -1,30 +1,24 @@
 <template>
-  <ModelCard
-    v-for="(item, index) in models"
-    :item="item"
-    :key="item.id"
-    :index="index"
-  />
+  <div class="flex flex-wrap max-w-600 my-12 gap-10">
+    <ModelCard
+      v-for="(item, index) in models"
+      :item="item"
+      :key="item.id"
+      :index="index"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import ModelCard from "../components/ModelCard.vue";
-import { ref, onMounted } from "vue";
-import axiosInstance from "../scripts/axiosConfig";
+import { useModelStore } from "../stores/modelStore";
+import { storeToRefs } from "pinia";
+import { onMounted } from "vue";
 
-const models = ref([]);
-
-const fetchModels = async () => {
-  try {
-    console.log("Fetching 3D models...");
-    const response = await axiosInstance.get("/models");
-    models.value = response.data.models;
-  } catch (error) {
-    console.error("Failed to fetch 3D models. ERR: ", error);
-  }
-};
+const modelStore = useModelStore();
+const { models } = storeToRefs(modelStore);
 
 onMounted(() => {
-  fetchModels();
+  modelStore.fetchModels();
 });
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen">
+  <div class="flex justify-center flex-col h-screen">
     <NavBar />
     <div class="grow px-4 md:px-8 lg:px-16">
       <RouterView />
