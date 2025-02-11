@@ -1,0 +1,23 @@
+datasource db {
+    provider    = "postgresql"
+    url         = env("DATABASE_URL")
+}
+
+generator client {
+    provider    = "prisma-client-js"
+}
+
+model Model {
+    id              String      @id @default(nanoid(16)) @db.Uuid 
+    accNum          String?
+    name            String
+    caption         String
+    description     String
+    materials       String[]
+    tags            String[]
+    dimensions      Decimal[]
+    modelPath       String
+    thumbnailPath   String
+    multimediaPath  String[]
+    createdAt       DateTime @default(now())
+}
