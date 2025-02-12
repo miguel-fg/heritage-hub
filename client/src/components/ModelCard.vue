@@ -7,7 +7,7 @@
       class="flex flex-col gap-1 cursor-pointer"
     >
       <img
-        :src="props.item.file_URL"
+        :src="props.item.thumbnailUrl"
         alt="Model image"
         class="w-full rounded-xs drop-shadow-xs"
       />
