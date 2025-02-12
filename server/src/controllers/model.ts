@@ -6,26 +6,30 @@ const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
 
 export const getModels = async (req: Request, res: Response): Promise<void> => {
   const models = await prisma.model.findMany();
-
-  const modelsWithPresignedUrls = await Promise.all(
-    models.map(async (model) => {
-      const thumbnailUrl = await generatePresignedUrl(
-        BUCKET_NAME,
-        model.thumbnailPath,
-      );
-      return {
-        ...model,
-        thumbnailUrl,
-      };
-    }),
-  );
-
-  res.status(200).json({ models: modelsWithPresignedUrls });
+  res.status(200).json({ models });
 };
 
 export const getModel = async (req: Request, res: Response): Promise<void> => {
   const modelId = req.params.id;
   res.status(200).json({ message: `Get a single model with ID: ${modelId}` });
+};
+
+export const getModelThumbnailUrl = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const modelId = req.params.id;
+
+  try {
+    const thumbnailUrl = await generatePresignedUrl(
+      BUCKET_NAME,
+      `${modelId}/thumbnail.png`,
+    );
+    res.status(200).json({ thumbnailUrl });
+  } catch (error) {
+    console.error("[server]: Failed to generate presigned URL. ERR: ", error);
+    res.status(500).json({ error: "Failed to generate presigned URL" });
+  }
 };
 
 export const newModel = async (req: Request, res: Response): Promise<void> => {

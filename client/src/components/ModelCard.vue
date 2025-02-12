@@ -7,7 +7,7 @@
       class="flex flex-col gap-1 cursor-pointer"
     >
       <img
-        :src="props.item.thumbnailUrl"
+        :src="thumbnailUrl"
         alt="Model image"
         class="w-full rounded-xs drop-shadow-xs"
       />
@@ -21,9 +21,18 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useModelStore } from "../stores/modelStore";
 import Tag from "./Tag.vue";
 const props = defineProps({
   item: { type: Object, required: true },
   index: Number,
+});
+
+const modelStore = useModelStore();
+const thumbnailUrl = ref("");
+
+onMounted(async () => {
+  thumbnailUrl.value = await modelStore.getThumbnailUrl(props.item.id);
 });
 </script>
