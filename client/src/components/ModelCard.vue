@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4 shrink-1 max-w-xs">
+  <div class="flex flex-col gap-4">
     <div
       @click="
         () => console.log(`Navigating to Model Page for ID:${props.item.id}`)

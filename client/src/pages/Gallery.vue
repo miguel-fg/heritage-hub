@@ -1,11 +1,15 @@
 <template>
-  <div class="flex flex-wrap max-w-600 my-12 gap-10">
-    <ModelCard
-      v-for="(item, index) in models"
-      :item="item"
-      :key="item.id"
-      :index="index"
-    />
+  <div class="w-full mx-auto my-12 max-w-[1920px]">
+    <div
+      class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+    >
+      <ModelCard
+        v-for="(item, index) in models"
+        :item="item"
+        :key="item.id"
+        :index="index"
+      />
+    </div>
   </div>
 </template>
 
