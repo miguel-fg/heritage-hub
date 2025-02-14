@@ -15,7 +15,7 @@ model Model {
     description     String
     materials       String[]
     tags            String[]
-    dimensions      Decimal[]
+    dimensions      Json?
     modelPath       String
     thumbnailPath   String
     multimediaPath  String[]
