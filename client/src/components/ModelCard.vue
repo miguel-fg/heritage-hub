@@ -1,11 +1,6 @@
 <template>
   <div class="flex flex-col gap-4">
-    <div
-      @click="
-        () => console.log(`Navigating to Model Page for ID:${props.item.id}`)
-      "
-      class="flex flex-col gap-1 cursor-pointer"
-    >
+    <div @click="handleNavigation" class="flex flex-col gap-1 cursor-pointer">
       <img
         :src="thumbnailUrl"
         alt="Model image"
@@ -22,8 +17,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useModelStore } from "../stores/modelStore";
 import Tag from "./Tag.vue";
+
 const props = defineProps({
   item: { type: Object, required: true },
   index: Number,
@@ -31,6 +28,12 @@ const props = defineProps({
 
 const modelStore = useModelStore();
 const thumbnailUrl = ref("");
+
+const router = useRouter();
+
+const handleNavigation = () => {
+  router.push({ name: "Model", params: { id: props.item.id } });
+};
 
 onMounted(async () => {
   thumbnailUrl.value = await modelStore.getThumbnailUrl(props.item.id);
