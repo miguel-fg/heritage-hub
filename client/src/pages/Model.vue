@@ -12,8 +12,6 @@
       <div class="flex flex-col gap-4 lg:w-2/5">
         <div>
           <h1 class="title text-primary-500 mb-2">{{ model.name }}</h1>
-          <p class="tag text-grayscale-500 mb-1">User Name</p>
-          <p class="tag text-grayscale-500">{{ cleanDate(model.createdAt) }}</p>
         </div>
         <div class="pb-4 border-b-1 border-grayscale-300">
           <div class="flex flex-col gap-4">
@@ -84,6 +82,10 @@
         </div>
         <div class="flex gap-1 flex-wrap">
           <Tag v-for="tag in model.tags" :content="tag" />
+        </div>
+        <div>
+          <p class="tag text-grayscale-500 mb-1">User Name</p>
+          <p class="tag text-grayscale-500">{{ cleanDate(model.createdAt) }}</p>
         </div>
       </div>
     </div>
