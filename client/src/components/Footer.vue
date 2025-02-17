@@ -15,23 +15,31 @@
         >
           <div class="max-w-32">
             <h1 class="subtitle">Navigate</h1>
-            <ul class="flex flex-col gap-2 mt-3 underline">
-              <li>Home</li>
-              <li>About</li>
-              <li>Explore</li>
+            <ul class="flex flex-col gap-2 mt-3">
+              <li class="cursor-pointer hover:underline">
+                <RouterLink to="/home">Home</RouterLink>
+              </li>
+              <li class="cursor-pointer hover:underline">
+                <RouterLink to="/about">About</RouterLink>
+              </li>
+              <li class="cursor-pointer hover:underline">
+                <RouterLink to="/">Explore</RouterLink>
+              </li>
             </ul>
           </div>
           <div class="max-w-32">
             <h1 class="subtitle">Actions</h1>
-            <ul class="flex flex-col gap-2 mt-3 underline">
-              <li>Upload</li>
-              <li>Search</li>
+            <ul class="flex flex-col gap-2 mt-3">
+              <li class="cursor-pointer hover:underline">Upload</li>
+              <li class="cursor-pointer hover:underline">Search</li>
             </ul>
           </div>
           <div class="max-w-32">
             <h1 class="subtitle">Resources</h1>
-            <ul class="flex flex-col gap-2 mt-3 underline">
-              <li class="text-pretty">Museum of Archaeology & Ethnology</li>
+            <ul class="flex flex-col gap-2 mt-3">
+              <li class="cursor-pointer hover:underline text-pretty">
+                Museum of Archaeology & Ethnology
+              </li>
             </ul>
           </div>
         </div>
@@ -40,4 +48,6 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { RouterLink } from "vue-router";
+</script>
