@@ -1,6 +1,8 @@
 <template>
   <div class="w-full mx-auto my-12 max-w-[1920px]">
-    <Button type="ghost" @click="() => router.back()" class="mb-2">Back</Button>
+    <Button type="ghost" @click="() => router.back()" class="mb-2 underline"
+      >Back</Button
+    >
     <div v-if="!loading && model" class="flex flex-col gap-4 lg:flex-row">
       <div
         class="flex h-120 lg:h-auto lg:w-3/5 max-h-[650px] bg-white rounded-sm justify-center items-center"
@@ -14,7 +16,32 @@
           <p class="tag text-grayscale-500">{{ cleanDate(model.createdAt) }}</p>
         </div>
         <div class="pb-4 border-b-1 border-grayscale-300">
-          <p class="body text-grayscale-900">{{ model.description }}</p>
+          <div class="flex flex-col gap-4">
+            <p
+              v-for="p in descriptionParagraphs()"
+              class="body text-grayscale-900"
+            >
+              {{ p }}
+            </p>
+          </div>
+          <Button
+            type="ghost"
+            @click="() => (isTruncated = !isTruncated)"
+            class="tag underline-none mt-2"
+            >{{ isTruncated ? "Read more" : "Read less" }}
+            <img
+              v-if="isTruncated"
+              src="../../assets/icons/chevron-down.svg"
+              alt="Read more icon"
+              class="w-5"
+            />
+            <img
+              v-else
+              src="../../assets/icons/chevron-up.svg"
+              alt="Read less icon"
+              class="w-5"
+            />
+          </Button>
         </div>
         <div class="pb-4 border-b-1 border-grayscale-300">
           <h2 class="subtitle text-primary-500">Dimensions</h2>
@@ -106,22 +133,28 @@ const loading = ref(false);
 const model = ref<Model | null>(null);
 const error = ref<any>(null);
 
-const capitalize = (content: string): string => {
-  return content
-    .split(/([-/])/)
-    .map((part, index, array) => {
-      if (part === "-" || part === "/") {
-        return part;
-      }
+const isTruncated = ref(true);
 
-      return part
-        .split(" ")
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        )
-        .join(" ");
-    })
-    .join("");
+const capitalize = (content: string): string => {
+  return (
+    content
+      .split(/([-/])/)
+      //@ts-ignore
+      .map((part, index, array) => {
+        if (part === "-" || part === "/") {
+          return part;
+        }
+
+        return part
+          .split(" ")
+          .map(
+            (word) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          )
+          .join(" ");
+      })
+      .join("")
+  );
 };
 
 const cleanDate = (rawDate: string): string => {
@@ -132,6 +165,17 @@ const cleanDate = (rawDate: string): string => {
     month: "long",
     day: "numeric",
   });
+};
+
+const descriptionParagraphs = (): Array<string> => {
+  let description = model.value?.description || "";
+  const maxLength = 350;
+
+  if (isTruncated.value && description.length > maxLength) {
+    description = description.slice(0, maxLength) + "...";
+  }
+
+  return description.split("  ");
 };
 
 const formatDimension = (dimension: Dimension): string => {
