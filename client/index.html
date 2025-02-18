@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/HH_red.png" id="faviconTag" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="https://cdn.jsdelivr.net/gh/miguel-fg/heritage-hub/client/public/HH_red.png"
+      id="faviconTag"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,7 +26,9 @@
       const isDark = window.matchMedia("(prefers-color-scheme: dark)");
 
       const setFavicon = () => {
-        faviconTag.href = isDark.matches ? "/HH_white.png" : "/HH_red.png";
+        faviconTag.href = isDark.matches
+          ? "https://cdn.jsdelivr.net/gh/miguel-fg/heritage-hub/client/public/HH_white.png"
+          : "https://cdn.jsdelivr.net/gh/miguel-fg/heritage-hub/client/public/HH_red.png";
       };
 
       setFavicon();
