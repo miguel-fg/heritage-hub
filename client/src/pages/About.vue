@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mt-28">
     <h1 class="title">About Page</h1>
   </div>
 </template>

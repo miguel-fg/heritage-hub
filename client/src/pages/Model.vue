@@ -1,9 +1,17 @@
 <template>
-  <div class="w-full mx-auto my-12 max-w-[1920px]">
+  <div class="w-full mx-auto mt-28 mb-12 max-w-[1920px]">
     <Button type="ghost" @click="() => router.back()" class="mb-2 underline"
       >Back</Button
     >
-    <div v-if="!loading && model" class="flex flex-col gap-4 lg:flex-row">
+    <div v-if="loading" class="flex flex-col gap-4 lg:flex-row">
+      <div class="flex w-full lg:w-3/5">
+        <Skeleton for="model" />
+      </div>
+      <div class="flex w-full lg:w-2/5">
+        <Skeleton for="model-description" />
+      </div>
+    </div>
+    <div v-else-if="!loading && model" class="flex flex-col gap-4 lg:flex-row">
       <div
         class="flex h-120 lg:h-auto lg:w-3/5 max-h-[650px] bg-white rounded-sm justify-center items-center"
       >
@@ -12,8 +20,6 @@
       <div class="flex flex-col gap-4 lg:w-2/5">
         <div>
           <h1 class="title text-primary-500 mb-2">{{ model.name }}</h1>
-          <p class="tag text-grayscale-500 mb-1">User Name</p>
-          <p class="tag text-grayscale-500">{{ cleanDate(model.createdAt) }}</p>
         </div>
         <div class="pb-4 border-b-1 border-grayscale-300">
           <div class="flex flex-col gap-4">
@@ -85,7 +91,20 @@
         <div class="flex gap-1 flex-wrap">
           <Tag v-for="tag in model.tags" :content="tag" />
         </div>
+        <div>
+          <p class="tag text-grayscale-500 mb-1">User Name</p>
+          <p class="tag text-grayscale-500">{{ cleanDate(model.createdAt) }}</p>
+        </div>
       </div>
+    </div>
+    <div v-else-if="!loading && error" class="flex flex-col text-grayscale-500">
+      <h1 class="title text-5xl text-wrap mb-8">
+        Error fetching model information.
+      </h1>
+      <h1 class="title text-7xl mb-16">:(</h1>
+      <h2 class="title text-3xl text-grayscale-300">
+        Model ID: {{ route.params.id }}
+      </h2>
     </div>
   </div>
 </template>
@@ -96,6 +115,7 @@ import { useRoute, useRouter } from "vue-router";
 import axiosInstance from "../scripts/axiosConfig";
 import Button from "../components/Button.vue";
 import Tag from "../components/Tag.vue";
+import Skeleton from "../components/Skeleton.vue";
 
 interface Dimension {
   metric: {
