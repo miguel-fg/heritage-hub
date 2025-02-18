@@ -6,7 +6,7 @@ import modelRoutes from "./routes/model";
 const app: Express = express();
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "https://heritage-hub-7h45.onrender.com"],
 };
 
 // middleware
