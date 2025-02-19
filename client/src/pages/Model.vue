@@ -32,6 +32,7 @@
           </div>
           <Button
             type="ghost"
+            v-if="showReadMore"
             @click="() => (isTruncated = !isTruncated)"
             class="tag underline-none mt-2"
             >{{ isTruncated ? "Read more" : "Read less" }}
@@ -110,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axiosInstance from "../scripts/axiosConfig";
 import Button from "../components/Button.vue";
@@ -221,6 +222,12 @@ const fetchModelData = async (): Promise<void> => {
     loading.value = false;
   }
 };
+
+const showReadMore = computed(() => {
+  const description = model.value?.description;
+
+  return description && description.length > 350;
+});
 
 onMounted(() => {
   fetchModelData();
