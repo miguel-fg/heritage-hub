@@ -37,7 +37,7 @@ const router = createRouter({
           top: savedPosition.top,
           behavior: "smooth",
         });
-      }, 75);
+      }, 100);
     } else {
       return { top: 0, left: 0 };
     }
