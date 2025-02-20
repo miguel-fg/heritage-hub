@@ -4,6 +4,7 @@ import Home from "./pages/Home.vue";
 import About from "./pages/About.vue";
 import Gallery from "./pages/Gallery.vue";
 import Model from "./pages/Model.vue";
+import { nextTick } from "vue";
 
 const routes = [
   {
@@ -29,6 +30,7 @@ const router = createRouter({
   routes,
   //@ts-ignore
   async scrollBehavior(to, from, savedPosition) {
+    await nextTick();
     if (savedPosition) {
       setTimeout(() => {
         window.scrollTo({
