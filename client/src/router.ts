@@ -28,8 +28,17 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   //@ts-ignore
-  scrollBehavior(to, from, savedPosition) {
-    return savedPosition || { top: 0, left: 0 };
+  async scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: savedPosition.top,
+          behavior: "smooth",
+        });
+      }, 75);
+    } else {
+      return { top: 0, left: 0 };
+    }
   },
 });
 
