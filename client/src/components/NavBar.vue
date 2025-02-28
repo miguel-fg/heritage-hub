@@ -135,10 +135,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
-import { useRoute, RouterLink } from "vue-router";
+import { useRoute, useRouter, RouterLink } from "vue-router";
 import Button from "./Button.vue";
 
 const route = useRoute();
+const router = useRouter();
 const isOpen = ref(false);
 
 const navbarTransform = ref("0");
@@ -183,7 +184,7 @@ const handleSearch = () => {
 };
 
 const handleUpload = () => {
-  console.log("Upload pressed!");
+  router.push("/new");
 };
 
 onMounted(() => {

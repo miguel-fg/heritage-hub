@@ -1,56 +1,86 @@
 @import "tailwindcss";
 
 :root {
-    background-color: var(--color-grayscale-100);
+  background-color: var(--color-grayscale-100);
 }
 
-@theme{
-    --color-primary-100: #DEAEB5;
-    --color-primary-200: #D09C96;
-    --color-primary-300: #BD5D6B;
-    --color-primary-400: #AA2F41;
-    --color-primary-500: #A0182C;
-    --color-primary-600: #801323;
-    --color-primary-700: #68101D;
-    --color-primary-800: #480B14;
-    --color-primary-900: #28060B;
+@theme {
+  --color-primary-100: #deaeb5;
+  --color-primary-200: #d09c96;
+  --color-primary-300: #bd5d6b;
+  --color-primary-400: #aa2f41;
+  --color-primary-500: #a0182c;
+  --color-primary-600: #801323;
+  --color-primary-700: #68101d;
+  --color-primary-800: #480b14;
+  --color-primary-900: #28060b;
 
-    --color-grayscale-100: #F2F2F2;
-    --color-grayscale-200: #D9D8D9;
-    --color-grayscale-300: #BAB8B9;
-    --color-grayscale-400: #A19E9F;
-    --color-grayscale-500: #817E7F;
-    --color-grayscale-600: #615F5F;
-    --color-grayscale-700: #413F40;
-    --color-grayscale-800: #272626;
-    --color-grayscale-900: #0D0D0D;
+  --color-grayscale-100: #f2f2f2;
+  --color-grayscale-200: #d9d8d9;
+  --color-grayscale-300: #bab8b9;
+  --color-grayscale-400: #a19e9f;
+  --color-grayscale-500: #817e7f;
+  --color-grayscale-600: #615f5f;
+  --color-grayscale-700: #413f40;
+  --color-grayscale-800: #272626;
+  --color-grayscale-900: #0d0d0d;
 
-    --font-poppins: "Poppins", "sans-serif";
-    --font-garamond: "EB Garamond", "serif";
+  --color-success-100: #d7f2e5;
+  --color-success-200: #b9e8d2;
+  --color-success-300: #9cdebe;
+  --color-success-400: #60c997;
+  --color-success-500: #38bc7d;
+  --color-success-600: #2d9664;
+  --color-success-700: #1f6745;
+  --color-success-800: #14422c;
+  --color-success-900: #0b2619;
+
+  --color-warning-100: #fef4cf;
+  --color-warning-200: #fdecab;
+  --color-warning-300: #fce17a;
+  --color-warning-400: #fbd956;
+  --color-warning-500: #f9c80e;
+  --color-warning-600: #c7a00b;
+  --color-warning-700: #957808;
+  --color-warning-800: #645006;
+  --color-warning-900: #251e02;
+
+  --color-danger-100: #fcd6d1;
+  --color-danger-200: #f9b8af;
+  --color-danger-300: #f68f81;
+  --color-danger-400: #f36653;
+  --color-danger-500: #ef331a;
+  --color-danger-600: #bf2915;
+  --color-danger-700: #8f1f10;
+  --color-danger-800: #60140a;
+  --color-danger-900: #300a05;
+
+  --font-poppins: "Poppins", "sans-serif";
+  --font-garamond: "EB Garamond", "serif";
 }
 
 @layer components {
-    .title {
-        font-family: var(--font-poppins);
-        font-weight: bold;
-        font-size: 1.25rem;
-    }
+  .title {
+    font-family: var(--font-poppins);
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
 
-    .subtitle {
-        font-family: var(--font-poppins);
-        font-weight: bold;
-        font-size: 1rem;
-    }
+  .subtitle {
+    font-family: var(--font-poppins);
+    font-weight: bold;
+    font-size: 1rem;
+  }
 
-    .body {
-        font-family: var(--font-garamond);
-        font-weight: 400;
-        font-size: 1rem;
-    }
+  .body {
+    font-family: var(--font-garamond);
+    font-weight: 400;
+    font-size: 1rem;
+  }
 
-    .tag {
-        font-family: var(--font-poppins);
-        font-weight: 500;
-        font-size: 0.75rem;
-    }
+  .tag {
+    font-family: var(--font-poppins);
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
 }
