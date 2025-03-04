@@ -4,6 +4,7 @@ import Home from "./pages/Home.vue";
 import About from "./pages/About.vue";
 import Gallery from "./pages/Gallery.vue";
 import Model from "./pages/Model.vue";
+import Upload from "./pages/Upload.vue";
 import { nextTick } from "vue";
 
 const routes = [
@@ -23,6 +24,7 @@ const routes = [
     name: "Model",
     component: Model,
   },
+  { path: "/new", name: "Upload", component: Upload },
 ];
 
 const router = createRouter({
