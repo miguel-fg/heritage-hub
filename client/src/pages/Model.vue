@@ -13,9 +13,9 @@
     </div>
     <div v-else-if="!loading && model" class="flex flex-col gap-4 lg:flex-row">
       <div
-        class="flex h-120 lg:h-auto lg:w-3/5 max-h-[650px] bg-white rounded-sm justify-center items-center"
+        class="flex h-120 lg:h-200 lg:w-3/5 max-h-[650px] rounded-sm justify-center items-center"
       >
-        <h1 class="title text-grayscale-900">3D Model Goes Here</h1>
+        <ThreeVisualizer />
       </div>
       <div class="flex flex-col gap-4 lg:w-2/5">
         <div>
@@ -117,6 +117,7 @@ import axiosInstance from "../scripts/axiosConfig";
 import Button from "../components/Button.vue";
 import Tag from "../components/Tag.vue";
 import Skeleton from "../components/Skeleton.vue";
+import ThreeVisualizer from "../components/ThreeVisualizer.vue";
 
 interface Dimension {
   metric: {
