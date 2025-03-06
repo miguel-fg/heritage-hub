@@ -15,7 +15,7 @@
       <div
         class="flex h-120 lg:h-200 lg:w-3/5 max-h-[650px] rounded-sm justify-center items-center"
       >
-        <ThreeVisualizer />
+        <ThreeVisualizer :modelId="model.id" />
       </div>
       <div class="flex flex-col gap-4 lg:w-2/5">
         <div>

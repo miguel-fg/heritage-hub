@@ -1,35 +1,66 @@
 <template>
-  <div
-    ref="container"
-    class="flex w-full h-full rounded-sm overflow-hidden"
-  ></div>
+  <div class="relative flex w-full h-full rounded-sm bg-white overflow-hidden">
+    <div
+      v-if="loading"
+      class="absolute top-0 left-0 z-50 w-full h-full flex flex-col justify-center items-center"
+    >
+      <h1 class="subtitle text-grayscale-900">Loading 3D Model</h1>
+      <div class="bg-grayscale-100 h-2 w-2/3 rounded-xs">
+        <div
+          class="h-full bg-primary-500 transition-all duration-300 ease-out"
+          :style="{ width: `${loadingProgress}%` }"
+        ></div>
+      </div>
+    </div>
+    <div ref="container" class="flex w-full h-full"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import * as THREE from "three";
 import WebGL from "three/addons/capabilities/WebGL.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { useTemplateRef, onMounted, onUnmounted, ref } from "vue";
+import { useModelStore } from "../stores/modelStore";
 
+const props = defineProps({
+  modelId: { type: String, required: true },
+});
+
+// Visualizer configuration
 const container = useTemplateRef("container");
 const renderer = ref<THREE.WebGLRenderer | null>(null);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
+
 const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
 camera.position.z = 5;
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(1, 1, 1);
+scene.add(directionalLight);
 
+// Model 3D Object
+const modelStore = useModelStore();
+const loading = ref(false);
+const loadingProgress = ref(0);
+const objectUrl = ref("");
+const model = ref<THREE.Group | null>(null);
+const loader = new GLTFLoader();
+
+// Animation loop
 const animate = () => {
   if (renderer.value) {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    if (model.value) {
+      model.value.rotation.y += 0.005;
+    }
     renderer.value.render(scene, camera);
   }
 };
 
+// Responsive scene dimensions
 const handleResize = () => {
   if (!container.value || !renderer.value) {
     return;
@@ -44,17 +75,68 @@ const handleResize = () => {
   renderer.value.setSize(width, height);
 };
 
-onMounted(() => {
+onMounted(async () => {
   if (WebGL.isWebGL2Available()) {
+    // Initialize renderer
     renderer.value = new THREE.WebGLRenderer({ antialias: true });
     renderer.value.setPixelRatio(window.devicePixelRatio);
-
     container.value?.appendChild(renderer.value.domElement);
     handleResize();
 
-    window.addEventListener("resize", handleResize);
-
     renderer.value.setAnimationLoop(animate);
+
+    // Load model
+    loading.value = true;
+    try {
+      objectUrl.value = await modelStore.getObjectUrl(props.modelId);
+
+      loader.load(
+        objectUrl.value,
+        (gltf) => {
+          model.value = gltf.scene;
+
+          // Center model
+          const box = new THREE.Box3().setFromObject(gltf.scene);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+
+          // Adjust model position
+          gltf.scene.position.x = -center.x;
+          gltf.scene.position.y = -center.y;
+          gltf.scene.position.z = -center.z;
+
+          // Adjust camera to fit model
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const fov = camera.fov * (Math.PI / 180);
+          let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+          cameraZ *= 1.5; // Padding
+          camera.position.z = cameraZ;
+
+          // Update camera's near and far planes
+          camera.near = cameraZ / 100;
+          camera.far = cameraZ * 100;
+          camera.updateProjectionMatrix();
+
+          scene.add(gltf.scene);
+          loading.value = false;
+        },
+        (xhr) => {
+          if (xhr.lengthComputable) {
+            loadingProgress.value = Math.round((xhr.loaded / xhr.total) * 100);
+            console.log(`${loadingProgress.value}% loaded`);
+          }
+        },
+        (error) => {
+          console.error("Error loading model: ", error);
+          loading.value = false;
+        },
+      );
+    } catch (error) {
+      console.error("Error fetching model URL: ", error);
+      loading.value = false;
+    }
+
+    window.addEventListener("resize", handleResize);
   } else {
     const warning = WebGL.getWebGL2ErrorMessage();
     container.value?.appendChild(warning);
