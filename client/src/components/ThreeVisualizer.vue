@@ -1,5 +1,8 @@
 <template>
-  <div class="relative flex w-full h-full rounded-sm bg-white overflow-hidden">
+  <div
+    ref="fsContainer"
+    class="relative flex w-full h-full rounded-sm bg-white overflow-hidden"
+  >
     <div
       v-if="loading"
       class="absolute top-0 left-0 z-50 w-full h-full flex flex-col justify-center items-center"
@@ -12,7 +15,11 @@
         ></div>
       </div>
     </div>
-    <div ref="container" class="flex w-full h-full"></div>
+    <Toolbar state="visiting" @fullscreen="toggleFullscreen" />
+    <div
+      ref="container"
+      class="flex w-full h-full cursor-grab active:cursor-grabbing"
+    ></div>
   </div>
 </template>
 
@@ -20,8 +27,11 @@
 import * as THREE from "three";
 import WebGL from "three/addons/capabilities/WebGL.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useTemplateRef, onMounted, onUnmounted, ref } from "vue";
 import { useModelStore } from "../stores/modelStore";
+import { useFullscreen } from "../scripts/threeUtils";
+import Toolbar from "./Toolbar.vue";
 
 const props = defineProps({
   modelId: { type: String, required: true },
@@ -29,6 +39,7 @@ const props = defineProps({
 
 // Visualizer configuration
 const container = useTemplateRef("container");
+const fsContainer = useTemplateRef("fsContainer");
 const renderer = ref<THREE.WebGLRenderer | null>(null);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
@@ -36,11 +47,14 @@ scene.background = new THREE.Color(0xffffff);
 const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
 camera.position.z = 5;
 
+const controls = ref<OrbitControls | null>(null);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
+
+const { toggleFullscreen } = useFullscreen(fsContainer);
 
 // Model 3D Object
 const modelStore = useModelStore();
@@ -53,9 +67,7 @@ const loader = new GLTFLoader();
 // Animation loop
 const animate = () => {
   if (renderer.value) {
-    if (model.value) {
-      model.value.rotation.y += 0.005;
-    }
+    controls.value?.update();
     renderer.value.render(scene, camera);
   }
 };
@@ -84,6 +96,10 @@ onMounted(async () => {
     handleResize();
 
     renderer.value.setAnimationLoop(animate);
+    controls.value = new OrbitControls(camera, renderer.value.domElement);
+    controls.value.enableDamping = true;
+    controls.value.dampingFactor = 0.1;
+    controls.value.autoRotate = true;
 
     // Load model
     loading.value = true;
@@ -117,13 +133,16 @@ onMounted(async () => {
           camera.far = cameraZ * 100;
           camera.updateProjectionMatrix();
 
+          if (controls.value) {
+            controls.value.update();
+          }
+
           scene.add(gltf.scene);
           loading.value = false;
         },
         (xhr) => {
           if (xhr.lengthComputable) {
             loadingProgress.value = Math.round((xhr.loaded / xhr.total) * 100);
-            console.log(`${loadingProgress.value}% loaded`);
           }
         },
         (error) => {
