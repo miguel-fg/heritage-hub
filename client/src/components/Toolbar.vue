@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="props.state === 'visiting'"
-    class="absolute bottom-2 right-2 py-1 flex flex-col gap-4 bg-grayscale-100 rounded-xs shadow-xs"
+    class="absolute z-40 bottom-2 right-2 py-1 flex flex-col gap-4 bg-grayscale-100 rounded-xs shadow-xs"
   >
     <button
       @click="emit('help')"

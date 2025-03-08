@@ -1,17 +1,15 @@
-import type { Ref } from "vue";
-
-export const useFullscreen = (containerRef: Ref<HTMLElement | null>) => {
-  const toggleFullscreen = () => {
-    if (!containerRef.value) return;
+export const useToolbar = () => {
+  const toggleFullscreen = (container: HTMLElement | null) => {
+    if (!container) return;
 
     // Enter fullscreen
     if (!document.fullscreenElement) {
-      if (containerRef.value.requestFullscreen) {
-        containerRef.value.requestFullscreen();
-      } else if ((containerRef.value as any).webkitRequestFullscreen) {
-        (containerRef.value as any).webkitRequestFullscreen(); // Safari support
-      } else if ((containerRef.value as any).msRequestFullscreen) {
-        (containerRef.value as any).msRequestFullscreen(); // IE/Edge support
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if ((container as any).webkitRequestFullscreen) {
+        (container as any).webkitRequestFullscreen(); // Safari support
+      } else if ((container as any).msRequestFullscreen) {
+        (container as any).msRequestFullscreen(); // IE/Edge support
       }
     } else {
       // Exit fullscreen
@@ -25,5 +23,12 @@ export const useFullscreen = (containerRef: Ref<HTMLElement | null>) => {
     }
   };
 
-  return { toggleFullscreen };
+  const downloadModel = (link: HTMLAnchorElement | null, modelUrl: string) => {
+    if (!link || !modelUrl) return;
+
+    link.href = modelUrl;
+    link.click();
+  };
+
+  return { toggleFullscreen, downloadModel };
 };

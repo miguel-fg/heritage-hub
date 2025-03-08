@@ -15,11 +15,23 @@
         ></div>
       </div>
     </div>
-    <Toolbar state="visiting" @fullscreen="toggleFullscreen" />
+    <Toolbar
+      state="visiting"
+      @fullscreen="toggleFullscreen(fsContainer)"
+      @download="downloadModel(downloadLink, objectUrl)"
+      @options="toggleOptionsMenu"
+      @help="toggleHelpOverlay"
+    />
+    <HelpOverlay
+      v-if="isHelpOpen"
+      @click="toggleHelpOverlay"
+      state="visiting"
+    />
     <div
       ref="container"
       class="flex w-full h-full cursor-grab active:cursor-grabbing"
     ></div>
+    <a ref="downloadLink" class="hidden"></a>
   </div>
 </template>
 
@@ -30,8 +42,9 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useTemplateRef, onMounted, onUnmounted, ref } from "vue";
 import { useModelStore } from "../stores/modelStore";
-import { useFullscreen } from "../scripts/threeUtils";
+import { useToolbar } from "../scripts/threeUtils";
 import Toolbar from "./Toolbar.vue";
+import HelpOverlay from "./HelpOverlay.vue";
 
 const props = defineProps({
   modelId: { type: String, required: true },
@@ -39,7 +52,6 @@ const props = defineProps({
 
 // Visualizer configuration
 const container = useTemplateRef("container");
-const fsContainer = useTemplateRef("fsContainer");
 const renderer = ref<THREE.WebGLRenderer | null>(null);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
@@ -54,7 +66,12 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
-const { toggleFullscreen } = useFullscreen(fsContainer);
+// Toolbar config
+const { toggleFullscreen, downloadModel } = useToolbar();
+const fsContainer = useTemplateRef("fsContainer");
+const downloadLink = useTemplateRef("downloadLink");
+const isHelpOpen = ref(false);
+const isOptionsOpen = ref(false);
 
 // Model 3D Object
 const modelStore = useModelStore();
@@ -85,6 +102,14 @@ const handleResize = () => {
   camera.updateProjectionMatrix();
 
   renderer.value.setSize(width, height);
+};
+
+const toggleHelpOverlay = () => {
+  isHelpOpen.value = !isHelpOpen.value;
+};
+
+const toggleOptionsMenu = () => {
+  isOptionsOpen.value = !isOptionsOpen.value;
 };
 
 onMounted(async () => {
