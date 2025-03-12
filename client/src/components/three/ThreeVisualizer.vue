@@ -27,6 +27,7 @@
       @click="toggleHelpOverlay"
       state="visiting"
     />
+    <OptionsOverlay v-if="isOptionsOpen" state="visiting" :values="values" />
     <div
       ref="container"
       class="flex w-full h-full cursor-grab active:cursor-grabbing"
@@ -40,38 +41,83 @@ import * as THREE from "three";
 import WebGL from "three/addons/capabilities/WebGL.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { useTemplateRef, onMounted, onUnmounted, ref } from "vue";
-import { useModelStore } from "../stores/modelStore";
-import { useToolbar } from "../scripts/threeUtils";
+import { useTemplateRef, onMounted, onUnmounted, ref, watch } from "vue";
+import { useModelStore } from "../../stores/modelStore";
+import { useToolbar } from "../../scripts/threeUtils";
 import Toolbar from "./Toolbar.vue";
 import HelpOverlay from "./HelpOverlay.vue";
+import OptionsOverlay from "./OptionsOverlay.vue";
 
 const props = defineProps({
   modelId: { type: String, required: true },
 });
 
 // Visualizer configuration
+const fov = ref("75");
+const bgColor = ref<string>("white");
+const light = ref("50");
+const rotation = ref(true);
+const speed = ref("50");
+
+const values = {
+  fov,
+  bgColor,
+  light,
+  rotation,
+  speed,
+};
+
 const container = useTemplateRef("container");
 const renderer = ref<THREE.WebGLRenderer | null>(null);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
 
-const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(parseInt(fov.value), 1, 0.1, 1000);
 camera.position.z = 5;
 
 const controls = ref<OrbitControls | null>(null);
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
+const ambientLight = ref<THREE.AmbientLight>(
+  new THREE.AmbientLight(0xffffff, parseInt(light.value) / 100),
+);
+scene.add(ambientLight.value);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
 // Toolbar config
-const { toggleFullscreen, downloadModel } = useToolbar();
+const {
+  toggleFullscreen,
+  downloadModel,
+  updateFOV,
+  setRotate,
+  setRotationSpeed,
+  setAmbientLight,
+  setBackgroundColor,
+} = useToolbar();
 const fsContainer = useTemplateRef("fsContainer");
 const downloadLink = useTemplateRef("downloadLink");
 const isHelpOpen = ref(false);
 const isOptionsOpen = ref(false);
+
+watch(fov, (val) => {
+  updateFOV(camera, val);
+});
+
+watch(rotation, (val) => {
+  setRotate(controls.value, val);
+});
+
+watch(speed, (val) => {
+  setRotationSpeed(controls.value, val);
+});
+
+watch(light, (val) => {
+  setAmbientLight(ambientLight.value, val);
+});
+
+watch(bgColor, (val) => {
+  setBackgroundColor(scene, val);
+});
 
 // Model 3D Object
 const modelStore = useModelStore();
@@ -117,6 +163,7 @@ onMounted(async () => {
     // Initialize renderer
     renderer.value = new THREE.WebGLRenderer({ antialias: true });
     renderer.value.setPixelRatio(window.devicePixelRatio);
+    renderer.value.shadowMap.enabled = true;
     container.value?.appendChild(renderer.value.domElement);
     handleResize();
 
@@ -124,7 +171,8 @@ onMounted(async () => {
     controls.value = new OrbitControls(camera, renderer.value.domElement);
     controls.value.enableDamping = true;
     controls.value.dampingFactor = 0.1;
-    controls.value.autoRotate = true;
+    controls.value.autoRotate = rotation.value;
+    controls.value.autoRotateSpeed = parseInt(speed.value) / 25;
 
     // Load model
     loading.value = true;

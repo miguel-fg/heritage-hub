@@ -1,3 +1,11 @@
+import {
+  Color,
+  type AmbientLight,
+  type PerspectiveCamera,
+  type Scene,
+} from "three";
+import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
 export const useToolbar = () => {
   const toggleFullscreen = (container: HTMLElement | null) => {
     if (!container) return;
@@ -30,5 +38,50 @@ export const useToolbar = () => {
     link.click();
   };
 
-  return { toggleFullscreen, downloadModel };
+  const updateFOV = (camera: PerspectiveCamera, fov: string) => {
+    camera.fov = parseInt(fov);
+    camera.updateProjectionMatrix();
+  };
+
+  const setRotate = (controls: OrbitControls | null, enabled: boolean) => {
+    if (!controls) return;
+
+    controls.autoRotate = enabled;
+    controls.update();
+  };
+
+  const setRotationSpeed = (controls: OrbitControls | null, speed: string) => {
+    if (!controls) return;
+
+    controls.autoRotateSpeed = parseInt(speed) / 25;
+    controls.update();
+  };
+
+  const setAmbientLight = (light: AmbientLight, intensity: string) => {
+    light.intensity = parseInt(intensity) / 100;
+  };
+
+  const setBackgroundColor = (scene: Scene, color: string) => {
+    switch (color) {
+      case "white":
+        scene.background = new Color(0xffffff);
+        break;
+      case "gray":
+        scene.background = new Color(0x888888);
+        break;
+      case "black":
+        scene.background = new Color(0x000000);
+        break;
+    }
+  };
+
+  return {
+    toggleFullscreen,
+    downloadModel,
+    updateFOV,
+    setRotate,
+    setRotationSpeed,
+    setAmbientLight,
+    setBackgroundColor,
+  };
 };

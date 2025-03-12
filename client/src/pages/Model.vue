@@ -117,7 +117,7 @@ import axiosInstance from "../scripts/axiosConfig";
 import Button from "../components/Button.vue";
 import Tag from "../components/Tag.vue";
 import Skeleton from "../components/Skeleton.vue";
-import ThreeVisualizer from "../components/ThreeVisualizer.vue";
+import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
 
 interface Dimension {
   metric: {
