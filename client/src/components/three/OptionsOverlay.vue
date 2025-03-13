@@ -58,7 +58,6 @@
 
 <script setup lang="ts">
 import type { Ref } from "vue";
-import type { Color } from "three";
 import { ref } from "vue";
 import Chevron from "./Chevron.vue";
 import ValueSlider from "../ValueSlider.vue";
@@ -67,7 +66,7 @@ import BackgroundPicker from "./BackgroundPicker.vue";
 
 interface ThreeValues {
   fov: Ref<string>;
-  bgColor: Ref<Color>;
+  bgColor: Ref<string>;
   light: Ref<string>;
   rotation: Ref<boolean>;
   speed: Ref<string>;
