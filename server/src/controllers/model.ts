@@ -70,6 +70,26 @@ export const getModelThumbnailUrl = async (
   }
 };
 
+export const getModelObjectUrl = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const modelId = req.params.id;
+
+  try {
+    const objectUrl = await generatePresignedUrl(
+      BUCKET_NAME,
+      `${modelId}/model.glb`,
+    );
+    res.status(200).json({ objectUrl });
+  } catch (error) {
+    console.error("[server]: Failed to generate presigned URL. ERR: ", error);
+    res.status(500).json({
+      error: `[server]: Failed to generate presigned URL. ERR: ${error}`,
+    });
+  }
+};
+
 export const newModel = async (req: Request, res: Response): Promise<void> => {
   res.status(200).json({ message: "Create a new model" });
 };

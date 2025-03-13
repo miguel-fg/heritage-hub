@@ -1,7 +1,21 @@
 {
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "compilerOptions": {
+    "paths": {
+      "three/webgpu": [
+        "./node_modules/three/build/three.webgpu.js"
+      ],
+      "three/tsl": [
+        "./node_modules/three/build/three.tsl.js"
+      ]
+    }
+  }
 }
