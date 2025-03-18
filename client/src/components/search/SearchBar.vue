@@ -5,12 +5,7 @@
     :style="{ transform: `translateY(${searchbarTransform})` }"
   >
     <div
-      class="w-full bg-white px-4 md:px-8 lg:px-16"
-      :class="
-        activeDropdown === 'sort'
-          ? 'border-none md:border-b md:border-grayscale-300'
-          : 'border-b border-grayscale-300'
-      "
+      class="w-full bg-white px-4 md:px-8 border-b border-grayscale-300 lg:px-16"
     >
       <div class="w-full mx-auto max-w-[1920px]">
         <div class="flex flex-col">

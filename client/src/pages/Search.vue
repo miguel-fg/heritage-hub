@@ -22,12 +22,25 @@
         Type something to search 3D models
       </p>
     </div>
-    <h1 v-else class="title">Searching with values:</h1>
-    <h2>Query: {{ query }}</h2>
-    <h2>Sort: {{ sort }}</h2>
-    <h2>Tags: {{ tags }}</h2>
-    <h2>Materials: {{ materials }}</h2>
-    <h2>Others: {{ others }}</h2>
+    <div v-else>
+      <h1 class="title">Searching with values:</h1>
+      <h2 class="subtitle">
+        Query: <span class="font-poppins font-medium">{{ query }}</span>
+      </h2>
+      <h2 class="subtitle">
+        Sort: <span class="font-poppins font-medium">{{ sort }}</span>
+      </h2>
+      <h2 class="subtitle">
+        Tags: <span class="font-poppins font-medium">{{ tags }}</span>
+      </h2>
+      <h2 class="subtitle">
+        Materials:
+        <span class="font-poppins font-medium">{{ materials }}</span>
+      </h2>
+      <h2 class="subtitle">
+        Others: <span class="font-poppins font-medium">{{ others }}</span>
+      </h2>
+    </div>
   </div>
 </template>
 
