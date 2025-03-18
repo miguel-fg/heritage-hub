@@ -180,7 +180,7 @@ const toggleNav = () => {
 };
 
 const handleSearch = () => {
-  console.log("Search pressed!");
+  router.push("/search");
 };
 
 const handleUpload = () => {

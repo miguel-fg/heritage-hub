@@ -1,6 +1,6 @@
 <template>
   <div class="flex gap-5 mx-auto mt-28 mb-32 max-w-[1920px]">
-    <div v-if="!fileSelected" class="flex gap-8 w-full">
+    <div v-if="fileSelected" class="flex gap-8 w-full">
       <div class="flex flex-col w-1/3">
         <h1 class="title text-grayscale-900">File Name: {{ file.name }}</h1>
         <h2 class="subtitle text-grayscale-900">File Size: {{ file.size }}</h2>
