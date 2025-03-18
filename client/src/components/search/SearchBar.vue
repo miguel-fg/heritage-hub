@@ -5,7 +5,12 @@
     :style="{ transform: `translateY(${searchbarTransform})` }"
   >
     <div
-      class="w-full bg-white px-4 md:px-8 lg:px-16 border-b border-grayscale-300"
+      class="w-full bg-white px-4 md:px-8 lg:px-16"
+      :class="
+        activeDropdown === 'sort'
+          ? 'border-none md:border-b md:border-grayscale-300'
+          : 'border-b border-grayscale-300'
+      "
     >
       <div class="w-full mx-auto max-w-[1920px]">
         <div class="flex flex-col">
@@ -35,7 +40,96 @@
             <Button type="outline" @click="handleCancel">Cancel</Button>
           </div>
           <!-- Mobile -->
-          <div class="flex md:hidden items-center"></div>
+          <div class="flex md:hidden items-center justify-between py-2">
+            <!-- Filter submenu -->
+            <div class="relative inline-block">
+              <button
+                @click="toggleFiltersOpen"
+                class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
+                :class="
+                  isFiltersOpen
+                    ? 'text-primary-500 border-b border-primary-500'
+                    : 'text-grayscale-600 border-none'
+                "
+              >
+                <span>Filters</span>
+
+                <svg
+                  v-if="!isFiltersOpen"
+                  width="16"
+                  height="10"
+                  viewBox="0 0 16 10"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M7.99993 7.2055L14.7006 0L16 1.39726L7.99993 10L0 1.39726L1.29936 0L7.99993 7.2055Z"
+                    fill="#615F5F"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  width="16"
+                  height="10"
+                  viewBox="0 0 16 10"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M8.00004 2.79451L1.29936 10L0 8.60269L8.00004 0L16 8.60269L14.7006 10L8.00004 2.79451Z"
+                    fill="#A0182C"
+                  />
+                </svg>
+              </button>
+              <div
+                v-if="isFiltersOpen"
+                class="absolute -left-4 top-full w-screen flex justify-between px-4 py-2 bg-white border-b border-grayscale-300"
+              >
+                <Dropdown
+                  v-model="tags"
+                  :options="tagOptions"
+                  label="Tags"
+                  multiple
+                  :isOpen="activeDropdown === 'tags'"
+                  @toggle="handleDropdownToggle('tags')"
+                />
+                <Dropdown
+                  v-model="materials"
+                  :options="materialOptions"
+                  label="Materials"
+                  multiple
+                  :isOpen="activeDropdown === 'materials'"
+                  @toggle="handleDropdownToggle('materials')"
+                />
+                <Dropdown
+                  v-model="others"
+                  :options="otherOptions"
+                  label="Others"
+                  multiple
+                  align="end"
+                  :isOpen="activeDropdown === 'others'"
+                  @toggle="handleDropdownToggle('others')"
+                />
+              </div>
+            </div>
+            <Dropdown
+              v-model="sort"
+              :options="sortOptions"
+              label="Sort"
+              :isOpen="activeDropdown === 'sort'"
+              @toggle="
+                () => {
+                  handleDropdownToggle('sort');
+                  isFiltersOpen = false;
+                }
+              "
+              align="end"
+            />
+          </div>
           <!-- Desktop -->
           <div class="hidden md:flex items-center justify-between py-2">
             <div class="flex gap-8">
@@ -55,21 +149,24 @@
                 :isOpen="activeDropdown === 'materials'"
                 @toggle="handleDropdownToggle('materials')"
               />
-              <label
-                for="downloadable"
-                class="flex gap-2 items-center text-nowrap font-poppins cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  id="downloadable"
-                  class="hidden absolute overflow-hidden"
-                  v-model="downloadable"
-                />
-                <span
-                  class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100"
-                ></span>
-                Downloadable
-              </label>
+              <div v-for="(option, index) in otherOptions">
+                <label
+                  :for="`${option.label}-${index}`"
+                  class="flex gap-2 items-center text-nowrap font-poppins cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    :id="`${option.label}-${index}`"
+                    class="hidden absolute overflow-hidden"
+                    :value="option.value"
+                    v-model="others"
+                  />
+                  <span
+                    class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100"
+                  ></span>
+                  {{ option.label }}
+                </label>
+              </div>
             </div>
             <Dropdown
               v-model="sort"
@@ -95,10 +192,12 @@ import { useSearchBar } from "../../scripts/searchUtils";
 
 const router = useRouter();
 
-const { query, sort, tags, materials, downloadable, resetSearch } =
-  useSearchBar();
+const { query, sort, tags, materials, others, resetSearch } = useSearchBar();
 
-const activeDropdown = ref<"tags" | "materials" | "sort" | null>(null);
+const activeDropdown = ref<"tags" | "materials" | "sort" | "others" | null>(
+  null,
+);
+const isFiltersOpen = ref(false);
 
 const tagOptions = [
   { value: "tag1", label: "Option 1" },
@@ -120,8 +219,20 @@ const sortOptions = [
   { value: "z-a", label: "Z to A" },
 ];
 
-const handleDropdownToggle = (dropdown: "tags" | "materials" | "sort") => {
+const otherOptions = [{ value: "downloadable", label: "Downloadable" }];
+
+const handleDropdownToggle = (
+  dropdown: "tags" | "materials" | "sort" | "others",
+) => {
   activeDropdown.value = activeDropdown.value === dropdown ? null : dropdown;
+};
+
+const toggleFiltersOpen = () => {
+  if (activeDropdown.value === "sort") {
+    activeDropdown.value = null;
+  }
+
+  isFiltersOpen.value = !isFiltersOpen.value;
 };
 
 const searchbarTransform = ref("0");

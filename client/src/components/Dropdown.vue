@@ -1,5 +1,5 @@
 <template>
-  <div class="relative inline-block">
+  <div class="md:relative inline-block">
     <button
       @click="handleToggle"
       class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
@@ -44,7 +44,7 @@
 
     <div
       v-if="props.isOpen"
-      class="absolute top-full py-1 mt-4 bg-white border border-grayscale-300 rounded-sm z-50"
+      class="absolute top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50"
       :class="props.align === 'start' ? 'left-0' : 'right-0'"
     >
       <div v-if="props.multiple" class="flex flex-col gap-4 px-4 py-1">

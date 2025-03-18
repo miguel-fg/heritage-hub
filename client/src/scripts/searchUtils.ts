@@ -4,13 +4,13 @@ const query = ref("");
 const sort = ref<"relevant" | "newest" | "oldest" | "a-z" | "z-a">("relevant");
 const tags = ref<string[]>([]);
 const materials = ref<string[]>([]);
-const downloadable = ref(false);
+const others = ref<string[]>([]);
 
 export const useSearchBar = () => {
   const clearFilters = () => {
     tags.value = [];
     materials.value = [];
-    downloadable.value = false;
+    others.value = [];
   };
 
   const resetSearch = () => {
@@ -18,7 +18,7 @@ export const useSearchBar = () => {
     sort.value = "relevant";
     tags.value = [];
     materials.value = [];
-    downloadable.value = false;
+    others.value = [];
   };
 
   return {
@@ -26,7 +26,7 @@ export const useSearchBar = () => {
     sort,
     tags,
     materials,
-    downloadable,
+    others,
     clearFilters,
     resetSearch,
   };
