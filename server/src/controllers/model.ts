@@ -11,7 +11,16 @@ export const getModels = async (req: Request, res: Response): Promise<void> => {
         id: true,
         name: true,
         caption: true,
-        tags: true,
+        tags: {
+          select: {
+            name: true,
+          },
+        },
+        materials: {
+          select: {
+            name: true,
+          },
+        },
         thumbnailPath: true,
         createdAt: true,
       },
@@ -38,6 +47,14 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
     const model = await prisma.model.findUnique({
       where: {
         id: modelId,
+      },
+      include: {
+        materials: {
+          select: { name: true },
+        },
+        tags: {
+          select: { name: true },
+        },
       },
     });
 

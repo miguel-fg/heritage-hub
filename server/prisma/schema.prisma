@@ -13,11 +13,24 @@ model Model {
     name            String
     caption         String
     description     String
-    materials       String[]
-    tags            String[]
+    materials       Material[]
+    tags            Tag[]
     dimensions      Json?
     modelPath       String
     thumbnailPath   String
     multimediaPath  String[]
     createdAt       DateTime @default(now())
 }
+
+model Tag {
+    id        Int        @id @default(autoincrement())
+    name      String     @unique
+    models    Model[]
+}
+
+model Material {
+    id        Int        @id @default(autoincrement())
+    name      String     @unique
+    models    Model[]
+}
+    

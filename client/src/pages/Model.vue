@@ -80,7 +80,7 @@
               v-for="(material, index) in model.materials"
               :key="index"
             >
-              {{ capitalize(material) }}
+              {{ material.name }}
             </li>
           </ul>
           <div v-else>
@@ -90,7 +90,7 @@
           </div>
         </div>
         <div class="flex gap-1 flex-wrap">
-          <Tag v-for="tag in model.tags" :content="tag" />
+          <Tag v-for="tag in model.tags" :content="tag.name" />
         </div>
         <div>
           <p class="tag text-grayscale-500 mb-1">User Name</p>
@@ -119,6 +119,14 @@ import Tag from "../components/Tag.vue";
 import Skeleton from "../components/Skeleton.vue";
 import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
 
+interface Tag {
+  name: string;
+}
+
+interface Material {
+  name: string;
+}
+
 interface Dimension {
   metric: {
     value: number;
@@ -135,8 +143,8 @@ interface Model {
   name: string;
   caption: string;
   description: string;
-  materials: Array<string>;
-  tags: Array<string>;
+  materials: Array<Material>;
+  tags: Array<Tag>;
   dimensions: {
     width: Dimension | null;
     height: Dimension | null;
@@ -156,28 +164,6 @@ const model = ref<Model | null>(null);
 const error = ref<any>(null);
 
 const isTruncated = ref(true);
-
-const capitalize = (content: string): string => {
-  return (
-    content
-      .split(/([-/])/)
-      //@ts-ignore
-      .map((part, index, array) => {
-        if (part === "-" || part === "/") {
-          return part;
-        }
-
-        return part
-          .split(" ")
-          .map(
-            (word) =>
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          )
-          .join(" ");
-      })
-      .join("")
-  );
-};
 
 const cleanDate = (rawDate: string): string => {
   const date = new Date(rawDate);

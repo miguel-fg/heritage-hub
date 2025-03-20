@@ -44,7 +44,7 @@
 
     <div
       v-if="props.isOpen"
-      class="absolute mt-2 md:top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50"
+      class="absolute mt-2 md:top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50 max-h-[50vh] overflow-y-auto"
       :class="props.align === 'start' ? 'left-0' : 'right-0'"
     >
       <div v-if="props.multiple" class="flex flex-col gap-4 px-4 py-1">
@@ -53,11 +53,11 @@
           :key="index"
         >
           <label
-            :for="`${props.label}-${option.label}-${index}`"
+            :for="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
             class="flex gap-2 items-center text-nowrap font-poppins cursor-pointer"
           >
             <input
-              :id="`${props.label}-${option.label}-${index}`"
+              :id="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
               type="checkbox"
               class="hidden absolute overflow-hidden"
               :value="option.value"
@@ -78,12 +78,12 @@
         >
           <label
             class="flex px-4 items-center text-nowrap font-poppins cursor-pointer"
-            :for="`${props.label}-${option.label}-${index}`"
+            :for="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
           >
             <input
               type="radio"
               class="hidden"
-              :id="`${props.label}-${option.label}-${index}`"
+              :id="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
               :value="option.value"
               v-model="model"
             />
@@ -125,6 +125,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  idPrefix: { type: String, required: false },
 });
 
 const model = defineModel();

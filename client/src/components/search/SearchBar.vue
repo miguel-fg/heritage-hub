@@ -91,6 +91,7 @@
                   multiple
                   :isOpen="activeDropdown === 'tags'"
                   @toggle="handleDropdownToggle('tags')"
+                  idPrefix="mobile"
                 />
                 <Dropdown
                   v-model="materials"
@@ -99,6 +100,7 @@
                   multiple
                   :isOpen="activeDropdown === 'materials'"
                   @toggle="handleDropdownToggle('materials')"
+                  idPrefix="mobile"
                 />
                 <Dropdown
                   v-model="others"
@@ -108,6 +110,7 @@
                   align="end"
                   :isOpen="activeDropdown === 'others'"
                   @toggle="handleDropdownToggle('others')"
+                  idPrefix="mobile"
                 />
               </div>
             </div>
@@ -123,6 +126,7 @@
                 }
               "
               align="end"
+              idPrefix="mobile"
             />
           </div>
           <!-- Desktop -->
@@ -135,6 +139,7 @@
                 multiple
                 :isOpen="activeDropdown === 'tags'"
                 @toggle="handleDropdownToggle('tags')"
+                idPrefix="desktop"
               />
               <Dropdown
                 v-model="materials"
@@ -143,6 +148,7 @@
                 multiple
                 :isOpen="activeDropdown === 'materials'"
                 @toggle="handleDropdownToggle('materials')"
+                idPrefix="desktop"
               />
               <div v-for="(option, index) in otherOptions">
                 <label
@@ -170,6 +176,7 @@
               align="end"
               :isOpen="activeDropdown === 'sort'"
               @toggle="handleDropdownToggle('sort')"
+              idPrefix="desktop"
             />
           </div>
         </div>
@@ -187,34 +194,23 @@ import { useSearchBar } from "../../scripts/searchUtils";
 
 const router = useRouter();
 
-const { query, sort, tags, materials, others, resetSearch } = useSearchBar();
+const {
+  query,
+  sort,
+  tags,
+  materials,
+  others,
+  tagOptions,
+  materialOptions,
+  sortOptions,
+  otherOptions,
+  resetSearch,
+} = useSearchBar();
 
 const activeDropdown = ref<"tags" | "materials" | "sort" | "others" | null>(
   null,
 );
 const isFiltersOpen = ref(false);
-
-const tagOptions = [
-  { value: "tag1", label: "Option 1" },
-  { value: "tag2", label: "Option 2" },
-  { value: "tag3", label: "Option 3" },
-];
-
-const materialOptions = [
-  { value: "material1", label: "Option 1" },
-  { value: "material2", label: "Option 2" },
-  { value: "material3", label: "Option 3" },
-];
-
-const sortOptions = [
-  { value: "relevant", label: "Most Relevant" },
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "a-z", label: "A to Z" },
-  { value: "z-a", label: "Z to A" },
-];
-
-const otherOptions = [{ value: "downloadable", label: "Downloadable" }];
 
 const handleDropdownToggle = (
   dropdown: "tags" | "materials" | "sort" | "others",

@@ -22,7 +22,7 @@
       </div>
     </div>
     <div class="flex gap-1 flex-wrap">
-      <Tag v-for="tag in props.item.tags" :content="tag" />
+      <Tag v-for="tag in props.item.tags" :content="tag.name" />
     </div>
   </div>
 </template>
