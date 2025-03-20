@@ -2,7 +2,7 @@ import { ref } from "vue";
 import axiosInstance from "./axiosConfig";
 
 const query = ref("");
-const sort = ref<"relevant" | "newest" | "oldest" | "a-z" | "z-a">("relevant");
+const sort = ref<"newest" | "oldest" | "a-z" | "z-a">("oldest");
 const tags = ref<string[]>([]);
 const materials = ref<string[]>([]);
 const others = ref<string[]>([]);
@@ -11,7 +11,6 @@ export const useSearchBar = () => {
   const tagOptions = ref<{ value: string; label: string }[]>([]);
   const materialOptions = ref<{ value: string; label: string }[]>([]);
   const sortOptions = [
-    { value: "relevant", label: "Most Relevant" },
     { value: "newest", label: "Newest" },
     { value: "oldest", label: "Oldest" },
     { value: "a-z", label: "A to Z" },

@@ -30,6 +30,7 @@
                 class="font-poppins w-full py-1 px-2"
                 placeholder="Search"
                 v-model="query"
+                v-focus
               />
             </label>
             <Button type="outline" @click="handleCancel">Cancel</Button>
@@ -259,6 +260,10 @@ const handleScroll = () => {
 const handleCancel = () => {
   resetSearch();
   router.push("/");
+};
+
+const vFocus = {
+  mounted: (el: HTMLElement) => el.focus(),
 };
 
 onMounted(() => {

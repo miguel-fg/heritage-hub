@@ -44,7 +44,7 @@
 
     <div
       v-if="props.isOpen"
-      class="absolute mt-2 md:top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50 max-h-[50vh] overflow-y-auto"
+      class="absolute mt-2 md:top-full w-screen md:w-fit py-1 pr-2 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50 max-h-[25vh] overflow-y-auto"
       :class="props.align === 'start' ? 'left-0' : 'right-0'"
     >
       <div v-if="props.multiple" class="flex flex-col gap-4 px-4 py-1">
