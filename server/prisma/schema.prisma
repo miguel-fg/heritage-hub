@@ -19,7 +19,8 @@ model Model {
     modelPath       String
     thumbnailPath   String
     multimediaPath  String[]
-    createdAt       DateTime @default(now())
+    downloadable    Boolean     @default(true)
+    createdAt       DateTime    @default(now())
 }
 
 model Tag {

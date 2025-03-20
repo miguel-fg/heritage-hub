@@ -37,6 +37,8 @@ import { useSearchBar } from "../scripts/searchUtils";
 import { useModelStore } from "../stores/modelStore";
 import { storeToRefs } from "pinia";
 
+type ModelAttribute = "downloadable";
+
 const modelStore = useModelStore();
 
 const { models, loading, error } = storeToRefs(modelStore);
@@ -67,7 +69,15 @@ const filteredModels = computed(() => {
         ),
       );
 
-    return queryMatch && tagsMatch && materialsMatch;
+    const othersMatch =
+      others.value.length === 0 ||
+      others.value.every((attribute) => {
+        const attr = attribute as ModelAttribute;
+
+        return model[attr] === true;
+      });
+
+    return queryMatch && tagsMatch && materialsMatch && othersMatch;
   });
 
   // Sorting

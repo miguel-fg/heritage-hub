@@ -22,6 +22,7 @@ export const getModels = async (req: Request, res: Response): Promise<void> => {
           },
         },
         thumbnailPath: true,
+        downloadable: true,
         createdAt: true,
       },
       orderBy: {

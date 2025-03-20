@@ -17,6 +17,7 @@ interface Model {
   tags: Array<Tag>;
   materials: Array<Material>;
   thumbnailPath: string;
+  downloadable: boolean;
   createdAt: string;
 }
 
