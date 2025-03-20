@@ -38,7 +38,7 @@
           <!-- Mobile -->
           <div class="flex md:hidden items-center justify-between py-2">
             <!-- Filter submenu -->
-            <div class="relative inline-block">
+            <div class="relative flex gap-6 sm:gap-10 items-center">
               <button
                 @click="toggleFiltersOpen"
                 class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
@@ -81,6 +81,9 @@
                   />
                 </svg>
               </button>
+              <Button v-show="filtersActive" @click="clearFilters" type="danger"
+                >Reset</Button
+              >
               <div
                 v-if="isFiltersOpen"
                 class="absolute -left-4 top-full w-screen flex justify-between px-4 py-2 bg-white border-b border-grayscale-300"
@@ -132,7 +135,7 @@
           </div>
           <!-- Desktop -->
           <div class="hidden md:flex items-center justify-between py-2">
-            <div class="flex gap-8">
+            <div class="flex gap-8 items-center">
               <Dropdown
                 v-model="tags"
                 :options="tagOptions"
@@ -169,6 +172,9 @@
                   {{ option.label }}
                 </label>
               </div>
+              <Button v-show="filtersActive" @click="clearFilters" type="danger"
+                >Reset</Button
+              >
             </div>
             <Dropdown
               v-model="sort"
@@ -187,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
@@ -205,6 +211,7 @@ const {
   materialOptions,
   sortOptions,
   otherOptions,
+  clearFilters,
   resetSearch,
 } = useSearchBar();
 
@@ -226,6 +233,13 @@ const toggleFiltersOpen = () => {
 
   isFiltersOpen.value = !isFiltersOpen.value;
 };
+
+const filtersActive = computed(
+  () =>
+    tags.value.length !== 0 ||
+    materials.value.length !== 0 ||
+    others.value.length !== 0,
+);
 
 const searchbarTransform = ref("0");
 const searchbarRef = ref<HTMLElement>();

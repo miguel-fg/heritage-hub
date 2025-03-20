@@ -54,7 +54,7 @@ export const useSearchBar = () => {
 
   const resetSearch = () => {
     query.value = "";
-    sort.value = "relevant";
+    sort.value = "oldest";
     tags.value = [];
     materials.value = [];
     others.value = [];
