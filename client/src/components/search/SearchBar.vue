@@ -21,7 +21,7 @@
             >
               <img
                 src="../../../assets/icons/search.svg"
-                alt="Search icon"
+                alt="Search bar"
                 class="w-4"
               />
               <input
@@ -158,17 +158,29 @@
                 <label
                   :for="`${option.label}-${index}`"
                   class="flex gap-2 items-center text-nowrap font-poppins cursor-pointer"
+                  tabindex="0"
+                  @keydown.enter="
+                    handleLabelKeydown($event, `${option.label}-${index}`)
+                  "
+                  role="checkbox"
+                  :aria-checked="others.includes(option.value)"
                 >
                   <input
                     type="checkbox"
                     :id="`${option.label}-${index}`"
-                    class="hidden absolute overflow-hidden"
+                    class="sr-only absolute overflow-hidden"
+                    tabindex="-1"
                     :value="option.value"
                     v-model="others"
                   />
                   <span
-                    class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100"
-                  ></span>
+                    class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100 flex items-center justify-center"
+                  >
+                    <span
+                      v-if="others.includes(option.value)"
+                      class="w-2 h-2 bg-primary-500 rounded-xs"
+                    ></span>
+                  </span>
                   {{ option.label }}
                 </label>
               </div>
@@ -271,6 +283,15 @@ const handleScroll = () => {
   lastScroll = currentScroll <= 0 ? 0 : currentScroll;
 };
 
+const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
+  if (event.key === "Enter") {
+    const inputElement = document.getElementById(inputId);
+    if (inputElement) {
+      inputElement.click();
+    }
+  }
+};
+
 const handleCancel = () => {
   resetSearch();
   router.push("/");
@@ -288,16 +309,3 @@ onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
 });
 </script>
-
-<style scoped>
-[type="checkbox"]:checked + span {
-  background: var(--color-primary-600);
-}
-
-[type="checkbox"]:checked + span:before {
-  content: "\2714";
-  position: absolute;
-  top: -6px;
-  left: 2;
-}
-</style>
