@@ -21,7 +21,7 @@
             >
               <img
                 src="../../../assets/icons/search.svg"
-                alt="Search icon"
+                alt="Search bar"
                 class="w-4"
               />
               <input
@@ -30,6 +30,7 @@
                 class="font-poppins w-full py-1 px-2"
                 placeholder="Search"
                 v-model="query"
+                v-focus
               />
             </label>
             <Button type="outline" @click="handleCancel">Cancel</Button>
@@ -37,7 +38,7 @@
           <!-- Mobile -->
           <div class="flex md:hidden items-center justify-between py-2">
             <!-- Filter submenu -->
-            <div class="relative inline-block">
+            <div class="relative flex gap-6 sm:gap-10 items-center">
               <button
                 @click="toggleFiltersOpen"
                 class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
@@ -80,6 +81,9 @@
                   />
                 </svg>
               </button>
+              <Button v-show="filtersActive" @click="clearFilters" type="danger"
+                >Reset</Button
+              >
               <div
                 v-if="isFiltersOpen"
                 class="absolute -left-4 top-full w-screen flex justify-between px-4 py-2 bg-white border-b border-grayscale-300"
@@ -91,6 +95,7 @@
                   multiple
                   :isOpen="activeDropdown === 'tags'"
                   @toggle="handleDropdownToggle('tags')"
+                  idPrefix="mobile"
                 />
                 <Dropdown
                   v-model="materials"
@@ -99,6 +104,7 @@
                   multiple
                   :isOpen="activeDropdown === 'materials'"
                   @toggle="handleDropdownToggle('materials')"
+                  idPrefix="mobile"
                 />
                 <Dropdown
                   v-model="others"
@@ -108,6 +114,7 @@
                   align="end"
                   :isOpen="activeDropdown === 'others'"
                   @toggle="handleDropdownToggle('others')"
+                  idPrefix="mobile"
                 />
               </div>
             </div>
@@ -123,11 +130,12 @@
                 }
               "
               align="end"
+              idPrefix="mobile"
             />
           </div>
           <!-- Desktop -->
           <div class="hidden md:flex items-center justify-between py-2">
-            <div class="flex gap-8">
+            <div class="flex gap-8 items-center">
               <Dropdown
                 v-model="tags"
                 :options="tagOptions"
@@ -135,6 +143,7 @@
                 multiple
                 :isOpen="activeDropdown === 'tags'"
                 @toggle="handleDropdownToggle('tags')"
+                idPrefix="desktop"
               />
               <Dropdown
                 v-model="materials"
@@ -143,25 +152,41 @@
                 multiple
                 :isOpen="activeDropdown === 'materials'"
                 @toggle="handleDropdownToggle('materials')"
+                idPrefix="desktop"
               />
               <div v-for="(option, index) in otherOptions">
                 <label
                   :for="`${option.label}-${index}`"
                   class="flex gap-2 items-center text-nowrap font-poppins cursor-pointer"
+                  tabindex="0"
+                  @keydown.enter="
+                    handleLabelKeydown($event, `${option.label}-${index}`)
+                  "
+                  role="checkbox"
+                  :aria-checked="others.includes(option.value)"
                 >
                   <input
                     type="checkbox"
                     :id="`${option.label}-${index}`"
-                    class="hidden absolute overflow-hidden"
+                    class="sr-only absolute overflow-hidden"
+                    tabindex="-1"
                     :value="option.value"
                     v-model="others"
                   />
                   <span
-                    class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100"
-                  ></span>
+                    class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100 flex items-center justify-center"
+                  >
+                    <span
+                      v-if="others.includes(option.value)"
+                      class="w-2 h-2 bg-primary-500 rounded-xs"
+                    ></span>
+                  </span>
                   {{ option.label }}
                 </label>
               </div>
+              <Button v-show="filtersActive" @click="clearFilters" type="danger"
+                >Reset</Button
+              >
             </div>
             <Dropdown
               v-model="sort"
@@ -170,6 +195,7 @@
               align="end"
               :isOpen="activeDropdown === 'sort'"
               @toggle="handleDropdownToggle('sort')"
+              idPrefix="desktop"
             />
           </div>
         </div>
@@ -179,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
@@ -187,34 +213,24 @@ import { useSearchBar } from "../../scripts/searchUtils";
 
 const router = useRouter();
 
-const { query, sort, tags, materials, others, resetSearch } = useSearchBar();
+const {
+  query,
+  sort,
+  tags,
+  materials,
+  others,
+  tagOptions,
+  materialOptions,
+  sortOptions,
+  otherOptions,
+  clearFilters,
+  resetSearch,
+} = useSearchBar();
 
 const activeDropdown = ref<"tags" | "materials" | "sort" | "others" | null>(
   null,
 );
 const isFiltersOpen = ref(false);
-
-const tagOptions = [
-  { value: "tag1", label: "Option 1" },
-  { value: "tag2", label: "Option 2" },
-  { value: "tag3", label: "Option 3" },
-];
-
-const materialOptions = [
-  { value: "material1", label: "Option 1" },
-  { value: "material2", label: "Option 2" },
-  { value: "material3", label: "Option 3" },
-];
-
-const sortOptions = [
-  { value: "relevant", label: "Most Relevant" },
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "a-z", label: "A to Z" },
-  { value: "z-a", label: "Z to A" },
-];
-
-const otherOptions = [{ value: "downloadable", label: "Downloadable" }];
 
 const handleDropdownToggle = (
   dropdown: "tags" | "materials" | "sort" | "others",
@@ -229,6 +245,13 @@ const toggleFiltersOpen = () => {
 
   isFiltersOpen.value = !isFiltersOpen.value;
 };
+
+const filtersActive = computed(
+  () =>
+    tags.value.length !== 0 ||
+    materials.value.length !== 0 ||
+    others.value.length !== 0,
+);
 
 const searchbarTransform = ref("0");
 const searchbarRef = ref<HTMLElement>();
@@ -260,9 +283,22 @@ const handleScroll = () => {
   lastScroll = currentScroll <= 0 ? 0 : currentScroll;
 };
 
+const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
+  if (event.key === "Enter") {
+    const inputElement = document.getElementById(inputId);
+    if (inputElement) {
+      inputElement.click();
+    }
+  }
+};
+
 const handleCancel = () => {
   resetSearch();
   router.push("/");
+};
+
+const vFocus = {
+  mounted: (el: HTMLElement) => el.focus(),
 };
 
 onMounted(() => {
@@ -273,16 +309,3 @@ onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
 });
 </script>
-
-<style scoped>
-[type="checkbox"]:checked + span {
-  background: var(--color-primary-600);
-}
-
-[type="checkbox"]:checked + span:before {
-  content: "\2714";
-  position: absolute;
-  top: -6px;
-  left: 2;
-}
-</style>

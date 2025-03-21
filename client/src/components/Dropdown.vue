@@ -44,53 +44,87 @@
 
     <div
       v-if="props.isOpen"
-      class="absolute mt-2 md:top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50"
+      class="absolute mt-2 md:top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50 max-h-[25vh] overflow-y-auto"
       :class="props.align === 'start' ? 'left-0' : 'right-0'"
     >
-      <div v-if="props.multiple" class="flex flex-col gap-4 px-4 py-1">
-        <div
-          v-for="(option, index) in props.options as Array<Options>"
-          :key="index"
-        >
-          <label
-            :for="`${props.label}-${option.label}-${index}`"
-            class="flex gap-2 items-center text-nowrap font-poppins cursor-pointer"
+      <fieldset v-if="props.multiple">
+        <legend class="sr-only">{{ props.label }}</legend>
+        <div class="flex flex-col gap-4 py-1">
+          <div
+            v-for="(option, index) in props.options as Array<Options>"
+            :key="index"
           >
-            <input
-              :id="`${props.label}-${option.label}-${index}`"
-              type="checkbox"
-              class="hidden absolute overflow-hidden"
-              :value="option.value"
-              v-model="model"
-            />
-            <span
-              class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100"
-            ></span>
-            {{ option.label }}
-          </label>
+            <label
+              :for="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
+              class="flex gap-2 w-full pl-4 pr-6 h-full items-center text-nowrap font-poppins cursor-pointer"
+              tabindex="0"
+              role="checkbox"
+              :aria-checked="model!.includes(option.value)"
+              @keydown.enter="
+                handleLabelKeydown(
+                  $event,
+                  `${props.idPrefix}-${props.label}-${option.label}-${index}`,
+                )
+              "
+            >
+              <input
+                :id="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
+                type="checkbox"
+                class="sr-only absolute overflow-hidden"
+                tabindex="-1"
+                :value="option.value"
+                v-model="model"
+              />
+              <span
+                class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100 flex items-center justify-center"
+              >
+                <span
+                  v-if="model!.includes(option.value)"
+                  class="w-2 h-2 bg-primary-500 rounded-xs"
+                ></span>
+              </span>
+              {{ option.label }}
+            </label>
+          </div>
         </div>
-      </div>
-      <div v-else class="flex flex-col gap-4">
-        <div
-          v-for="(option, index) in props.options as Array<Options>"
-          class="py-1 border-l-4 border-white"
-          :class="{ 'selected-option': model === option.value }"
-        >
-          <label
-            class="flex px-4 items-center text-nowrap font-poppins cursor-pointer"
-            :for="`${props.label}-${option.label}-${index}`"
+      </fieldset>
+      <fieldset v-else>
+        <legend class="sr-only">{{ props.label }}</legend>
+        <div class="flex flex-col gap-4">
+          <div
+            v-for="(option, index) in props.options as Array<Options>"
+            class="py-1 pl-2"
+            :class="{
+              'bg-primary-100/50 border-l-4 border-primary-500 font-medium text-primary-600':
+                model === option.value,
+            }"
           >
-            <input
-              type="radio"
-              class="hidden"
-              :id="`${props.label}-${option.label}-${index}`"
-              :value="option.value"
-              v-model="model"
-            />
-            {{ option.label }}
-          </label>
+            <label
+              class="flex pl-4 pr-6 items-center text-nowrap font-poppins cursor-pointer"
+              :for="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
+              role="radio"
+              tabindex="0"
+              :aria-checked="model === option.value"
+              @keydown.enter="
+                handleLabelKeydown(
+                  $event,
+                  `${props.idPrefix}-${props.label}-${option.label}-${index}`,
+                )
+              "
+            >
+              <input
+                type="radio"
+                class="sr-only"
+                tabindex="-1"
+                :id="`${props.idPrefix}-${props.label}-${option.label}-${index}`"
+                :value="option.value"
+                v-model="model"
+              />
+              {{ option.label }}
+            </label>
+          </div>
         </div>
-      </div>
+      </fieldset>
     </div>
   </div>
 </template>
@@ -125,33 +159,23 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  idPrefix: { type: String, required: false },
 });
 
-const model = defineModel();
+const model = defineModel<string[] | "newest" | "oldest" | "a-z" | "z-a">();
 
 const emit = defineEmits(["toggle"]);
+
+const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
+  if (event.key === "Enter") {
+    const inputElement = document.getElementById(inputId);
+    if (inputElement) {
+      inputElement.click();
+    }
+  }
+};
 
 const handleToggle = () => {
   emit("toggle");
 };
 </script>
-
-<style scoped>
-[type="checkbox"]:checked + span {
-  background: var(--color-primary-600);
-}
-
-[type="checkbox"]:checked + span:before {
-  content: "\2714";
-  position: absolute;
-  top: -6px;
-  left: 2;
-}
-
-.selected-option {
-  background-color: var(--color-primary-100);
-  border-left: 4px solid var(--color-primary-500);
-  font-weight: 500;
-  color: var(--color-primary-600);
-}
-</style>
