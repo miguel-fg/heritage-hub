@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import axiosInstance from "../scripts/axiosConfig";
+import fakeModelsData from "../../assets/fakeModels.json";
 
 interface Tag {
   name: string;
@@ -31,12 +32,26 @@ interface ModelUrls {
   object?: PresignedUrl;
 }
 
+interface PaginationState {
+  page: number;
+  limit: number;
+  hasMore: boolean;
+  total: number;
+}
+
 export const useModelStore = defineStore("models", () => {
   const models = ref<Array<Model> | null>(null);
   const loading = ref(false);
   const error = ref<any>(null);
 
   const presignedUrlCache = ref<Record<string, ModelUrls>>({});
+
+  const pagination = ref<PaginationState>({
+    page: 1,
+    limit: 24,
+    hasMore: true,
+    total: 0,
+  });
 
   const fetchModels = async () => {
     error.value = null;
@@ -54,6 +69,48 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
+  // ------------> DELETE THIS BEFORE COMMITING
+  // Fake Models
+  const fetchFakeModels = async (limit = 24, skip = 0) => {
+    error.value = null;
+    loading.value = true;
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const total = fakeModelsData.length;
+      const pagedData = fakeModelsData.slice(skip, skip + limit);
+
+      if (models.value) {
+        models.value = [...models.value, ...pagedData];
+      } else {
+        models.value = pagedData;
+      }
+
+      pagination.value = {
+        page: Math.floor(skip / limit) + 1,
+        limit,
+        total,
+        hasMore: skip + limit < total,
+      };
+    } catch (err: any) {
+      console.error("[model store]: Failed to fetch fake models. ERR: ", err);
+      error.value = err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const loadMoreFakeModels = async () => {
+    if (loading.value || !pagination.value.hasMore) return;
+
+    const nextSkip = models.value?.length || 0;
+    console.log(
+      `Loading more with values: limit: ${pagination.value.limit}, skip: ${nextSkip}`,
+    );
+    await fetchFakeModels(pagination.value.limit, nextSkip);
+  };
+  // <-----------
   const getThumbnailUrl = async (modelId: string) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedThumbnail = cachedModel.thumbnail;
@@ -86,6 +143,14 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
+  // ------------> DELETE THIS BEFORE COMMITING
+  // Fake Thumbnail Url
+  const getFakeThumbnailUrl = async (modelId: string) => {
+    return `https://picsum.photos/400/500?random=${modelId}`;
+  };
+
+  // <-----------
+
   const getObjectUrl = async (modelId: string) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedObject = cachedModel.object;
@@ -116,13 +181,28 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
+  const resetPagination = () => {
+    pagination.value = {
+      page: 1,
+      limit: pagination.value.limit,
+      hasMore: true,
+      total: 0,
+    };
+    models.value = null;
+  };
+
   return {
     models,
     loading,
     error,
+    pagination,
+    resetPagination,
     fetchModels,
+    fetchFakeModels,
+    loadMoreFakeModels,
     presignedUrlCache,
     getThumbnailUrl,
+    getFakeThumbnailUrl,
     getObjectUrl,
   };
 });

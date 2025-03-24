@@ -1,9 +1,5 @@
 <template>
-  <div
-    ref="searchbarRef"
-    class="z-20 top-0 left-0 w-full fixed"
-    :style="{ transform: `translateY(${searchbarTransform})` }"
-  >
+  <div class="w-full">
     <div
       class="w-full bg-white px-4 md:px-8 border-b border-grayscale-300 lg:px-16"
     >
@@ -205,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
@@ -253,36 +249,6 @@ const filtersActive = computed(
     others.value.length !== 0,
 );
 
-const searchbarTransform = ref("0");
-const searchbarRef = ref<HTMLElement>();
-let lastScroll = 0;
-let scrollStartUp = 0;
-let scrollStartDown = 0;
-
-const handleScroll = () => {
-  const searchbarH = searchbarRef.value?.clientHeight as number;
-  const currentScroll = window.scrollY;
-
-  if (currentScroll > lastScroll) {
-    if (scrollStartDown === 0) {
-      scrollStartDown = currentScroll;
-    }
-
-    scrollStartUp = 0;
-    searchbarTransform.value = `${scrollStartDown - currentScroll}px`;
-  } else if (currentScroll < lastScroll) {
-    if (scrollStartUp === 0) {
-      scrollStartUp = currentScroll;
-    }
-
-    scrollStartDown = 0;
-    const scrollDiff = -searchbarH + scrollStartUp - currentScroll;
-    searchbarTransform.value = `${scrollDiff < 0 && scrollStartUp > searchbarH ? scrollDiff : 0}px`;
-  }
-
-  lastScroll = currentScroll <= 0 ? 0 : currentScroll;
-};
-
 const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
   if (event.key === "Enter") {
     const inputElement = document.getElementById(inputId);
@@ -300,12 +266,4 @@ const handleCancel = () => {
 const vFocus = {
   mounted: (el: HTMLElement) => el.focus(),
 };
-
-onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
 </script>
