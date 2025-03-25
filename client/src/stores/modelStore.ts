@@ -48,18 +48,37 @@ export const useModelStore = defineStore("models", () => {
 
   const pagination = ref<PaginationState>({
     page: 1,
-    limit: 24,
+    limit: 18,
     hasMore: true,
     total: 0,
   });
 
-  const fetchModels = async () => {
+  const fetchModels = async (limit = 18, skip = 0) => {
     error.value = null;
     loading.value = true;
 
     try {
-      const response = await axiosInstance.get("/models");
-      models.value = response.data.models;
+      const response = await axiosInstance.get("/models", {
+        params: {
+          limit,
+          skip,
+        },
+      });
+
+      const { models: fetchedModels, total } = response.data;
+
+      if (models.value) {
+        models.value = [...models.value, ...fetchedModels];
+      } else {
+        models.value = fetchedModels;
+      }
+
+      pagination.value = {
+        page: Math.floor(skip / limit) + 1,
+        limit,
+        total,
+        hasMore: skip + limit < total,
+      };
     } catch (err: any) {
       console.error("[model store]: Failed to fetch models. ERR: ", err);
       error.value = err;
@@ -69,8 +88,14 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
-  // ------------> DELETE THIS BEFORE COMMITING
-  // Fake Models
+  const loadMoreModels = async () => {
+    if (loading.value || !pagination.value.hasMore) return;
+
+    const nextSkip = models.value?.length || 0;
+    await fetchModels(pagination.value.limit, nextSkip);
+  };
+
+  // Fake Models For Testing Only
   const fetchFakeModels = async (limit = 24, skip = 0) => {
     error.value = null;
     loading.value = true;
@@ -111,6 +136,7 @@ export const useModelStore = defineStore("models", () => {
     await fetchFakeModels(pagination.value.limit, nextSkip);
   };
   // <-----------
+
   const getThumbnailUrl = async (modelId: string) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedThumbnail = cachedModel.thumbnail;
@@ -198,6 +224,7 @@ export const useModelStore = defineStore("models", () => {
     pagination,
     resetPagination,
     fetchModels,
+    loadMoreModels,
     fetchFakeModels,
     loadMoreFakeModels,
     presignedUrlCache,

@@ -1,7 +1,7 @@
 <template>
   <div class="w-full @container">
     <div
-      class="w-full mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
+      class="w-full min-h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
     >
       <div
         v-if="
@@ -91,7 +91,7 @@ const modelStore = useModelStore();
 
 onMounted(() => {
   if (!modelStore.models) {
-    modelStore.fetchFakeModels();
+    modelStore.fetchModels();
   }
 });
 </script>

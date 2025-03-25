@@ -3,7 +3,7 @@
     <NavBar v-if="route.name !== 'Search'" />
     <SearchBar v-else />
     <div
-      class="grow"
+      class="h-full"
       :class="shouldLoadMore ? 'overflow-y-auto px-0' : 'px-4 md:px-8 lg:px-16'"
       ref="app"
     >
@@ -32,7 +32,7 @@ const shouldLoadMore = computed(
 
 const loadMore = () => {
   if (shouldLoadMore.value) {
-    modelStore.loadMoreFakeModels();
+    modelStore.loadMoreModels();
   }
 };
 

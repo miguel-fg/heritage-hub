@@ -51,7 +51,7 @@ const handleNavigation = () => {
 
 onMounted(async () => {
   loading.value = true;
-  thumbnailUrl.value = await modelStore.getFakeThumbnailUrl(props.item.id);
+  thumbnailUrl.value = await modelStore.getThumbnailUrl(props.item.id);
   loading.value = false;
 });
 </script>
