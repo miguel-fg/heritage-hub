@@ -41,6 +41,8 @@ export const useSearchStore = defineStore("search", () => {
     total: 0,
   });
 
+  const isMounted = ref(false);
+
   const searchModels = async (params: {
     query?: string;
     tags?: string[];
@@ -50,6 +52,8 @@ export const useSearchStore = defineStore("search", () => {
     limit?: number;
     skip?: number;
   }) => {
+    if (!isMounted) return;
+
     error.value = null;
     loading.value = true;
 
@@ -125,6 +129,7 @@ export const useSearchStore = defineStore("search", () => {
     loading,
     error,
     pagination,
+    isMounted,
     searchModels,
     searchMoreModels,
     resetPagination,

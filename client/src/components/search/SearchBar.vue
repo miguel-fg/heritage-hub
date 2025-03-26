@@ -201,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
@@ -221,6 +221,8 @@ const {
   materialOptions,
   sortOptions,
   otherOptions,
+  fetchTags,
+  fetchMaterials,
   clearFilters,
   resetSearch,
 } = useSearchBar();
@@ -269,4 +271,9 @@ const handleCancel = () => {
 const vFocus = {
   mounted: (el: HTMLElement) => el.focus(),
 };
+
+onMounted(async () => {
+  tagOptions.value = await fetchTags();
+  materialOptions.value = await fetchMaterials();
+});
 </script>

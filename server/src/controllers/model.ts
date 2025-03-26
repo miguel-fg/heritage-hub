@@ -31,7 +31,7 @@ export const getModels = async (req: Request, res: Response): Promise<void> => {
         createdAt: true,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
       take: limit,
       skip: skip,

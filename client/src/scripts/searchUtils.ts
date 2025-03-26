@@ -2,22 +2,22 @@ import { ref } from "vue";
 import axiosInstance from "./axiosConfig";
 
 const query = ref("");
-const sort = ref<"newest" | "oldest" | "a-z" | "z-a">("oldest");
+const sort = ref<"newest" | "oldest" | "a-z" | "z-a">("newest");
 const tags = ref<string[]>([]);
 const materials = ref<string[]>([]);
 const others = ref<string[]>([]);
 
-export const useSearchBar = () => {
-  const tagOptions = ref<{ value: string; label: string }[]>([]);
-  const materialOptions = ref<{ value: string; label: string }[]>([]);
-  const sortOptions = [
-    { value: "newest", label: "Newest" },
-    { value: "oldest", label: "Oldest" },
-    { value: "a-z", label: "A to Z" },
-    { value: "z-a", label: "Z to A" },
-  ];
-  const otherOptions = [{ value: "downloadable", label: "Downloadable" }];
+const tagOptions = ref<{ value: string; label: string }[]>([]);
+const materialOptions = ref<{ value: string; label: string }[]>([]);
+const sortOptions = [
+  { value: "newest", label: "Newest" },
+  { value: "oldest", label: "Oldest" },
+  { value: "a-z", label: "A to Z" },
+  { value: "z-a", label: "Z to A" },
+];
+const otherOptions = [{ value: "downloadable", label: "Downloadable" }];
 
+export const useSearchBar = () => {
   const fetchTags = async () => {
     try {
       const response = await axiosInstance.get("/tags");
@@ -54,14 +54,11 @@ export const useSearchBar = () => {
 
   const resetSearch = () => {
     query.value = "";
-    sort.value = "oldest";
+    sort.value = "newest";
     tags.value = [];
     materials.value = [];
     others.value = [];
   };
-
-  fetchTags().then((tags) => (tagOptions.value = tags));
-  fetchMaterials().then((materials) => (materialOptions.value = materials));
 
   return {
     query,
@@ -73,6 +70,8 @@ export const useSearchBar = () => {
     materialOptions,
     sortOptions,
     otherOptions,
+    fetchTags,
+    fetchMaterials,
     clearFilters,
     resetSearch,
   };

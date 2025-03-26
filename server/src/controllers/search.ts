@@ -20,7 +20,7 @@ export const searchModels = async (
         .split(",")
         .filter((tag) => tag.trim() !== "") || [];
     const materials =
-      req.query.materails
+      req.query.materials
         ?.toString()
         .split(",")
         .filter((material) => material.trim() !== "") || [];
