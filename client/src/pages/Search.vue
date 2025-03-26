@@ -3,17 +3,23 @@
     <div
       class="w-full min-h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
     >
-      <div v-if="!loading || (models && models.length > 0)" class="w-full">
+      <div
+        v-if="
+          !searchStore.loading ||
+          (searchStore.models && searchStore.models.length > 0)
+        "
+        class="w-full"
+      >
         <ul
           class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 mb-12"
         >
-          <li v-for="model in filteredModels" class="w-full">
+          <li v-for="model in searchStore.models" class="w-full">
             <ModelCard :item="model" :key="model.id" />
           </li>
         </ul>
 
         <!-- Loading indicator at bottom for more items -->
-        <div v-if="loading" class="mt-8 mb-12 text-center">
+        <div v-if="searchStore.loading" class="mt-8 mb-12 text-center">
           <div role="status">
             <svg
               aria-hidden="true"
@@ -38,7 +44,7 @@
 
       <!-- Initial Loading State -->
       <div
-        v-else-if="loading && !models"
+        v-else-if="searchStore.loading && !searchStore.models"
         class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
       >
         <div v-for="i in 16" class="flex flex-col gap-1">
@@ -49,7 +55,9 @@
 
       <!-- Error State -->
       <div
-        v-else-if="!loading && error && !models"
+        v-else-if="
+          !searchStore.loading && searchStore.error && !searchStore.models
+        "
         class="flex flex-col text-grayscale-500"
       >
         <h1 class="title text-5xl text-wrap mb-8">Error fetching models.</h1>
@@ -60,10 +68,10 @@
     <!-- End of list footer -->
     <div
       v-if="
-        !loading &&
-        models &&
-        filteredModels.length > 0 &&
-        !modelStore.pagination.hasMore
+        !searchStore.loading &&
+        searchStore.models &&
+        searchStore.models.length > 0 &&
+        !searchStore.pagination.hasMore
       "
       class="w-full mt-40"
     >
@@ -75,78 +83,27 @@
 <script setup lang="ts">
 import ModelCard from "../components/ModelCard.vue";
 import Skeleton from "../components/Skeleton.vue";
-import { computed, onMounted } from "vue";
-import { useSearchBar } from "../scripts/searchUtils";
-import { useModelStore } from "../stores/modelStore";
-import { storeToRefs } from "pinia";
 import Footer from "../components/Footer.vue";
+import { useDebounceFn } from "@vueuse/core";
+import { watch } from "vue";
+import { useSearchBar } from "../scripts/searchUtils";
+import { useSearchStore } from "../stores/searchStore";
 
-type ModelAttribute = "downloadable";
+const searchStore = useSearchStore();
 
-const modelStore = useModelStore();
-
-const { models, loading, error } = storeToRefs(modelStore);
 const { query, sort, tags, materials, others } = useSearchBar();
 
-const filteredModels = computed(() => {
-  if (!models.value) return [];
-
-  // Filters
-  let filtered = models.value.filter((model) => {
-    const cleanQuery = query.value.toLowerCase();
-
-    const queryMatch =
-      model.name.toLowerCase().includes(cleanQuery) ||
-      model.caption.toLowerCase().includes(cleanQuery);
-
-    const tagsMatch =
-      tags.value.length === 0 ||
-      tags.value.every((tag) =>
-        model.tags.some((modelTag) => modelTag.name === tag),
-      );
-
-    const materialsMatch =
-      materials.value.length === 0 ||
-      materials.value.every((material) =>
-        model.materials.some(
-          (modelMaterial) => modelMaterial.name === material,
-        ),
-      );
-
-    const othersMatch =
-      others.value.length === 0 ||
-      others.value.every((attribute) => {
-        const attr = attribute as ModelAttribute;
-
-        return model[attr] === true;
-      });
-
-    return queryMatch && tagsMatch && materialsMatch && othersMatch;
+const debouncedSearch = useDebounceFn(() => {
+  if (!query.value && tags.value.length === 0 && materials.value.length === 0)
+    return;
+  searchStore.searchModels({
+    query: query.value,
+    tags: tags.value,
+    materials: materials.value,
+    others: others.value,
+    sort: sort.value,
   });
+}, 1000);
 
-  // Sorting
-  if (sort.value === "newest") {
-    filtered = [...filtered].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  } else if (sort.value === "oldest") {
-    filtered = [...filtered].sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
-  } else if (sort.value === "a-z") {
-    filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
-  } else if (sort.value === "z-a") {
-    filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
-  }
-
-  return filtered;
-});
-
-onMounted(() => {
-  if (!models.value) {
-    modelStore.fetchModels();
-  }
-});
+watch([query, tags, materials], debouncedSearch);
 </script>

@@ -4,6 +4,7 @@ import morgan from "morgan";
 import modelRoutes from "./routes/model";
 import tagRoutes from "./routes/tag";
 import materialRoutes from "./routes/material";
+import searchRoutes from "./routes/search";
 
 const app: Express = express();
 
@@ -19,5 +20,6 @@ app.use(express.json());
 app.use("/api/models", modelRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/materials", materialRoutes);
+app.use("/api/search", searchRoutes);
 
 export default app;

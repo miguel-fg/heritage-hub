@@ -21,18 +21,34 @@ import { useRoute } from "vue-router";
 import { useTemplateRef, computed, watch } from "vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useModelStore } from "./stores/modelStore";
+import { useSearchStore } from "./stores/searchStore";
 
 const route = useRoute();
 const appRef = useTemplateRef("app");
 const modelStore = useModelStore();
+const searchStore = useSearchStore();
 
 const shouldLoadMore = computed(
   () => route.name === "Gallery" || route.name === "Search",
 );
 
+const hasMore = computed(() => {
+  if (route.name === "Gallery") {
+    return modelStore.pagination.hasMore;
+  } else if (route.name === "Search") {
+    return searchStore.pagination.hasMore;
+  } else {
+    return false;
+  }
+});
+
 const loadMore = () => {
   if (shouldLoadMore.value) {
-    modelStore.loadMoreModels();
+    if (route.name === "Gallery") {
+      modelStore.loadMoreModels();
+    } else if (route.name === "Search") {
+      searchStore.searchMoreModels();
+    }
   }
 };
 
@@ -46,6 +62,6 @@ watch(
 );
 
 useInfiniteScroll(appRef, loadMore, {
-  canLoadMore: () => shouldLoadMore.value && modelStore.pagination.hasMore,
+  canLoadMore: () => shouldLoadMore.value && hasMore.value,
 });
 </script>

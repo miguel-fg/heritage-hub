@@ -206,8 +206,10 @@ import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
 import { useSearchBar } from "../../scripts/searchUtils";
+import { useSearchStore } from "../../stores/searchStore.ts";
 
 const router = useRouter();
+const searchStore = useSearchStore();
 
 const {
   query,
@@ -260,6 +262,7 @@ const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
 
 const handleCancel = () => {
   resetSearch();
+  searchStore.resetPagination();
   router.push("/");
 };
 
