@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
 import { useSearchBar } from "../scripts/searchUtils";
+import type { Ref } from "vue";
 import { inject, nextTick } from "vue";
 
 const props = defineProps({
@@ -20,7 +21,7 @@ const route = useRoute();
 const router = useRouter();
 const { tags, resetSearch } = useSearchBar();
 
-const appRef = inject("appRef");
+const appRef = inject<Ref<HTMLElement>>("appRef");
 
 const handleTagClick = () => {
   resetSearch();
@@ -30,7 +31,9 @@ const handleTagClick = () => {
     router.push("/search");
   } else {
     nextTick(() => {
-      appRef.value?.scrollTo({ top: 0, behavior: "instant" });
+      if (appRef) {
+        appRef.value?.scrollTo({ top: 0, behavior: "instant" });
+      }
     });
   }
 };

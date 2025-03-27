@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, nextTick } from "vue";
 
 interface Options {
   value: string;

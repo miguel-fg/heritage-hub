@@ -24,7 +24,7 @@ import { useModelStore } from "./stores/modelStore";
 import { useSearchStore } from "./stores/searchStore";
 
 const route = useRoute();
-const appRef = useTemplateRef("app");
+const appRef = useTemplateRef<HTMLElement>("app");
 const modelStore = useModelStore();
 const searchStore = useSearchStore();
 
