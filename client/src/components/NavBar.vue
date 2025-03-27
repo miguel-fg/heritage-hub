@@ -1,9 +1,5 @@
 <template>
-  <div
-    ref="navbarRef"
-    class="z-20 top-0 left-0 w-full fixed"
-    :style="{ transform: `translateY(${navbarTransform})` }"
-  >
+  <div class="w-full">
     <div
       class="w-full bg-white px-4 md:px-8 lg:px-16"
       :class="isOpen ? 'border-none' : 'border-b border-grayscale-300'"
@@ -134,46 +130,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import Button from "./Button.vue";
 
 const route = useRoute();
 const router = useRouter();
 const isOpen = ref(false);
-
-const navbarTransform = ref("0");
-const navbarRef = ref<HTMLElement>();
-let lastScroll = 0;
-let scrollStartUp = 0;
-let scrollStartDown = 0;
-
-const handleScroll = () => {
-  if (isOpen.value) {
-    isOpen.value = !isOpen.value;
-  }
-  const navbarH = navbarRef.value?.clientHeight as number;
-  const currentScroll = window.scrollY;
-
-  if (currentScroll > lastScroll) {
-    if (scrollStartDown === 0) {
-      scrollStartDown = currentScroll;
-    }
-
-    scrollStartUp = 0;
-    navbarTransform.value = `${scrollStartDown - currentScroll}px`;
-  } else if (currentScroll < lastScroll) {
-    if (scrollStartUp === 0) {
-      scrollStartUp = currentScroll;
-    }
-
-    scrollStartDown = 0;
-    const scrollDiff = -navbarH + scrollStartUp - currentScroll;
-    navbarTransform.value = `${scrollDiff < 0 && scrollStartUp > navbarH ? scrollDiff : 0}px`;
-  }
-
-  lastScroll = currentScroll <= 0 ? 0 : currentScroll;
-};
 
 const toggleNav = () => {
   isOpen.value = !isOpen.value;
@@ -186,12 +149,4 @@ const handleSearch = () => {
 const handleUpload = () => {
   router.push("/new");
 };
-
-onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
 </script>

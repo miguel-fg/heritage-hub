@@ -1,7 +1,8 @@
 <template>
-  <div class="md:relative inline-block">
+  <div class="md:relative inline-block" data-dropdown-container>
     <button
       @click="handleToggle"
+      @mouseenter="handleMouseEnter"
       class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
       :class="
         props.isOpen
@@ -44,6 +45,8 @@
 
     <div
       v-if="props.isOpen"
+      @mouseenter="handleMouseEnter"
+      @mouseleave="handleMouseLeave"
       class="absolute mt-2 md:top-full w-screen md:w-fit py-1 md:mt-4 bg-white md:border border-b border-grayscale-300 md:rounded-sm z-50 max-h-[25vh] overflow-y-auto"
       :class="props.align === 'start' ? 'left-0' : 'right-0'"
     >
@@ -130,6 +133,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, useTemplateRef, onMounted, onUnmounted, nextTick } from "vue";
+
 interface Options {
   value: string;
   label: string;
@@ -166,6 +171,9 @@ const model = defineModel<string[] | "newest" | "oldest" | "a-z" | "z-a">();
 
 const emit = defineEmits(["toggle"]);
 
+const isHovering = ref(false);
+let closeTimeout: number | null = null;
+
 const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
   if (event.key === "Enter") {
     const inputElement = document.getElementById(inputId);
@@ -176,6 +184,37 @@ const handleLabelKeydown = (event: KeyboardEvent, inputId: string) => {
 };
 
 const handleToggle = () => {
+  if (closeTimeout) {
+    clearTimeout(closeTimeout);
+    closeTimeout = null;
+  }
+
   emit("toggle");
+};
+
+const handleMouseEnter = () => {
+  isHovering.value = true;
+  if (closeTimeout) {
+    clearTimeout(closeTimeout);
+    closeTimeout = null;
+  }
+
+  if (!props.isOpen) {
+    emit("toggle");
+  }
+};
+
+const handleMouseLeave = () => {
+  isHovering.value = false;
+
+  nextTick(() => {
+    if (!isHovering.value) {
+      closeTimeout = window.setTimeout(() => {
+        if (props.isOpen) {
+          emit("toggle");
+        }
+      }, 1000);
+    }
+  });
 };
 </script>

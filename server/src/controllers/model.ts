@@ -6,6 +6,11 @@ const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
 
 export const getModels = async (req: Request, res: Response): Promise<void> => {
   try {
+    const limit = Number(req.query.limit) || 18;
+    const skip = Number(req.query.skip) || 0;
+
+    const total = await prisma.model.count();
+
     const models = await prisma.model.findMany({
       select: {
         id: true,
@@ -26,10 +31,12 @@ export const getModels = async (req: Request, res: Response): Promise<void> => {
         createdAt: true,
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
+      take: limit,
+      skip: skip,
     });
-    res.status(200).json({ models });
+    res.status(200).json({ models, total });
   } catch (error) {
     console.error(
       "[server]: Failed to fetch models from database. ERR: ",
