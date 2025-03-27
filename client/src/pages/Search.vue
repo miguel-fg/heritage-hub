@@ -81,16 +81,11 @@ import { useDebounceFn } from "@vueuse/core";
 import { ref, watch, onMounted } from "vue";
 import { useSearchBar } from "../scripts/searchUtils";
 import { useSearchStore } from "../stores/searchStore";
-import { useModelStore } from "../stores/modelStore";
-import { storeToRefs } from "pinia";
 
 const shouldBlur = ref(false);
 const searchStore = useSearchStore();
-const modelStore = useModelStore();
 
 const { query, sort, tags, materials, others } = useSearchBar();
-const { models: searchModels } = storeToRefs(searchStore);
-const { models: galleryModels } = storeToRefs(modelStore);
 
 const debouncedSearch = useDebounceFn(() => {
   searchStore.searchModels({
@@ -117,8 +112,14 @@ watch(
 );
 
 onMounted(() => {
-  if (!searchStore.models) {
-    searchModels.value = galleryModels.value;
+  if (tags.value.length > 0 || !searchStore.models) {
+    searchStore.searchModels({
+      query: query.value,
+      tags: tags.value,
+      materials: materials.value,
+      others: others.value,
+      sort: sort.value,
+    });
   }
 });
 </script>

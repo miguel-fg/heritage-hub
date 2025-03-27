@@ -18,7 +18,7 @@ import NavBar from "./components/NavBar.vue";
 import SearchBar from "./components/search/SearchBar.vue";
 import Footer from "./components/Footer.vue";
 import { useRoute } from "vue-router";
-import { useTemplateRef, computed, watch } from "vue";
+import { useTemplateRef, computed, watch, provide } from "vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useModelStore } from "./stores/modelStore";
 import { useSearchStore } from "./stores/searchStore";
@@ -64,4 +64,6 @@ watch(
 useInfiniteScroll(appRef, loadMore, {
   canLoadMore: () => shouldLoadMore.value && hasMore.value,
 });
+
+provide("appRef", appRef);
 </script>
