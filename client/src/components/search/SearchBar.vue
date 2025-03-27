@@ -201,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
@@ -268,6 +268,17 @@ const handleCancel = () => {
   router.push("/");
 };
 
+const handleClickOutside = (event: MouseEvent) => {
+  const clickedElement = event.target as HTMLElement;
+  const isClickInsideDropdown = clickedElement.closest(
+    "[data-dropdown-container]",
+  );
+
+  if (!isClickInsideDropdown && activeDropdown.value) {
+    activeDropdown.value = null;
+  }
+};
+
 const vFocus = {
   mounted: (el: HTMLElement) => el.focus(),
 };
@@ -275,5 +286,11 @@ const vFocus = {
 onMounted(async () => {
   tagOptions.value = await fetchTags();
   materialOptions.value = await fetchMaterials();
+
+  document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>

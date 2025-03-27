@@ -135,7 +135,6 @@ export const useModelStore = defineStore("models", () => {
     );
     await fetchFakeModels(pagination.value.limit, nextSkip);
   };
-  // <-----------
 
   const getThumbnailUrl = async (modelId: string) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
@@ -169,13 +168,10 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
-  // ------------> DELETE THIS BEFORE COMMITING
-  // Fake Thumbnail Url
+  // Fake Thumbnail Url For Testing Only
   const getFakeThumbnailUrl = async (modelId: string) => {
     return `https://picsum.photos/400/500?random=${modelId}`;
   };
-
-  // <-----------
 
   const getObjectUrl = async (modelId: string) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
