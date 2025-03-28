@@ -34,7 +34,10 @@
           <!-- Mobile -->
           <div class="flex md:hidden items-center justify-between py-2">
             <!-- Filter submenu -->
-            <div class="relative flex gap-6 sm:gap-10 items-center">
+            <div
+              class="relative flex gap-6 sm:gap-10 items-center"
+              data-dropdown-container
+            >
               <button
                 @click="toggleFiltersOpen"
                 class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
@@ -44,7 +47,7 @@
                     : 'text-grayscale-600 border-none'
                 "
               >
-                <span>Filters</span>
+                Filters
 
                 <svg
                   v-if="!isFiltersOpen"
@@ -89,8 +92,8 @@
                   :options="tagOptions"
                   label="Tags"
                   multiple
-                  :isOpen="activeDropdown === 'tags'"
-                  @toggle="handleDropdownToggle('tags')"
+                  :isOpen="isFiltersOpen && activeDropdown === 'tags'"
+                  @toggle="() => handleDropdownToggle('tags')"
                   idPrefix="mobile"
                 />
                 <Dropdown
@@ -98,8 +101,8 @@
                   :options="materialOptions"
                   label="Materials"
                   multiple
-                  :isOpen="activeDropdown === 'materials'"
-                  @toggle="handleDropdownToggle('materials')"
+                  :isOpen="isFiltersOpen && activeDropdown === 'materials'"
+                  @toggle="() => handleDropdownToggle('materials')"
                   idPrefix="mobile"
                 />
                 <Dropdown
@@ -108,8 +111,8 @@
                   label="Others"
                   multiple
                   align="end"
-                  :isOpen="activeDropdown === 'others'"
-                  @toggle="handleDropdownToggle('others')"
+                  :isOpen="isFiltersOpen && activeDropdown === 'others'"
+                  @toggle="() => handleDropdownToggle('others')"
                   idPrefix="mobile"
                 />
               </div>
@@ -118,11 +121,11 @@
               v-model="sort"
               :options="sortOptions"
               label="Sort"
-              :isOpen="activeDropdown === 'sort'"
+              :isOpen="!isFiltersOpen && activeDropdown === 'sort'"
               @toggle="
                 () => {
-                  handleDropdownToggle('sort');
                   isFiltersOpen = false;
+                  handleDropdownToggle('sort');
                 }
               "
               align="end"
@@ -239,10 +242,7 @@ const handleDropdownToggle = (
 };
 
 const toggleFiltersOpen = () => {
-  if (activeDropdown.value === "sort") {
-    activeDropdown.value = null;
-  }
-
+  activeDropdown.value = null;
   isFiltersOpen.value = !isFiltersOpen.value;
 };
 
@@ -268,14 +268,21 @@ const handleCancel = () => {
   router.push("/");
 };
 
-const handleClickOutside = (event: MouseEvent) => {
+const handleClickOutside = (event: MouseEvent | TouchEvent) => {
   const clickedElement = event.target as HTMLElement;
+
   const isClickInsideDropdown = clickedElement.closest(
     "[data-dropdown-container]",
   );
 
-  if (!isClickInsideDropdown && activeDropdown.value) {
-    activeDropdown.value = null;
+  if (!isClickInsideDropdown) {
+    if (activeDropdown.value) {
+      activeDropdown.value = null;
+    }
+
+    if (isFiltersOpen.value) {
+      isFiltersOpen.value = false;
+    }
   }
 };
 
@@ -288,9 +295,11 @@ onMounted(async () => {
   materialOptions.value = await fetchMaterials();
 
   document.addEventListener("click", handleClickOutside);
+  document.addEventListener("touchstart", handleClickOutside);
 });
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
+  document.removeEventListener("touchstart", handleClickOutside);
 });
 </script>

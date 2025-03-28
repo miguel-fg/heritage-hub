@@ -1,8 +1,10 @@
 <template>
   <div class="md:relative inline-block" data-dropdown-container>
     <button
-      @click="handleToggle"
+      @click.stop.prevent="handleToggle"
       @mouseenter="handleMouseEnter"
+      @touchend.stop.prevent
+      @touchstart.stop.prevent="handleToggle"
       class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
       :class="
         props.isOpen
@@ -10,7 +12,7 @@
           : 'text-grayscale-600 border-none'
       "
     >
-      <span>{{ props.label }}</span>
+      {{ props.label }}
       <svg
         v-if="!props.isOpen"
         width="16"
