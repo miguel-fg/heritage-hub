@@ -1,5 +1,5 @@
 <template>
-  <div class="md:relative inline-block" data-dropdown-container>
+  <div class="md:relative inline-block">
     <button
       @click.stop.prevent="handleToggle"
       @mouseenter="handleMouseEnter"

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div class="w-full z-20" ref="searchContainer">
     <div
       class="w-full bg-white px-4 md:px-8 border-b border-grayscale-300 lg:px-16"
     >
@@ -27,19 +27,28 @@
                 placeholder="Search"
                 v-model="query"
                 v-focus
+                @click.stop
+                @touchstart.stop
               />
             </label>
             <Button type="outline" @click="handleCancel">Cancel</Button>
           </div>
           <!-- Mobile -->
-          <div class="flex md:hidden items-center justify-between py-2">
+          <div
+            class="flex md:hidden items-center justify-between py-2"
+            @click.stop
+            @touchstart.stop
+          >
             <!-- Filter submenu -->
             <div
               class="relative flex gap-6 sm:gap-10 items-center"
-              data-dropdown-container
+              @click.stop
+              @touchstart.stop
             >
               <button
-                @click="toggleFiltersOpen"
+                @click.stop.prevent="toggleFiltersOpen"
+                @touchend.stop.prevent
+                @touchstart.stop.prevent="toggleFiltersOpen"
                 class="flex gap-2 items-center bg-transparent font-poppins font-medium cursor-pointer"
                 :class="
                   isFiltersOpen
@@ -85,7 +94,9 @@
               >
               <div
                 v-if="isFiltersOpen"
-                class="absolute -left-4 top-full w-screen flex justify-between px-4 py-2 bg-white border-b border-grayscale-300"
+                class="absolute -left-4 top-full w-screen flex justify-between px-4 py-4 bg-white border-b border-grayscale-300"
+                @click.stop
+                @touchstart.stop
               >
                 <Dropdown
                   v-model="tags"
@@ -204,12 +215,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, useTemplateRef, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Button from "../Button.vue";
 import Dropdown from "../Dropdown.vue";
 import { useSearchBar } from "../../scripts/searchUtils";
 import { useSearchStore } from "../../stores/searchStore.ts";
+import { onClickOutside } from "@vueuse/core";
 
 const router = useRouter();
 const searchStore = useSearchStore();
@@ -234,6 +246,8 @@ const activeDropdown = ref<"tags" | "materials" | "sort" | "others" | null>(
   null,
 );
 const isFiltersOpen = ref(false);
+
+const searchContainer = useTemplateRef<HTMLElement>("searchContainer");
 
 const handleDropdownToggle = (
   dropdown: "tags" | "materials" | "sort" | "others",
@@ -268,24 +282,6 @@ const handleCancel = () => {
   router.push("/");
 };
 
-const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-  const clickedElement = event.target as HTMLElement;
-
-  const isClickInsideDropdown = clickedElement.closest(
-    "[data-dropdown-container]",
-  );
-
-  if (!isClickInsideDropdown) {
-    if (activeDropdown.value) {
-      activeDropdown.value = null;
-    }
-
-    if (isFiltersOpen.value) {
-      isFiltersOpen.value = false;
-    }
-  }
-};
-
 const vFocus = {
   mounted: (el: HTMLElement) => el.focus(),
 };
@@ -293,13 +289,10 @@ const vFocus = {
 onMounted(async () => {
   tagOptions.value = await fetchTags();
   materialOptions.value = await fetchMaterials();
-
-  document.addEventListener("click", handleClickOutside);
-  document.addEventListener("touchstart", handleClickOutside);
 });
 
-onUnmounted(() => {
-  document.removeEventListener("click", handleClickOutside);
-  document.removeEventListener("touchstart", handleClickOutside);
+onClickOutside(searchContainer, () => {
+  isFiltersOpen.value = false;
+  activeDropdown.value = null;
 });
 </script>
