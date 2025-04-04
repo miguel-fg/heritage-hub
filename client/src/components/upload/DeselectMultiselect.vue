@@ -1,0 +1,18 @@
+<template>
+  <svg
+    width="8"
+    height="9"
+    viewBox="0 0 8 9"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M3.15657 4.49995L0 7.65656L0.8434 8.5L4 5.34339L7.15657 8.5L8 7.65656L4.84343 4.49995L7.99992 1.34341L7.15649 0.5L4 3.65651L0.843496 0.5L9.51703e-05 1.34341L3.15657 4.49995Z"
+      fill="#413F40"
+    />
+  </svg>
+</template>
+
+<script setup lang="ts"></script>
