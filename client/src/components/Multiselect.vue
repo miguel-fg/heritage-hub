@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading && options" class="flex flex-col w-full">
+  <div v-if="!loading && options" class="flex flex-col w-full gap-1">
     <label :for="`${props.label}-input`" class="subtitle text-primary-500">{{
       props.label
     }}</label>
@@ -35,7 +35,7 @@
     </svg>
     <span class="sr-only">Loading {{ props.label }} multiselect...</span>
   </div>
-  <div v-else-if="!loading && error" class="flex flex-col w-full">
+  <div v-else-if="!loading && error" class="flex flex-col w-full gap-1">
     <label :for="`${props.label}-input`" class="subtitle text-primary-500">{{
       props.label
     }}</label>
@@ -108,14 +108,20 @@ onMounted(async () => {
   color: var(--color-grayscale-500);
 }
 
+.multiselect-chooser .vs__dropdown-option {
+  font-family: var(--font-garamond);
+  font-weight: 400;
+  font-size: 1rem;
+}
+
 .multiselect-chooser .vs__dropdown-option--highlight {
   background: var(--color-primary-500);
   color: white;
 }
 
 .multiselect-chooser .vs__dropdown-option--selected {
-  background: var(--color-primary-500);
-  color: white;
+  background: var(--color-grayscale-200);
+  color: var(--color-grayscale-900);
 }
 
 .multiselect-chooser .vs__selected {
