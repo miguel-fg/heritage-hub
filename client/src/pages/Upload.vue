@@ -8,6 +8,7 @@
           File Extention: {{ file.extention }}
         </h2>
         <Button type="secondary" @click="clearFile">Re-upload Model</Button>
+        <div>{{ modelId }}</div>
       </div>
       <div class="flex flex-col gap-6 w-2/3">
         <ModelForm />
@@ -24,7 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
+import { v4 as uuidv4, type UUIDTypes } from "uuid";
 import { useRouter } from "vue-router";
 import Button from "../components/Button.vue";
 import Dropzone from "../components/Dropzone.vue";
@@ -32,6 +34,7 @@ import ModelForm from "../components/ModelForm.vue";
 
 const fileSelected = ref(false);
 
+const modelId = ref<UUIDTypes | null>(null);
 const file = ref({
   name: "",
   size: 0,
@@ -52,4 +55,12 @@ const router = useRouter();
 const cancelUpload = () => {
   router.push("/");
 };
+
+onMounted(() => {
+  modelId.value = uuidv4();
+});
+
+onUnmounted(() => {
+  modelId.value = null;
+});
 </script>

@@ -15,11 +15,15 @@
     "pinia": "^2.3.1",
     "tailwindcss": "^4.0.2",
     "three": "^0.174.0",
+    "uuid": "^11.1.0",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "vue-select": "^4.0.0-beta.6"
   },
   "devDependencies": {
     "@types/three": "^0.174.0",
+    "@types/uuid": "^10.0.0",
+    "@types/vue-select": "^3.16.8",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
     "typescript": "~5.6.2",

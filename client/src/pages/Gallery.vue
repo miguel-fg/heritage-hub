@@ -3,23 +3,17 @@
     <div
       class="w-full min-h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
     >
-      <div
-        v-if="
-          !modelStore.loading ||
-          (modelStore.models && modelStore.models.length > 0)
-        "
-        class="w-full"
-      >
+      <div v-if="!loading && models && models.length > 0" class="w-full">
         <ul
           class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
         >
-          <li v-for="model in modelStore.models" class="w-full">
+          <li v-for="model in models" class="w-full">
             <ModelCard :item="model" :key="model.id" />
           </li>
         </ul>
 
         <!-- Loading indicator at bottom for more items -->
-        <div v-if="modelStore.loading" class="mt-8 mb-12 text-center">
+        <div v-if="loading && models && !error" class="mt-8 mb-12 text-center">
           <div role="status">
             <svg
               aria-hidden="true"
@@ -44,7 +38,7 @@
 
       <!-- Initial Loading State -->
       <div
-        v-else-if="modelStore.loading && !modelStore.models"
+        v-else-if="loading && !models && !error"
         class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
       >
         <div v-for="i in 16" class="flex flex-col gap-1" role="status">
@@ -56,23 +50,18 @@
 
       <!-- Error State -->
       <div
-        v-else-if="
-          !modelStore.loading && modelStore.error && !modelStore.models
-        "
+        v-else-if="!loading && error"
         class="flex flex-col text-grayscale-500"
       >
         <h1 class="title text-5xl text-wrap mb-8">Error fetching models.</h1>
-        <h1 class="title text-7xl">:(</h1>
+        <h1 class="title text-7xl mb-16">:(</h1>
+        <span class="font-poppins text-xl">{{ error }}</span>
       </div>
     </div>
 
     <!-- End of list footer -->
     <div
-      v-if="
-        !modelStore.loading &&
-        modelStore.models &&
-        !modelStore.pagination.hasMore
-      "
+      v-if="(!loading && models && !pagination.hasMore) || (!loading && error)"
       class="w-full mt-40"
     >
       <Footer />
@@ -86,8 +75,11 @@ import Footer from "../components/Footer.vue";
 import Skeleton from "../components/Skeleton.vue";
 import { onMounted } from "vue";
 import { useModelStore } from "../stores/modelStore";
+import { storeToRefs } from "pinia";
 
 const modelStore = useModelStore();
+
+const { models, loading, error, pagination } = storeToRefs(modelStore);
 
 onMounted(() => {
   if (!modelStore.models) {

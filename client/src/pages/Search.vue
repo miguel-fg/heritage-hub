@@ -4,13 +4,7 @@
       <div
         class="w-full min-h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
       >
-        <div
-          v-if="
-            !searchStore.loading ||
-            (searchStore.models && searchStore.models.length > 0)
-          "
-          class="w-full"
-        >
+        <div v-if="!loading && models && models.length > 0" class="w-full">
           <ul
             class="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 mb-12"
           >
@@ -20,10 +14,7 @@
           </ul>
 
           <!-- Loading indicator at bottom for more items -->
-          <div
-            v-if="searchStore.loading && !shouldBlur"
-            class="mt-8 mb-12 text-center"
-          >
+          <div v-if="loading && !shouldBlur" class="mt-8 mb-12 text-center">
             <div role="status">
               <svg
                 aria-hidden="true"
@@ -48,23 +39,20 @@
 
         <!-- Error State -->
         <div
-          v-else-if="
-            !searchStore.loading && searchStore.error && !searchStore.models
-          "
+          v-else-if="!loading && error"
           class="flex flex-col text-grayscale-500"
         >
           <h1 class="title text-5xl text-wrap mb-8">Error fetching models.</h1>
-          <h1 class="title text-7xl">:(</h1>
+          <h1 class="title text-7xl mb-16">:(</h1>
+          <span class="font-poppins text-xl">{{ error }}</span>
         </div>
       </div>
 
       <!-- End of list footer -->
       <div
         v-if="
-          !searchStore.loading &&
-          searchStore.models &&
-          searchStore.models.length > 0 &&
-          !searchStore.pagination.hasMore
+          (!loading && models && models.length > 0 && !pagination.hasMore) ||
+          (!loading && error)
         "
         class="w-full mt-40"
       >
@@ -81,10 +69,12 @@ import { useDebounceFn } from "@vueuse/core";
 import { ref, watch, onMounted } from "vue";
 import { useSearchBar } from "../scripts/searchUtils";
 import { useSearchStore } from "../stores/searchStore";
+import { storeToRefs } from "pinia";
 
 const shouldBlur = ref(false);
 const searchStore = useSearchStore();
 
+const { models, loading, error, pagination } = storeToRefs(searchStore);
 const { query, sort, tags, materials, others } = useSearchBar();
 
 const debouncedSearch = useDebounceFn(() => {
@@ -103,16 +93,16 @@ watch([query, tags, materials, others, sort], () => {
 });
 
 watch(
-  () => searchStore.loading,
+  () => loading.value,
   () => {
-    if (!searchStore.loading) {
+    if (!loading.value) {
       shouldBlur.value = false;
     }
   },
 );
 
 onMounted(() => {
-  if (tags.value.length > 0 || !searchStore.models) {
+  if (tags.value.length > 0 || !models.value) {
     searchStore.searchModels({
       query: query.value,
       tags: tags.value,

@@ -44,9 +44,9 @@ const hasMore = computed(() => {
 
 const loadMore = () => {
   if (shouldLoadMore.value) {
-    if (route.name === "Gallery") {
+    if (route.name === "Gallery" && !modelStore.error) {
       modelStore.loadMoreModels();
-    } else if (route.name === "Search") {
+    } else if (route.name === "Search" && !searchStore.error) {
       searchStore.searchMoreModels();
     }
   }

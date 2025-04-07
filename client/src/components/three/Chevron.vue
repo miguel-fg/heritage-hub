@@ -4,7 +4,7 @@
     class="cursor-pointer hover:bg-grayscale-200 w-[20px] h-[20px]"
   >
     <svg
-      v-if="menuOpen"
+      v-if="menuOpen || props.isOpen"
       width="12"
       height="2"
       viewBox="0 0 12 2"
@@ -40,6 +40,9 @@
 </template>
 
 <script setup lang="ts">
+const props = defineProps({
+  isOpen: { type: Boolean, required: false },
+});
 const menuOpen = defineModel({ default: true });
 
 const toggleExpand = () => {
