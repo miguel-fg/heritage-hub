@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../services/prisma";
-import { generatePresignedUrl } from "../scripts/r2Storage";
+import {
+  generatePresignedUrl,
+  generatePresignedUploadUrl,
+} from "../scripts/r2Storage";
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
 
@@ -100,17 +103,40 @@ export const getModelObjectUrl = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id;
+  const { temp = false } = req.query;
 
   try {
-    const objectUrl = await generatePresignedUrl(
-      BUCKET_NAME,
-      `${modelId}/model.glb`,
-    );
+    const objectKey = temp
+      ? `temp/${modelId}/model.glb`
+      : `${modelId}/model.glb`;
+
+    const objectUrl = await generatePresignedUrl(BUCKET_NAME, objectKey);
     res.status(200).json({ objectUrl });
   } catch (error) {
     console.error("[server]: Failed to generate presigned URL. ERR: ", error);
     res.status(500).json({
       error: `[server]: Failed to generate presigned URL. ERR: ${error}`,
+    });
+  }
+};
+
+export const getModelUploadUrl = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { modelId, filename } = req.body;
+
+  try {
+    const uploadUrl = await generatePresignedUploadUrl(
+      BUCKET_NAME,
+      `temp/${modelId}/${filename}`,
+    );
+
+    res.status(200).json({ uploadUrl });
+  } catch (error) {
+    console.error("[server]: Failed to generate upload URL. ERR: ", error);
+    res.status(500).json({
+      error: `[server]: Failed to enerate upload URL. ERR: ${error}`,
     });
   }
 };
