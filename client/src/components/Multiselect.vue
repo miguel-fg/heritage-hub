@@ -71,7 +71,7 @@ const { fetchTags, fetchMaterials } = useSearchBar();
 
 const loading = ref(false);
 const options = ref<Option[] | null>(null);
-const error = ref<any>("This is an error");
+const error = ref<any>(null);
 
 const selected = ref<Option[] | null>(null);
 
