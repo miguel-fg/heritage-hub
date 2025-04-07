@@ -9,7 +9,7 @@
   <TextArea fieldId="description" label="Description" />
   <div class="flex justify-between">
     <DimensionsField />
-    <div class="flex flex-col w-full gap-8">
+    <div class="flex flex-col w-7/10 gap-8">
       <Multiselect label="Materials" />
       <Multiselect label="Tags" />
     </div>

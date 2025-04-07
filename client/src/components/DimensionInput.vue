@@ -1,9 +1,12 @@
 <template>
-  <div class="flex justify-between w-full body items-center">
-    <label class="w-min" :for="`${props.dimension}-num-input`">
+  <div class="flex flex-col gap-1 w-full">
+    <label
+      class="subtitle text-primary-500"
+      :for="`${props.dimension}-num-input`"
+    >
       {{ dimensions[props.dimension].name }}
     </label>
-    <div class="flex w-8/10 body gap-3">
+    <div class="flex body gap-2 w-full">
       <input
         type="number"
         :id="`${props.dimension}-num-input`"
@@ -13,7 +16,7 @@
         v-model="value"
       />
       <v-select
-        class="dimension-chooser w-full"
+        class="dimension-chooser w-56"
         :inputId="`${props.dimension}-unit-input`"
         :options="dimensionUnits"
         transition=""
@@ -21,7 +24,6 @@
         :components="{ OpenIndicator, Deselect: DeselectDimension }"
         v-model="unit"
       >
-        <template #no-options>Select a dimension to choose a unit. </template>
       </v-select>
     </div>
   </div>
