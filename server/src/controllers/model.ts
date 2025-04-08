@@ -150,12 +150,11 @@ export const deleteModel = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id;
-  const { temp = false } = req.query;
+  const { temp = "false" } = req.query;
 
   try {
-    const objectKey = temp
-      ? `temp/${modelId}/model.glb`
-      : `${modelId}/model.glb`;
+    const objectKey =
+      temp === "true" ? `temp/${modelId}/model.glb` : `${modelId}/model.glb`;
 
     await deleteObjectFromR2(BUCKET_NAME, objectKey);
 
