@@ -50,6 +50,7 @@ import OptionsOverlay from "./OptionsOverlay.vue";
 
 const props = defineProps({
   modelId: { type: String, required: true },
+  editing: { type: Boolean, default: false },
 });
 
 // Visualizer configuration
@@ -177,7 +178,10 @@ onMounted(async () => {
     // Load model
     loading.value = true;
     try {
-      objectUrl.value = await modelStore.getObjectUrl(props.modelId);
+      objectUrl.value = await modelStore.getObjectUrl(
+        props.modelId,
+        props.editing,
+      );
 
       loader.load(
         objectUrl.value,

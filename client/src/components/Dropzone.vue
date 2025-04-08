@@ -40,13 +40,7 @@
 import { ref } from "vue";
 import Button from "./Button.vue";
 
-const file = defineModel({
-  default: {
-    name: "",
-    size: 0,
-    extention: "",
-  },
-});
+const file = defineModel();
 
 const emit = defineEmits(["update", "cancel"]);
 
@@ -62,13 +56,7 @@ const handleFileChange = (e: Event) => {
   if (target.files && target.files[0]) {
     const targetFile = target.files[0];
 
-    const fileSize = Math.round((targetFile.size / 1024 / 1024) * 100) / 100;
-    const fileExtention = targetFile.name.split(".").pop();
-    const fileName = targetFile.name.split(".").shift();
-
-    file.value.name = fileName || "";
-    file.value.size = fileSize;
-    file.value.extention = fileExtention || "";
+    file.value = targetFile;
   }
 
   emit("update");
@@ -80,13 +68,7 @@ const handleDrop = (e: DragEvent) => {
   if (e.dataTransfer && e.dataTransfer.files[0]) {
     const targetFile = e.dataTransfer.files[0];
 
-    const fileSize = Math.round((targetFile.size / 1024 / 1024) * 100) / 100;
-    const fileExtention = targetFile.name.split(".").pop();
-    const fileName = targetFile.name.split(".").shift();
-
-    file.value.name = fileName || "";
-    file.value.size = fileSize;
-    file.value.extention = fileExtention || "";
+    file.value = targetFile;
 
     emit("update");
   }

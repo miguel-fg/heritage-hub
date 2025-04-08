@@ -173,7 +173,7 @@ export const useModelStore = defineStore("models", () => {
     return `https://picsum.photos/400/500?random=${modelId}`;
   };
 
-  const getObjectUrl = async (modelId: string) => {
+  const getObjectUrl = async (modelId: string, temp = false) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedObject = cachedModel.object;
 
@@ -182,7 +182,9 @@ export const useModelStore = defineStore("models", () => {
     }
 
     try {
-      const response = await axiosInstance.get(`/models/${modelId}/object`);
+      const response = await axiosInstance.get(`/models/${modelId}/object`, {
+        params: { temp },
+      });
       const newUrl = response.data.objectUrl;
 
       presignedUrlCache.value[modelId] = {
