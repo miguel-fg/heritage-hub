@@ -15,7 +15,7 @@
     </div>
   </div>
   <div class="flex w-full justify-end gap-2">
-    <Button type="secondary" @click="uploadAttempted = false">Cancel</Button>
+    <Button type="secondary" @click="handleCancel">Cancel</Button>
     <Button type="primary" @click="uploadAttempted = true">Validate</Button>
   </div>
 </template>
@@ -29,6 +29,8 @@ import Multiselect from "./Multiselect.vue";
 import { useUpload } from "../scripts/useUpload";
 import { watch } from "vue";
 
+const emit = defineEmits(["cancel"]);
+
 const {
   mName,
   mCaption,
@@ -37,6 +39,11 @@ const {
   validateField,
   uploadAttempted,
 } = useUpload();
+
+const handleCancel = () => {
+  uploadAttempted.value = false;
+  emit("cancel");
+};
 
 watch(mName, () => {
   validateField("Name");

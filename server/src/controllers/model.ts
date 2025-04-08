@@ -3,6 +3,7 @@ import prisma from "../services/prisma";
 import {
   generatePresignedUrl,
   generatePresignedUploadUrl,
+  deleteObjectFromR2,
 } from "../scripts/r2Storage";
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
@@ -124,12 +125,12 @@ export const getModelUploadUrl = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { modelId, filename } = req.body;
+  const { modelId } = req.body;
 
   try {
     const uploadUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
-      `temp/${modelId}/${filename}`,
+      `temp/${modelId}/model.glb`,
     );
 
     res.status(200).json({ uploadUrl });
@@ -143,4 +144,29 @@ export const getModelUploadUrl = async (
 
 export const newModel = async (req: Request, res: Response): Promise<void> => {
   res.status(200).json({ message: "Create a new model" });
+};
+
+export const deleteModel = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const modelId = req.params.id;
+  const { temp = false } = req.query;
+
+  try {
+    const objectKey = temp
+      ? `temp/${modelId}/model.glb`
+      : `${modelId}/model.glb`;
+
+    await deleteObjectFromR2(BUCKET_NAME, objectKey);
+
+    res
+      .status(200)
+      .json({ message: `Model ${objectKey} deleted successfully!` });
+  } catch (error) {
+    console.error("[server]: Failed to delete model. ERR: ", error);
+    res.status(500).json({
+      error: `[server]: Failed to delete model. ERR: ${error}`,
+    });
+  }
 };
