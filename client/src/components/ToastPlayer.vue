@@ -14,7 +14,6 @@
 </template>
 
 <script setup lang="ts">
-import { Teleport } from "vue";
 import Toast from "./Toast.vue";
 import { useToastStore } from "../stores/toastStore";
 import { storeToRefs } from "pinia";
