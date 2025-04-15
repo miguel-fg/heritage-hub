@@ -66,6 +66,8 @@ const uploadLink = ref<string | null>(null);
 const uploadLoading = ref(false);
 const uploadSuccess = ref(false);
 
+const isEditingHotspot = ref(false);
+
 const resetState = () => {
   fileSelected.value = false;
   file.value = null;

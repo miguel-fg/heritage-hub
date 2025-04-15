@@ -7,6 +7,7 @@ import {
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export const useToolbar = () => {
+  // Fullscreen
   const toggleFullscreen = (container: HTMLElement | null) => {
     if (!container) return;
 
@@ -31,6 +32,7 @@ export const useToolbar = () => {
     }
   };
 
+  // Options
   const downloadModel = (link: HTMLAnchorElement | null, modelUrl: string) => {
     if (!link || !modelUrl) return;
 
