@@ -1,5 +1,6 @@
 <template>
   <div class="flex flex-col h-screen">
+    <ToastPlayer />
     <NavBar v-if="route.name !== 'Search'" />
     <SearchBar v-else />
     <div
@@ -17,6 +18,7 @@
 import NavBar from "./components/NavBar.vue";
 import SearchBar from "./components/search/SearchBar.vue";
 import Footer from "./components/Footer.vue";
+import ToastPlayer from "./components/ToastPlayer.vue";
 import { useRoute } from "vue-router";
 import { useTemplateRef, computed, watch, provide } from "vue";
 import { useInfiniteScroll } from "@vueuse/core";

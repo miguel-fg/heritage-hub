@@ -16,11 +16,13 @@
       </div>
     </div>
     <Toolbar
-      state="visiting"
+      :editing="props.editing"
       @fullscreen="toggleFullscreen(fsContainer)"
       @download="downloadModel(downloadLink, objectUrl)"
       @options="toggleOptionsMenu"
       @help="toggleHelpOverlay"
+      @hotspots="handleHotspotToggle"
+      @thumbnail="captureThumbnail"
     />
     <HelpOverlay
       v-if="isHelpOpen"
@@ -28,9 +30,20 @@
       state="visiting"
     />
     <OptionsOverlay v-if="isOptionsOpen" state="visiting" :values="values" />
+    <HotspotOverlay
+      v-if="isEditingHotspot"
+      @save="saveHotspotData"
+      @cancel="() => (isEditingHotspot = false)"
+    />
     <div
       ref="container"
-      class="flex w-full h-full cursor-grab active:cursor-grabbing"
+      class="flex w-full h-full"
+      @click="handleModelClick"
+      :class="
+        !hotspotStore.isHotspotMode
+          ? 'cursor-grab active:cursor-grabbing'
+          : 'cursor-crosshair'
+      "
     ></div>
     <a ref="downloadLink" class="hidden"></a>
   </div>
@@ -41,23 +54,34 @@ import * as THREE from "three";
 import WebGL from "three/addons/capabilities/WebGL.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CENTER, MeshBVH, acceleratedRaycast } from "three-mesh-bvh";
 import { useTemplateRef, onMounted, onUnmounted, ref, watch } from "vue";
 import { useModelStore } from "../../stores/modelStore";
-import { useToolbar } from "../../scripts/threeUtils";
+import { useHotspotStore } from "../../stores/hotspotStore";
+import { useToolbar } from "../../scripts/useToolbar";
 import Toolbar from "./Toolbar.vue";
 import HelpOverlay from "./HelpOverlay.vue";
 import OptionsOverlay from "./OptionsOverlay.vue";
+import gsap from "gsap";
+import HotspotOverlay from "./HotspotOverlay.vue";
+import { storeToRefs } from "pinia";
+import { useToastStore } from "../../stores/toastStore";
+
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const props = defineProps({
   modelId: { type: String, required: true },
   editing: { type: Boolean, default: false },
 });
 
+const toastStore = useToastStore();
+
 // Visualizer configuration
 const fov = ref("75");
 const bgColor = ref<string>("white");
 const light = ref("50");
 const rotation = ref(true);
+const wasRotating = ref(true);
 const speed = ref("50");
 
 const values = {
@@ -106,6 +130,7 @@ watch(fov, (val) => {
 
 watch(rotation, (val) => {
   setRotate(controls.value, val);
+  wasRotating.value = val;
 });
 
 watch(speed, (val) => {
@@ -120,12 +145,160 @@ watch(bgColor, (val) => {
   setBackgroundColor(scene, val);
 });
 
+// Hotspot store
+const hotspotStore = useHotspotStore();
+const { newPosition, newMarker, newLabel, newContent } =
+  storeToRefs(hotspotStore);
+const isEditingHotspot = ref(false);
+
+const handleHotspotToggle = () => {
+  if (!controls.value) return;
+
+  if (hotspotStore.isHotspotMode) {
+    hotspotStore.setHotspotMode(false);
+    if (wasRotating.value) {
+      setRotate(controls.value, true);
+    }
+  } else {
+    hotspotStore.setHotspotMode(true);
+    setRotate(controls.value, false);
+  }
+};
+
+const handleModelClick = (event: MouseEvent) => {
+  if (!hotspotStore.isHotspotMode || !renderer.value || !model.value) return;
+
+  const rect = renderer.value.domElement.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  );
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.near = camera.near;
+  raycaster.far = camera.far;
+  raycaster.firstHitOnly = true;
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(modelMeshes.value, false);
+  if (intersects.length > 0) {
+    const { point, face, object } = intersects[0];
+
+    const normalMatrix = new THREE.Matrix3().getNormalMatrix(
+      object.matrixWorld,
+    );
+    const worldNormal = face!.normal
+      .clone()
+      .applyMatrix3(normalMatrix)
+      .normalize();
+    const offsetPoint = point.clone().add(worldNormal!.multiplyScalar(0.01));
+
+    addHotspotMarker(offsetPoint, worldNormal);
+    moveCameraToHotspot(offsetPoint, worldNormal);
+  }
+};
+
+const addHotspotMarker = (position: THREE.Vector3, normal: THREE.Vector3) => {
+  const radius = 0.025;
+  const height = 0.005;
+
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x0d0d0d,
+    transparent: true,
+    opacity: 0.5,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false,
+  });
+  const marker = new THREE.Mesh(geometry, material);
+
+  marker.rotation.x = Math.PI / 2;
+
+  const quat = new THREE.Quaternion();
+  quat.setFromUnitVectors(
+    new THREE.Vector3(0, 0, 1),
+    normal.clone().normalize(),
+  );
+  marker.quaternion.premultiply(quat);
+  marker.position.copy(position);
+
+  scene.add(marker);
+  newPosition.value = marker.position;
+  newMarker.value = marker;
+};
+
+const moveCameraToHotspot = (
+  targetPosition: THREE.Vector3,
+  normal: THREE.Vector3,
+) => {
+  if (!controls.value) return;
+
+  const distance = 35;
+
+  controls.value.enabled = false;
+
+  const newCameraPosition = targetPosition
+    .clone()
+    .add(normal.clone().multiplyScalar(distance));
+
+  gsap.to(camera.position, {
+    x: newCameraPosition.x,
+    y: newCameraPosition.y,
+    z: newCameraPosition.z,
+    duration: 1.2,
+    ease: "power2.out",
+    onUpdate: () => {
+      camera.lookAt(targetPosition);
+      controls.value!.target.copy(targetPosition);
+      controls.value!.update();
+    },
+    onComplete: () => {
+      controls.value!.enabled = true;
+      isEditingHotspot.value = true;
+    },
+  });
+};
+
+const saveHotspotData = () => {
+  if (
+    !newPosition.value ||
+    newLabel.value === "" ||
+    newContent.value === "" ||
+    !newMarker.value
+  ) {
+    toastStore.showToast("error", "Invalid hotspot data!");
+    return;
+  }
+
+  hotspotStore.addHotspot(
+    newPosition.value,
+    newLabel.value,
+    newContent.value,
+    newMarker.value,
+  );
+  printHotspotState();
+  isEditingHotspot.value = false;
+  toastStore.showToast("success", "Hotspot saved!");
+};
+
+const printHotspotState = () => {
+  console.log("==== HOTSPOT STATE ====");
+  console.log(hotspotStore.hotspots);
+};
+
+const captureThumbnail = () => {
+  return;
+};
+
 // Model 3D Object
 const modelStore = useModelStore();
 const loading = ref(false);
 const loadingProgress = ref(0);
 const objectUrl = ref("");
 const model = ref<THREE.Group | null>(null);
+const modelMeshes = ref<THREE.Mesh[]>([]);
 const loader = new GLTFLoader();
 
 // Animation loop
@@ -188,15 +361,30 @@ onMounted(async () => {
         (gltf) => {
           model.value = gltf.scene;
 
+          // Build BVH for meshes in model
+          gltf.scene.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              modelMeshes.value.push(child);
+              const geometry = child.geometry;
+
+              const bvh = new MeshBVH(geometry, {
+                maxLeafTris: 10,
+                strategy: CENTER,
+              });
+
+              geometry.boundsTree = bvh;
+            }
+          });
+
           // Center model
           const box = new THREE.Box3().setFromObject(gltf.scene);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
 
           // Adjust model position
-          gltf.scene.position.x = -center.x;
-          gltf.scene.position.y = -center.y;
-          gltf.scene.position.z = -center.z;
+          gltf.scene.position.x -= center.x;
+          gltf.scene.position.y -= center.y;
+          gltf.scene.position.z -= center.z;
 
           // Adjust camera to fit model
           const maxDim = Math.max(size.x, size.y, size.z);

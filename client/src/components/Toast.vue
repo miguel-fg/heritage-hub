@@ -7,6 +7,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+
 const props = defineProps({
   type: { type: String, required: true },
   message: { type: String, required: true },
