@@ -1,0 +1,19 @@
+-- CreateTable
+CREATE TABLE "Hotspot" (
+    "id" SERIAL NOT NULL,
+    "modelId" UUID NOT NULL,
+    "label" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "posX" DOUBLE PRECISION NOT NULL,
+    "posY" DOUBLE PRECISION NOT NULL,
+    "posZ" DOUBLE PRECISION NOT NULL,
+    "quatX" DOUBLE PRECISION NOT NULL,
+    "quatY" DOUBLE PRECISION NOT NULL,
+    "quatZ" DOUBLE PRECISION NOT NULL,
+    "quatW" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "Hotspot_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "Hotspot" ADD CONSTRAINT "Hotspot_modelId_fkey" FOREIGN KEY ("modelId") REFERENCES "Model"("id") ON DELETE CASCADE ON UPDATE CASCADE;
