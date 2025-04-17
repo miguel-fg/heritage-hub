@@ -5,19 +5,17 @@
     <SearchBar v-else />
     <div
       class="h-full"
-      :class="shouldLoadMore ? 'overflow-y-auto px-0' : 'px-4 md:px-8 lg:px-16'"
+      :class="shouldLoadMore ? 'overflow-y-auto px-0' : ''"
       ref="app"
     >
       <RouterView />
     </div>
-    <Footer v-if="!shouldLoadMore" />
   </div>
 </template>
 
 <script setup lang="ts">
 import NavBar from "./components/NavBar.vue";
 import SearchBar from "./components/search/SearchBar.vue";
-import Footer from "./components/Footer.vue";
 import ToastPlayer from "./components/ToastPlayer.vue";
 import { useRoute } from "vue-router";
 import { useTemplateRef, computed, watch, provide } from "vue";

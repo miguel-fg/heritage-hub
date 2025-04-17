@@ -67,6 +67,10 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
         tags: {
           select: { name: true },
         },
+        dimensions: {
+          select: { type: true, value: true, unit: true },
+        },
+        hotspots: true,
       },
     });
 
@@ -142,7 +146,130 @@ export const getModelUploadUrl = async (
 };
 
 export const newModel = async (req: Request, res: Response): Promise<void> => {
-  res.status(200).json({ message: "Create a new model" });
+  const {
+    id,
+    name,
+    caption,
+    description,
+    tags,
+    materials,
+    dimensions,
+    hotspots,
+  } = req.body;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Create model
+      await tx.model.create({
+        data: {
+          id,
+          name,
+          caption,
+          description,
+          modelPath: `${id}/model.glb`,
+          thumbnailPath: `${id}/thumbnail.png`,
+          multimediaPath: [],
+        },
+      });
+
+      // Handle tags
+      if (Array.isArray(tags)) {
+        for (const tagName of tags) {
+          const existing = await tx.tag.findUnique({
+            where: { name: tagName },
+          });
+
+          if (existing) {
+            await tx.model.update({
+              where: { id },
+              data: {
+                tags: {
+                  connect: { id: existing.id },
+                },
+              },
+            });
+          } else {
+            await tx.tag.create({
+              data: {
+                name: tagName,
+                models: {
+                  connect: { id },
+                },
+              },
+            });
+          }
+        }
+      }
+
+      // Handle materials
+      if (Array.isArray(materials)) {
+        for (const materialName of materials) {
+          const existing = await tx.material.findUnique({
+            where: { name: materialName },
+          });
+
+          if (existing) {
+            await tx.model.update({
+              where: { id },
+              data: {
+                materials: {
+                  connect: { id: existing.id },
+                },
+              },
+            });
+          } else {
+            await tx.material.create({
+              data: {
+                name: materialName,
+                models: {
+                  connect: { id },
+                },
+              },
+            });
+          }
+        }
+      }
+
+      // Create Dimensions
+      if (Array.isArray(dimensions)) {
+        await tx.dimension.createMany({
+          data: dimensions.map((dim) => ({
+            modelId: id,
+            type: dim.type,
+            value: dim.value,
+            unit: dim.unit,
+          })),
+        });
+      }
+
+      // Create Hotspots
+      if (Array.isArray(hotspots)) {
+        await tx.hotspot.createMany({
+          data: hotspots.map((h) => ({
+            modelId: id,
+            label: h.label,
+            content: h.content,
+            posX: h.position.x,
+            posY: h.position.y,
+            posZ: h.position.z,
+            quatX: h.quaternion.x,
+            quatY: h.quaternion.y,
+            quatZ: h.quaternion.z,
+            quatW: h.quaternion.w,
+          })),
+        });
+      }
+    });
+
+    res
+      .status(201)
+      .json({ message: "Model created successfully", modelId: id });
+  } catch (error) {
+    console.error("[server] Failed to create model. ERR:", error);
+    res.status(500).json({
+      error: `[server]: Failed to create model. ERR: ${error}`,
+    });
+  }
 };
 
 export const deleteModel = async (
