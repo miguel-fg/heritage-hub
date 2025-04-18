@@ -25,7 +25,7 @@
       type="file"
       name="object"
       id="objectInput"
-      accept=".glb"
+      accept=".glb,model/gltf-binary"
       class="hidden"
       @change="handleFileChange"
     />
@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import Button from "./Button.vue";
+import { useToastStore } from "../stores/toastStore";
 
 const file = defineModel();
 
@@ -46,30 +47,76 @@ const emit = defineEmits(["update", "cancel"]);
 
 const active = ref(false);
 
+const toastStore = useToastStore();
+
 const toggleActive = () => {
   active.value = !active.value;
 };
 
-const handleFileChange = (e: Event) => {
+const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
+  const fileName = targetFile.name.toLowerCase();
+
+  if (fileName.endsWith(".gltf")) {
+    try {
+      const text = await targetFile.text();
+      const json = JSON.parse(text);
+      return json.asset && json.asset.version ? true : false;
+    } catch (error) {
+      return false;
+    }
+  } else if (fileName.endsWith(".glb")) {
+    try {
+      const buffer = await targetFile.arrayBuffer();
+      const view = new DataView(buffer);
+      const magic = view.getUint32(0, true);
+      const version = view.getUint32(4, true);
+
+      return magic === 0x46546c67 && version === 2;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  return false;
+};
+
+const handleFileChange = async (e: Event) => {
   const target = e.target as HTMLInputElement;
 
   if (target.files && target.files[0]) {
     const targetFile = target.files[0];
 
-    file.value = targetFile;
-  }
+    const isValidFile = await validateGLTFFile(targetFile);
 
-  emit("update");
+    if (!isValidFile) {
+      toastStore.showToast(
+        "error",
+        "Invalid file type. Please upload a .glb/.gltf file.",
+      );
+      return;
+    }
+
+    file.value = targetFile;
+    emit("update");
+  }
 };
 
-const handleDrop = (e: DragEvent) => {
+const handleDrop = async (e: DragEvent) => {
   toggleActive();
 
   if (e.dataTransfer && e.dataTransfer.files[0]) {
     const targetFile = e.dataTransfer.files[0];
 
-    file.value = targetFile;
+    const isValidFile = await validateGLTFFile(targetFile);
+    if (!isValidFile) {
+      toastStore.showToast(
+        "error",
+        "Invalid file type. Please upload a .glb/.gltf file.",
+      );
+      return;
+    }
 
+    file.value = targetFile;
     emit("update");
   }
 };
