@@ -44,6 +44,8 @@ export const useModelStore = defineStore("models", () => {
   const loading = ref(false);
   const error = ref<any>(null);
 
+  const modelLoaded = ref(false);
+
   const presignedUrlCache = ref<Record<string, ModelUrls>>({});
 
   const pagination = ref<PaginationState>({
@@ -205,6 +207,10 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
+  const setModelLoaded = (value: boolean) => {
+    modelLoaded.value = value;
+  };
+
   const resetPagination = () => {
     pagination.value = {
       page: 1,
@@ -219,6 +225,8 @@ export const useModelStore = defineStore("models", () => {
     models,
     loading,
     error,
+    modelLoaded,
+    setModelLoaded,
     pagination,
     resetPagination,
     fetchModels,

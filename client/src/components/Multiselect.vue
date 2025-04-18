@@ -48,6 +48,18 @@
     >
     </v-select>
   </div>
+  <div v-else class="flex flex-col w-full gap-1">
+    <label :for="`${props.label}-input`" class="subtitle text-primary-500">
+      {{ props.label }}
+    </label>
+    <v-select
+      class="w-full multiselect-chooser"
+      :inputId="`${props.label}-input`"
+      :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
+      disabled
+    >
+    </v-select>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -55,8 +67,10 @@ import vSelect from "vue-select";
 import OpenIndicator from "./upload/OpenIndicator.vue";
 import DeselectMultiselect from "./upload/DeselectMultiselect.vue";
 import "vue-select/dist/vue-select.css";
-import { onMounted, ref } from "vue";
+import { ref, watch } from "vue";
 import { useSearchBar } from "../scripts/searchUtils";
+import { useModelStore } from "../stores/modelStore";
+import { storeToRefs } from "pinia";
 
 interface Option {
   value: string;
@@ -69,14 +83,17 @@ const props = defineProps<{
 
 const { fetchTags, fetchMaterials } = useSearchBar();
 
+const modelStore = useModelStore();
+const { modelLoaded } = storeToRefs(modelStore);
+
 const loading = ref(false);
 const options = ref<Option[] | null>(null);
 const error = ref<any>(null);
 
 const selected = ref<Option[] | null>(null);
 
-onMounted(async () => {
-  if (!options.value) {
+watch(modelLoaded, async (loaded) => {
+  if (loaded && !options.value) {
     loading.value = true;
     try {
       if (props.label === "Tags") {
@@ -85,7 +102,7 @@ onMounted(async () => {
         options.value = await fetchMaterials();
       }
     } catch (err) {
-      console.log("[Multiselect.vue] Error fetching options. ERR: ", err);
+      console.error("[Multiselect.vue] Error fetching options. ERR: ", err);
       error.value = err;
     } finally {
       loading.value = false;

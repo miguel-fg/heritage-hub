@@ -67,6 +67,7 @@ import Dropzone from "../components/Dropzone.vue";
 import ModelForm from "../components/ModelForm.vue";
 import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
 import Footer from "../components/Footer.vue";
+import { useModelStore } from "../stores/modelStore";
 import axiosInstance from "../scripts/axiosConfig";
 import axios from "axios";
 
@@ -79,7 +80,10 @@ const uploadLink = ref<string | null>(null);
 const uploadLoading = ref(false);
 const uploadSuccess = ref(false);
 
+const modelStore = useModelStore();
+
 const resetState = () => {
+  modelStore.setModelLoaded(false);
   fileSelected.value = false;
   file.value = null;
   modelId.value = null;
@@ -89,7 +93,6 @@ const resetState = () => {
 
 const reUploadFile = async () => {
   if (uploadSuccess.value) {
-    console.log("Calling cleanup!");
     await cleanupTempUpload();
   }
 
@@ -108,10 +111,6 @@ const handleFileUpdate = async () => {
 
     if (uploadLink.value) {
       uploadSuccess.value = await uploadModeltoR2(file.value, uploadLink.value);
-
-      if (uploadSuccess) {
-        console.log("File uploaded successfully!");
-      }
     }
   } catch (error) {
     console.error("File upload process failed: ", error);
@@ -168,7 +167,6 @@ const cleanupTempUpload = async () => {
     await axiosInstance.delete(`/models/${modelId.value}`, {
       params: { temp: true },
     });
-    console.log("Temporary file deleted successfully");
   } catch (error) {
     console.error("Failed to delete temporary file: ERR: ", error);
   }

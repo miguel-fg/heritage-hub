@@ -404,6 +404,7 @@ onMounted(async () => {
 
           scene.add(gltf.scene);
           loading.value = false;
+          modelStore.setModelLoaded(true);
         },
         (xhr) => {
           if (xhr.lengthComputable) {
