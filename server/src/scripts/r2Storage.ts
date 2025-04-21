@@ -1,5 +1,6 @@
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
@@ -49,5 +50,31 @@ export const deleteObjectFromR2 = async (
       error,
     );
     throw error;
+  }
+};
+
+export const finalizeModelUpload = async (
+  bucketName: string,
+  modelId: string,
+): Promise<boolean> => {
+  const tempKey = `temp/${modelId}/model.glb`;
+  const finalKey = `${modelId}/model.glb`;
+
+  try {
+    const copyCommand = new CopyObjectCommand({
+      Bucket: bucketName,
+      CopySource: `${bucketName}/${tempKey}`,
+      Key: finalKey,
+    });
+
+    await s3Client.send(copyCommand);
+
+    await deleteObjectFromR2(bucketName, tempKey);
+
+    console.log(`Model ${modelId} successfully finalized.`);
+    return true;
+  } catch (error) {
+    console.error(`[R2 Error] Failed to finalize model upload. ERR: `, error);
+    return false;
   }
 };

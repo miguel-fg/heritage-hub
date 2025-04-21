@@ -11,7 +11,7 @@
       :options="options"
       label="label"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
-      v-model="selected"
+      v-model="model"
     >
     </v-select>
   </div>
@@ -90,7 +90,7 @@ const loading = ref(false);
 const options = ref<Option[] | null>(null);
 const error = ref<any>(null);
 
-const selected = ref<Option[] | null>(null);
+const model = defineModel<Option[] | null>();
 
 watch(modelLoaded, async (loaded) => {
   if (loaded && !options.value) {
@@ -106,6 +106,7 @@ watch(modelLoaded, async (loaded) => {
       error.value = err;
     } finally {
       loading.value = false;
+      modelStore.setModelLoaded(false);
     }
   }
 });

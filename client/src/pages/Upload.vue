@@ -38,7 +38,7 @@
           >
         </div>
         <div class="flex flex-col gap-6 w-2/3">
-          <ModelForm @cancel="cancelUpload" />
+          <ModelForm @publish="handlePublish" @cancel="cancelUpload" />
         </div>
       </div>
       <div
@@ -60,6 +60,7 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted } from "vue";
+import { storeToRefs } from "pinia";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "vue-router";
 import Button from "../components/Button.vue";
@@ -68,6 +69,10 @@ import ModelForm from "../components/ModelForm.vue";
 import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
 import Footer from "../components/Footer.vue";
 import { useModelStore } from "../stores/modelStore";
+import { useDimensions } from "../scripts/useDimensions";
+import { useHotspotStore } from "../stores/hotspotStore";
+import { useToastStore } from "../stores/toastStore";
+import { useUpload } from "../scripts/useUpload";
 import axiosInstance from "../scripts/axiosConfig";
 import axios from "axios";
 
@@ -81,6 +86,13 @@ const uploadLoading = ref(false);
 const uploadSuccess = ref(false);
 
 const modelStore = useModelStore();
+const toastStore = useToastStore();
+
+const { dimensions: dimensionsState } = useDimensions();
+const { dimensions, sanitizeDimensions, hotspots, publishModel } = useUpload();
+
+const hotspotStore = useHotspotStore();
+const { hotspots: hotspotState } = storeToRefs(hotspotStore);
 
 const resetState = () => {
   modelStore.setModelLoaded(false);
@@ -117,6 +129,21 @@ const handleFileUpdate = async () => {
   } finally {
     uploadLoading.value = false;
   }
+};
+
+const handlePublish = async () => {
+  if (!modelId.value) return;
+  dimensions.value = sanitizeDimensions(dimensionsState.value);
+  hotspots.value = hotspotState.value; // Missing sanitazion
+
+  const success = await publishModel(modelId.value);
+
+  if (!success) {
+    toastStore.showToast("error", "Failed to publish model");
+    return;
+  }
+
+  toastStore.showToast("success", "Model published successfully!");
 };
 
 const getObjectUploadUrl = async (modelId: string) => {

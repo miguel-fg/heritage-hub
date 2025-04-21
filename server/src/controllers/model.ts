@@ -4,6 +4,7 @@ import {
   generatePresignedUrl,
   generatePresignedUploadUrl,
   deleteObjectFromR2,
+  finalizeModelUpload,
 } from "../scripts/r2Storage";
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
@@ -260,6 +261,18 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
         });
       }
     });
+
+    const finalized = await finalizeModelUpload(BUCKET_NAME, id);
+
+    if (!finalized) {
+      res
+        .status(500)
+        .json({
+          error:
+            "[server] Model saved to database but failed to finalize model upload to R2.",
+        });
+      return;
+    }
 
     res
       .status(201)
