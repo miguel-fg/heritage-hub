@@ -143,7 +143,10 @@ const handlePublish = async () => {
     return;
   }
 
+  modelStore.resetPagination();
+  modelStore.removeCachedUrls(modelId.value);
   toastStore.showToast("success", "Model published successfully!");
+  router.replace("/");
 };
 
 const getObjectUploadUrl = async (modelId: string) => {

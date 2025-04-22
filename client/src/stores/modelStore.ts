@@ -221,6 +221,18 @@ export const useModelStore = defineStore("models", () => {
     models.value = null;
   };
 
+  const removeCachedUrls = (modelId: string) => {
+    delete presignedUrlCache.value[modelId];
+  };
+
+  const removeModelById = (modelId: string) => {
+    if (models.value) {
+      models.value = models.value.filter((m) => m.id !== modelId);
+    }
+
+    delete presignedUrlCache.value[modelId];
+  };
+
   return {
     models,
     loading,
@@ -237,5 +249,7 @@ export const useModelStore = defineStore("models", () => {
     getThumbnailUrl,
     getFakeThumbnailUrl,
     getObjectUrl,
+    removeModelById,
+    removeCachedUrls,
   };
 });

@@ -265,12 +265,10 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
     const finalized = await finalizeModelUpload(BUCKET_NAME, id);
 
     if (!finalized) {
-      res
-        .status(500)
-        .json({
-          error:
-            "[server] Model saved to database but failed to finalize model upload to R2.",
-        });
+      res.status(500).json({
+        error:
+          "[server] Model saved to database but failed to finalize model upload to R2.",
+      });
       return;
     }
 
@@ -292,15 +290,44 @@ export const deleteModel = async (
   const modelId = req.params.id;
   const { temp = "false" } = req.query;
 
+  if (!modelId) {
+    res.status(400).json({ error: "Model ID is required" });
+    return;
+  }
+
+  const fullDelete = temp !== "true";
+
   try {
-    const objectKey =
-      temp === "true" ? `temp/${modelId}/model.glb` : `${modelId}/model.glb`;
+    if (fullDelete) {
+      const existing = await prisma.model.findUnique({
+        where: { id: modelId },
+      });
 
-    await deleteObjectFromR2(BUCKET_NAME, objectKey);
+      if (!existing) {
+        res.status(404).json({ error: `Model ${modelId} not found.` });
+        return;
+      }
 
-    res
-      .status(200)
-      .json({ message: `Model ${objectKey} deleted successfully!` });
+      await prisma.model.delete({
+        where: {
+          id: modelId,
+        },
+      });
+
+      const filesToDelete = [
+        `${modelId}/model.glb`,
+        // Add thumbnail and multimedia files here
+      ];
+
+      for (const file of filesToDelete) {
+        await deleteObjectFromR2(BUCKET_NAME, file);
+      }
+    } else {
+      const objectKey = `temp/${modelId}/model.glb`;
+      await deleteObjectFromR2(BUCKET_NAME, objectKey);
+    }
+
+    res.status(200).json({ message: `Model ${modelId} deleted successfully!` });
   } catch (error) {
     console.error("[server]: Failed to delete model. ERR: ", error);
     res.status(500).json({

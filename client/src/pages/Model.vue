@@ -92,11 +92,19 @@
           <div class="flex gap-1 flex-wrap">
             <Tag v-for="tag in model.tags" :content="tag.name" />
           </div>
-          <div>
-            <p class="tag text-grayscale-500 mb-1">User Name</p>
-            <p class="tag text-grayscale-500">
-              {{ cleanDate(model.createdAt) }}
-            </p>
+          <div class="flex justify-between items-end">
+            <div>
+              <p class="tag text-grayscale-500 mb-1">User Name</p>
+              <p class="tag text-grayscale-500">
+                {{ cleanDate(model.createdAt) }}
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <Button type="secondary">Edit</Button>
+              <Button @click="() => (showConfirmModal = true)" type="danger"
+                >Delete</Button
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -111,12 +119,33 @@
         <h2 class="title text-3xl text-grayscale-300">
           Model ID: {{ route.params.id }}
         </h2>
+        <span class="font-poppins text-xl">{{ error }}</span>
       </div>
     </div>
     <div class="w-full mt-40">
       <Footer />
     </div>
   </div>
+  <ConfirmationModal
+    :visible="showConfirmModal"
+    @confirm="
+      () => {
+        showConfirmModal = false;
+        deleteModel();
+      }
+    "
+    @cancel="() => (showConfirmModal = false)"
+  >
+    <template #title>Confirm deletion</template>
+    <template #subtitle>Are you sure you want to delete this model?</template>
+    <template #warning
+      >Deleting this model will
+      <span class="font-medium">permanently delete</span> all information,
+      hotspots and comments associated with it.</template
+    >
+    <template #confirm>Delete</template>
+    <template #cancel>Cancel</template>
+  </ConfirmationModal>
 </template>
 
 <script setup lang="ts">
@@ -129,6 +158,9 @@ import Skeleton from "../components/Skeleton.vue";
 import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
 import { useDimensions } from "../scripts/useDimensions";
 import Footer from "../components/Footer.vue";
+import { useModelStore } from "../stores/modelStore";
+import { useToastStore } from "../stores/toastStore";
+import ConfirmationModal from "../components/ConfirmationModal.vue";
 
 interface Tag {
   name: string;
@@ -167,6 +199,11 @@ const error = ref<any>(null);
 const isTruncated = ref(true);
 const { formatDimension } = useDimensions();
 
+const modelStore = useModelStore();
+const toastStore = useToastStore();
+
+const showConfirmModal = ref(false);
+
 const cleanDate = (rawDate: string): string => {
   const date = new Date(rawDate);
 
@@ -192,18 +229,60 @@ const fetchModelData = async (): Promise<void> => {
   error.value = model.value = null;
   loading.value = true;
 
-  const modelId = route.params.id;
+  const modelId = paramGuard(route.params.id);
+
+  if (!modelId) {
+    toastStore.showToast("error", "Invalid model ID");
+    router.replace("/");
+    return;
+  }
 
   try {
-    const response = await axiosInstance.get(`models/${modelId}`);
+    const response = await axiosInstance.get(`models/${modelId}`, {
+      params: { temp: false },
+    });
     model.value = response.data.model;
   } catch (err: any) {
     console.error("Failed to fetch data from model. ERR: ", err);
+    toastStore.showToast("error", "Failed to fetch model data.");
     model.value = null;
     error.value = err;
   } finally {
     loading.value = false;
   }
+};
+
+const deleteModel = async (): Promise<void> => {
+  error.value = model.value = null;
+  loading.value = true;
+
+  const modelId = paramGuard(route.params.id);
+
+  if (!modelId) {
+    toastStore.showToast("error", "Invalid model ID");
+    router.replace("/");
+    return;
+  }
+
+  try {
+    await axiosInstance.delete(`models/${modelId}`, {
+      params: { temp: false },
+    });
+    modelStore.removeModelById(modelId);
+
+    toastStore.showToast("success", "Model deleted successfully!");
+    router.push("/");
+  } catch (err: any) {
+    console.error("Failed to delete model. ERR: ", err);
+    toastStore.showToast("error", "Failed to delete model.");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const paramGuard = (param: string | string[] | undefined): string | null => {
+  if (typeof param === "string") return param;
+  return null;
 };
 
 const showReadMore = computed(() => {

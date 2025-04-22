@@ -42,7 +42,6 @@ export const deleteObjectFromR2 = async (
 
   try {
     await s3Client.send(command);
-    console.log(`Successfully deleted object: ${objectKey}`);
     return true;
   } catch (error) {
     console.error(
@@ -71,7 +70,6 @@ export const finalizeModelUpload = async (
 
     await deleteObjectFromR2(bucketName, tempKey);
 
-    console.log(`Model ${modelId} successfully finalized.`);
     return true;
   } catch (error) {
     console.error(`[R2 Error] Failed to finalize model upload. ERR: `, error);
