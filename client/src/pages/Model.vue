@@ -238,9 +238,7 @@ const fetchModelData = async (): Promise<void> => {
   }
 
   try {
-    const response = await axiosInstance.get(`models/${modelId}`, {
-      params: { temp: false },
-    });
+    const response = await axiosInstance.get(`models/${modelId}`);
     model.value = response.data.model;
   } catch (err: any) {
     console.error("Failed to fetch data from model. ERR: ", err);
@@ -265,9 +263,7 @@ const deleteModel = async (): Promise<void> => {
   }
 
   try {
-    await axiosInstance.delete(`models/${modelId}`, {
-      params: { temp: false },
-    });
+    await axiosInstance.delete(`models/${modelId}`);
     modelStore.removeModelById(modelId);
 
     toastStore.showToast("success", "Model deleted successfully!");

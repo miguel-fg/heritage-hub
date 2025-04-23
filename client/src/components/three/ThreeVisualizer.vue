@@ -72,6 +72,7 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;
 const props = defineProps({
   modelId: { type: String, required: true },
   editing: { type: Boolean, default: false },
+  fileRef: { type: File, required: false },
 });
 
 const toastStore = useToastStore();
@@ -354,6 +355,7 @@ onMounted(async () => {
       objectUrl.value = await modelStore.getObjectUrl(
         props.modelId,
         props.editing,
+        props.fileRef,
       );
 
       loader.load(
@@ -403,7 +405,7 @@ onMounted(async () => {
           }
 
           scene.add(gltf.scene);
-          modelStore.setModelLoaded(true);
+          loading.value = false;
         },
         (xhr) => {
           if (xhr.lengthComputable) {
@@ -416,10 +418,8 @@ onMounted(async () => {
       );
     } catch (error) {
       console.error("Error fetching model URL: ", error);
-    } finally {
       loading.value = false;
     }
-
     window.addEventListener("resize", handleResize);
   } else {
     const warning = WebGL.getWebGL2ErrorMessage();
@@ -427,11 +427,56 @@ onMounted(async () => {
   }
 });
 
+// Cleanup
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
   if (renderer.value) {
     renderer.value.setAnimationLoop(null);
+  }
+
+  modelMeshes.value.forEach((mesh) => {
+    if (mesh.geometry) {
+      mesh.geometry.dispose();
+    }
+
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach((material) => disposeThreeMaterial(material));
+    } else {
+      disposeThreeMaterial(mesh.material);
+    }
+  });
+
+  modelMeshes.value = [];
+
+  if (model.value) {
+    scene.remove(model.value);
+    model.value = null;
+  }
+
+  if (controls.value) {
+    controls.value.dispose();
+    controls.value = null;
+  }
+
+  scene.remove(ambientLight.value);
+  scene.remove(directionalLight);
+
+  while (scene.children.length > 0) {
+    const object = scene.children[0];
+    scene.remove(object);
+  }
+
+  if (renderer.value) {
+    const domElement = renderer.value.domElement;
+    if (domElement && domElement.parentNode) {
+      domElement.parentNode.removeChild(domElement);
+    }
     renderer.value.dispose();
+    renderer.value = null;
   }
 });
+
+const disposeThreeMaterial = (material: THREE.Material) => {
+  material.dispose();
+};
 </script>

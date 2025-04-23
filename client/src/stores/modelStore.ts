@@ -44,8 +44,6 @@ export const useModelStore = defineStore("models", () => {
   const loading = ref(false);
   const error = ref<any>(null);
 
-  const modelLoaded = ref(false);
-
   const presignedUrlCache = ref<Record<string, ModelUrls>>({});
 
   const pagination = ref<PaginationState>({
@@ -175,7 +173,17 @@ export const useModelStore = defineStore("models", () => {
     return `https://picsum.photos/400/500?random=${modelId}`;
   };
 
-  const getObjectUrl = async (modelId: string, temp = false) => {
+  const getObjectUrl = async (
+    modelId: string,
+    editing = false,
+    file: File | null | undefined,
+  ) => {
+    // Load model from local file
+    if (editing && file) {
+      return await getLocalObjectUrl(file);
+    }
+
+    // Fetch model from cache or Cloudflare
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedObject = cachedModel.object;
 
@@ -184,9 +192,7 @@ export const useModelStore = defineStore("models", () => {
     }
 
     try {
-      const response = await axiosInstance.get(`/models/${modelId}/object`, {
-        params: { temp },
-      });
+      const response = await axiosInstance.get(`/models/${modelId}/object`);
       const newUrl = response.data.objectUrl;
 
       presignedUrlCache.value[modelId] = {
@@ -207,8 +213,22 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
-  const setModelLoaded = (value: boolean) => {
-    modelLoaded.value = value;
+  const getLocalObjectUrl = (file: File) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file provided"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        resolve(event.target?.result);
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const resetPagination = () => {
@@ -237,8 +257,6 @@ export const useModelStore = defineStore("models", () => {
     models,
     loading,
     error,
-    modelLoaded,
-    setModelLoaded,
     pagination,
     resetPagination,
     fetchModels,

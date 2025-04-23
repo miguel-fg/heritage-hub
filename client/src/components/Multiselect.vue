@@ -67,10 +67,8 @@ import vSelect from "vue-select";
 import OpenIndicator from "./upload/OpenIndicator.vue";
 import DeselectMultiselect from "./upload/DeselectMultiselect.vue";
 import "vue-select/dist/vue-select.css";
-import { ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { useSearchBar } from "../scripts/searchUtils";
-import { useModelStore } from "../stores/modelStore";
-import { storeToRefs } from "pinia";
 
 interface Option {
   value: string;
@@ -84,31 +82,17 @@ const props = defineProps<{
 
 const { fetchTags, fetchMaterials } = useSearchBar();
 
-const modelStore = useModelStore();
-const { modelLoaded } = storeToRefs(modelStore);
-
 const loading = ref(false);
 const options = ref<Option[] | null>(null);
 const error = ref<any>(null);
 
 const model = defineModel<Option[] | null>();
 
-watch(modelLoaded, async (loaded) => {
-  if (loaded && !options.value) {
-    loading.value = true;
-    try {
-      if (props.label === "Tags") {
-        options.value = await fetchTags();
-      } else if (props.label === "Materials") {
-        options.value = await fetchMaterials();
-      }
-    } catch (err) {
-      console.error("[Multiselect.vue] Error fetching options. ERR: ", err);
-      error.value = err;
-    } finally {
-      loading.value = false;
-      modelStore.setModelLoaded(false);
-    }
+onMounted(async () => {
+  if (props.label === "Tags") {
+    options.value = await fetchTags();
+  } else {
+    options.value = await fetchMaterials();
   }
 });
 </script>

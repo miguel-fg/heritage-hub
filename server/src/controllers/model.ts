@@ -4,7 +4,6 @@ import {
   generatePresignedUrl,
   generatePresignedUploadUrl,
   deleteObjectFromR2,
-  finalizeModelUpload,
 } from "../scripts/r2Storage";
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
@@ -109,11 +108,9 @@ export const getModelObjectUrl = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id;
-  const { temp = "false" } = req.query;
 
   try {
-    const objectKey =
-      temp === "true" ? `temp/${modelId}/model.glb` : `${modelId}/model.glb`;
+    const objectKey = `${modelId}/model.glb`;
 
     const objectUrl = await generatePresignedUrl(BUCKET_NAME, objectKey);
     res.status(200).json({ objectUrl });
@@ -134,7 +131,7 @@ export const getModelUploadUrl = async (
   try {
     const uploadUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
-      `temp/${modelId}/model.glb`,
+      `${modelId}/model.glb`,
     );
 
     res.status(200).json({ uploadUrl });
@@ -262,16 +259,6 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
       }
     });
 
-    const finalized = await finalizeModelUpload(BUCKET_NAME, id);
-
-    if (!finalized) {
-      res.status(500).json({
-        error:
-          "[server] Model saved to database but failed to finalize model upload to R2.",
-      });
-      return;
-    }
-
     res
       .status(201)
       .json({ message: "Model created successfully", modelId: id });
@@ -288,43 +275,35 @@ export const deleteModel = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id;
-  const { temp = "false" } = req.query;
 
   if (!modelId) {
     res.status(400).json({ error: "Model ID is required" });
     return;
   }
 
-  const fullDelete = temp !== "true";
-
   try {
-    if (fullDelete) {
-      const existing = await prisma.model.findUnique({
-        where: { id: modelId },
-      });
+    const existing = await prisma.model.findUnique({
+      where: { id: modelId },
+    });
 
-      if (!existing) {
-        res.status(404).json({ error: `Model ${modelId} not found.` });
-        return;
-      }
+    if (!existing) {
+      res.status(404).json({ error: `Model ${modelId} not found.` });
+      return;
+    }
 
-      await prisma.model.delete({
-        where: {
-          id: modelId,
-        },
-      });
+    await prisma.model.delete({
+      where: {
+        id: modelId,
+      },
+    });
 
-      const filesToDelete = [
-        `${modelId}/model.glb`,
-        // Add thumbnail and multimedia files here
-      ];
+    const filesToDelete = [
+      `${modelId}/model.glb`,
+      // Add thumbnail and multimedia files here
+    ];
 
-      for (const file of filesToDelete) {
-        await deleteObjectFromR2(BUCKET_NAME, file);
-      }
-    } else {
-      const objectKey = `temp/${modelId}/model.glb`;
-      await deleteObjectFromR2(BUCKET_NAME, objectKey);
+    for (const file of filesToDelete) {
+      await deleteObjectFromR2(BUCKET_NAME, file);
     }
 
     res.status(200).json({ message: `Model ${modelId} deleted successfully!` });

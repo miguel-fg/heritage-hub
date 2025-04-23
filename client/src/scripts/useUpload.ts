@@ -66,7 +66,6 @@ export const useUpload = () => {
 
     try {
       await axiosInstance.post("/models", formData);
-      console.log(`[useUpload] Submitted: ${modelId}`);
       uploadSuccess = true;
     } catch (err) {
       console.error(`[useUpload] Failed to publish model. ERR: ${err}`);

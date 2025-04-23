@@ -51,28 +51,3 @@ export const deleteObjectFromR2 = async (
     throw error;
   }
 };
-
-export const finalizeModelUpload = async (
-  bucketName: string,
-  modelId: string,
-): Promise<boolean> => {
-  const tempKey = `temp/${modelId}/model.glb`;
-  const finalKey = `${modelId}/model.glb`;
-
-  try {
-    const copyCommand = new CopyObjectCommand({
-      Bucket: bucketName,
-      CopySource: `${bucketName}/${tempKey}`,
-      Key: finalKey,
-    });
-
-    await s3Client.send(copyCommand);
-
-    await deleteObjectFromR2(bucketName, tempKey);
-
-    return true;
-  } catch (error) {
-    console.error(`[R2 Error] Failed to finalize model upload. ERR: `, error);
-    return false;
-  }
-};
