@@ -13,6 +13,7 @@
           : 'border border-grayscale-300'
       "
       v-model="model"
+      autocomplete="off"
     />
     <span v-if="uploadAttempted" class="tag text-danger-600">{{
       props.error

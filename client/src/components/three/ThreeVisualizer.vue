@@ -403,7 +403,6 @@ onMounted(async () => {
           }
 
           scene.add(gltf.scene);
-          loading.value = false;
           modelStore.setModelLoaded(true);
         },
         (xhr) => {
@@ -413,11 +412,11 @@ onMounted(async () => {
         },
         (error) => {
           console.error("Error loading model: ", error);
-          loading.value = false;
         },
       );
     } catch (error) {
       console.error("Error fetching model URL: ", error);
+    } finally {
       loading.value = false;
     }
 

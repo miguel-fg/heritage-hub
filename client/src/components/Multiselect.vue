@@ -1,11 +1,11 @@
 <template>
   <div v-if="!loading && options" class="flex flex-col w-full gap-1">
-    <label :for="`${props.label}-input`" class="subtitle text-primary-500">{{
+    <label :for="`${props.fieldId}`" class="subtitle text-primary-500">{{
       props.label
     }}</label>
     <v-select
       class="w-full multiselect-chooser"
-      :inputId="`${props.label}-input`"
+      :inputId="`${props.fieldId}`"
       multiple
       taggable
       :options="options"
@@ -36,12 +36,12 @@
     <span class="sr-only">Loading {{ props.label }} multiselect...</span>
   </div>
   <div v-else-if="!loading && error" class="flex flex-col w-full gap-1">
-    <label :for="`${props.label}-input`" class="subtitle text-primary-500">{{
+    <label :for="`${props.fieldId}`" class="subtitle text-primary-500">{{
       props.label
     }}</label>
     <v-select
       class="w-full multiselect-chooser"
-      :inputId="`${props.label}-input`"
+      :inputId="`${props.fieldId}`"
       :placeholder="`Could not fetch ${props.label} options :(`"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
       disabled
@@ -49,12 +49,12 @@
     </v-select>
   </div>
   <div v-else class="flex flex-col w-full gap-1">
-    <label :for="`${props.label}-input`" class="subtitle text-primary-500">
+    <label :for="`${props.fieldId}`" class="subtitle text-primary-500">
       {{ props.label }}
     </label>
     <v-select
       class="w-full multiselect-chooser"
-      :inputId="`${props.label}-input`"
+      :inputId="`${props.fieldId}`"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
       disabled
     >
@@ -79,6 +79,7 @@ interface Option {
 
 const props = defineProps<{
   label: "Tags" | "Materials";
+  fieldId: string;
 }>();
 
 const { fetchTags, fetchMaterials } = useSearchBar();
