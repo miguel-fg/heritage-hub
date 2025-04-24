@@ -41,6 +41,9 @@ const hotspots = ref<
   | any
 >([]);
 
+// Thumbnail
+const thumbnail = ref<string | null>(null);
+
 const isValid = ref(false);
 const uploadAttempted = ref(false);
 
@@ -200,6 +203,7 @@ export const useUpload = () => {
     descriptionError,
     dimensions,
     hotspots,
+    thumbnail,
     sanitizeDimensions,
     selectedTags,
     selectedMaterials,

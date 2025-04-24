@@ -1,7 +1,7 @@
 <template>
   <div
     ref="fsContainer"
-    class="relative flex w-full h-full rounded-sm bg-white overflow-hidden"
+    class="relative flex w-full h-full rounded-sm bg-white overflow-hidden shadow-sm"
   >
     <div
       v-if="loading"
@@ -22,7 +22,7 @@
       @options="toggleOptionsMenu"
       @help="toggleHelpOverlay"
       @hotspots="handleHotspotToggle"
-      @thumbnail="captureThumbnail"
+      @thumbnail="() => (snap = true)"
     />
     <HelpOverlay
       v-if="isHelpOpen"
@@ -66,6 +66,7 @@ import gsap from "gsap";
 import HotspotOverlay from "./HotspotOverlay.vue";
 import { storeToRefs } from "pinia";
 import { useToastStore } from "../../stores/toastStore";
+import { useUpload } from "../../scripts/useUpload";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
@@ -289,8 +290,42 @@ const printHotspotState = () => {
   console.log(hotspotStore.hotspots);
 };
 
+// Thumbnail
+const { thumbnail } = useUpload();
+let snap = true;
+
 const captureThumbnail = () => {
-  return;
+  if (!renderer.value) return;
+
+  const canvas = renderer.value.domElement;
+  const width = canvas.width;
+  const height = canvas.height;
+  const squareSize = Math.min(width, height);
+
+  const cropX = (width - squareSize) / 2;
+  const cropY = (height - squareSize) / 2;
+
+  const croppedCanvas = document.createElement("canvas");
+  croppedCanvas.width = squareSize;
+  croppedCanvas.height = squareSize;
+  const ctx = croppedCanvas.getContext("2d");
+
+  if (!ctx) return;
+
+  ctx.drawImage(
+    canvas,
+    cropX,
+    cropY,
+    squareSize,
+    squareSize,
+    0,
+    0,
+    squareSize,
+    squareSize,
+  );
+  const squareDataUrl = croppedCanvas.toDataURL("image/png");
+
+  thumbnail.value = squareDataUrl;
 };
 
 // Model 3D Object
@@ -307,6 +342,11 @@ const animate = () => {
   if (renderer.value) {
     controls.value?.update();
     renderer.value.render(scene, camera);
+
+    if (snap && model.value) {
+      captureThumbnail();
+      snap = false;
+    }
   }
 };
 

@@ -129,12 +129,17 @@ export const getModelUploadUrl = async (
   const { modelId } = req.body;
 
   try {
-    const uploadUrl = await generatePresignedUploadUrl(
+    const modelUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
       `${modelId}/model.glb`,
     );
 
-    res.status(200).json({ uploadUrl });
+    const thumbnailUrl = await generatePresignedUploadUrl(
+      BUCKET_NAME,
+      `${modelId}/thumbnail.png`,
+    );
+
+    res.status(200).json({ modelUrl, thumbnailUrl });
   } catch (error) {
     console.error("[server]: Failed to generate upload URL. ERR: ", error);
     res.status(500).json({

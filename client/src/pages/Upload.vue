@@ -19,9 +19,14 @@
               :fileRef="file"
             />
           </div>
-          <Button type="secondary" @click="reUploadFile"
-            >Re-upload Model</Button
-          >
+          <div v-if="thumbnail" class="flex flex-col w-full gap-2 mt-8">
+            <h1 class="subtitle text-primary-500 w-full">Thumbnail</h1>
+            <img
+              :src="thumbnail"
+              alt="Model thumbnail preview"
+              class="size-full max-w-64 rounded-xs shadow-sm"
+            />
+          </div>
         </div>
         <div class="flex flex-col gap-6 w-full lg:w-1/2">
           <ModelForm @publish="handlePublish" @cancel="cancelUpload" />
@@ -69,7 +74,6 @@ import { ref, onUnmounted } from "vue";
 import { storeToRefs } from "pinia";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "vue-router";
-import Button from "../components/Button.vue";
 import Dropzone from "../components/Dropzone.vue";
 import ModelForm from "../components/ModelForm.vue";
 import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
@@ -93,7 +97,8 @@ const modelStore = useModelStore();
 const toastStore = useToastStore();
 
 const { dimensions: dimensionsState } = useDimensions();
-const { dimensions, sanitizeDimensions, hotspots, publishModel } = useUpload();
+const { thumbnail, dimensions, sanitizeDimensions, hotspots, publishModel } =
+  useUpload();
 
 const hotspotStore = useHotspotStore();
 const { hotspots: hotspotState } = storeToRefs(hotspotStore);
@@ -105,10 +110,6 @@ const resetState = () => {
   publishing.value = false;
 };
 
-const reUploadFile = async () => {
-  resetState();
-};
-
 const handleFileUpdate = async () => {
   if (!file.value) return;
 
@@ -117,16 +118,20 @@ const handleFileUpdate = async () => {
 };
 
 const handlePublish = async () => {
-  if (!modelId.value || !file.value) return;
+  if (!modelId.value || !thumbnail.value || !file.value) return;
 
   publishing.value = true;
 
   // 3D File
   console.log("[Upload.vue] Uploading model to Cloudflare...");
-  const uploadUrl = await getObjectUploadUrl(modelId.value);
-  const fileUploaded = await uploadModeltoR2(file.value, uploadUrl);
+  const { modelUrl, thumbnailUrl } = await getObjectUploadUrl(modelId.value);
+  const modelUploaded = await uploadModeltoR2(file.value, modelUrl);
+  const thumbUploaded = await uploadModeltoR2(
+    dataUrlToFile(thumbnail.value),
+    thumbnailUrl,
+  );
 
-  if (!fileUploaded) {
+  if (!modelUploaded || !thumbUploaded) {
     toastStore.showToast("error", "Failed to publish model");
     return;
   }
@@ -160,9 +165,9 @@ const getObjectUploadUrl = async (modelId: string) => {
       modelId,
     });
 
-    const newUrl = response.data.uploadUrl;
+    const urls = response.data;
 
-    return newUrl;
+    return urls;
   } catch (error) {
     console.error("Failed to fetch upload presigned URL. ERR: ", error);
     return null;
@@ -182,6 +187,23 @@ const uploadModeltoR2 = async (file: File, presignedUrl: string) => {
     console.error("Error uploading file to Cloudflare R2. ERR: ", error);
     return false;
   }
+};
+
+const dataUrlToFile = (dataUrl: string): File => {
+  const byteString = atob(dataUrl.split(",")[1]);
+  const mimeString = dataUrl.split(",")[0].split(":")[1].split(";")[0];
+
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+
+  const blob = new Blob([ab], { type: mimeString });
+
+  const file = new File([blob], "thumbnail.png", { type: mimeString });
+
+  return file;
 };
 
 const router = useRouter();
