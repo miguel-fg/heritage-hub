@@ -3,6 +3,7 @@
     ref="fsContainer"
     class="relative flex w-full h-full rounded-sm bg-white overflow-hidden shadow-sm"
   >
+    <!-- Loading model -->
     <div
       v-if="loading"
       class="absolute top-0 left-0 z-50 w-full h-full flex flex-col justify-center items-center"
@@ -15,6 +16,11 @@
         ></div>
       </div>
     </div>
+    <!-- Flash overlay -->
+    <div
+      class="absolute opacity-0 transition-opacity duration-150 top-0 left-0 z-40 w-full h-full bg-white pointer-events-none"
+      :class="{ 'opacity-90': showFlash }"
+    ></div>
     <Toolbar
       :editing="props.editing"
       @fullscreen="toggleFullscreen(fsContainer)"
@@ -22,7 +28,7 @@
       @options="toggleOptionsMenu"
       @help="toggleHelpOverlay"
       @hotspots="handleHotspotToggle"
-      @thumbnail="() => (snap = true)"
+      @thumbnail="handleThumbnailCapture"
     />
     <HelpOverlay
       v-if="isHelpOpen"
@@ -35,6 +41,7 @@
       @save="saveHotspotData"
       @cancel="() => (isEditingHotspot = false)"
     />
+    <!-- Three js renderer -->
     <div
       ref="container"
       class="flex w-full h-full"
@@ -292,7 +299,17 @@ const printHotspotState = () => {
 
 // Thumbnail
 const { thumbnail } = useUpload();
-let snap = true;
+const snap = ref(true);
+const showFlash = ref(false);
+
+const handleThumbnailCapture = () => {
+  snap.value = true;
+
+  showFlash.value = true;
+  setTimeout(() => {
+    showFlash.value = false;
+  }, 150);
+};
 
 const captureThumbnail = () => {
   if (!renderer.value) return;
@@ -343,9 +360,9 @@ const animate = () => {
     controls.value?.update();
     renderer.value.render(scene, camera);
 
-    if (snap && model.value) {
+    if (snap.value && model.value) {
       captureThumbnail();
-      snap = false;
+      snap.value = false;
     }
   }
 };
