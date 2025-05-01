@@ -5,31 +5,140 @@
     >
       <div
         v-if="fileSelected && !publishing"
-        class="flex flex-col lg:flex-row gap-8 w-full"
+        class="flex gap-8 w-full max-w-[1080px] mx-auto"
       >
-        <div class="flex flex-col w-full lg:w-1/2 gap-2 items-end">
-          <h1 class="subtitle text-primary-500 w-full">Preview</h1>
+        <!-- Step 1: 3D Model configuration -->
+        <div
+          v-show="uploadStep === 1"
+          class="w-full h-full flex flex-col gap-8"
+        >
+          <h1 class="title text-primary-500">3D Model Settings</h1>
           <div
-            class="w-full h-120 lg:h-100 max-h-[450px] bg-white flex justify-center items-center"
+            class="flex flex-col md:flex-row w-full h-[550px] lg:h-[600px] 2xl:[h-700px] gap-2"
           >
-            <ThreeVisualizer
-              v-if="modelId && file"
-              :modelId="modelId"
-              editing
-              :fileRef="file"
-            />
+            <div class="flex flex-col w-full md:w-8/10">
+              <h1 class="subtitle text-grayscale-700 w-full">Preview</h1>
+              <div
+                class="flex max-h-[550px] lg:max-h-[600px] 2xl:max-h-[700px] h-full w-full bg-white"
+              >
+                <ThreeVisualizer
+                  v-if="modelId && file"
+                  :modelId="modelId"
+                  editing
+                  :fileRef="file"
+                  :capture-request="snapCamera"
+                  @capture-complete="completeCapture"
+                />
+              </div>
+            </div>
+            <div class="flex flex-col w-60 md:w-2/10 gap-8">
+              <div class="flex flex-col w-full">
+                <h1 class="subtitle text-grayscale-700">Thumbnail</h1>
+                <img
+                  v-if="thumbnail"
+                  :src="thumbnail"
+                  alt="Model thumbnail preview"
+                  class="rounded-xs shadow-sm"
+                />
+                <Button
+                  @click="triggerCapture"
+                  type="outline"
+                  class="mt-1 w-full justify-center"
+                  >Re-capture</Button
+                >
+              </div>
+              <div class="flex flex-col w-full">
+                <h1 class="subtitle text-grayscale-700">Hotspots</h1>
+                <div class="flex flex-col w-full">
+                  <div v-for="(h, _k) in hotspotState">
+                    <div class="flex gap-2">
+                      <span class="font-poppins text-grayscale-900">{{
+                        h.label
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  @click="enterHotspotMode"
+                  v-if="!hotspotStore.isHotspotMode"
+                  type="outline"
+                  class="w-full justify-center"
+                  >Add New</Button
+                >
+                <Button
+                  @click="exitHotspotMode"
+                  v-else
+                  type="secondary"
+                  class="w-full justify-center"
+                  >Cancel</Button
+                >
+              </div>
+              <div class="flex items-center gap-1 w-full">
+                <input type="checkbox" />
+                <h1 class="subtitle text-grayscale-700">Allow Download</h1>
+              </div>
+            </div>
           </div>
-          <div v-if="thumbnail" class="flex flex-col w-full gap-2 mt-8">
-            <h1 class="subtitle text-primary-500 w-full">Thumbnail</h1>
-            <img
-              :src="thumbnail"
-              alt="Model thumbnail preview"
-              class="size-full max-w-64 rounded-xs shadow-sm"
-            />
+
+          <div class="flex justify-between w-full mt-8">
+            <Button @click="resetState" type="secondary">Back</Button>
+            <div class="font-poppins text-grayscale-500">Page 1 of 3</div>
+            <Button @click="() => (uploadStep = 2)" type="primary">Next</Button>
           </div>
         </div>
-        <div class="flex flex-col gap-6 w-full lg:w-1/2">
-          <ModelForm @publish="handlePublish" @cancel="cancelUpload" />
+        <!-- Step 2: Model metadata form-->
+        <div
+          v-show="uploadStep === 2"
+          class="flex flex-col gap-8 w-full max-w-[1080px] mx-auto"
+        >
+          <h1 class="title text-primary-500">Model Information</h1>
+          <ModelForm />
+          <div class="flex justify-between w-full mt-4">
+            <Button @click="() => (uploadStep = 1)" type="secondary"
+              >Back</Button
+            >
+            <div class="font-poppins text-grayscale-500">Page 2 of 3</div>
+            <Button @click="handleValidate" type="primary">Next</Button>
+          </div>
+        </div>
+        <!-- Step 3: Summary -->
+        <div
+          v-show="uploadStep === 3"
+          class="flex flex-col gap-8 w-full max-w-[1080px] mx-auto"
+        >
+          <h1 class="title text-primary-500">Review and Confirm</h1>
+          <div class="flex flex-col gap-4">
+            <h2 class="subtitle text-grayscale-700">Model Information</h2>
+            <p>Name: {{ mName }}</p>
+            <p>Caption: {{ mCaption }}</p>
+            <p>Description: {{ mDescription }}</p>
+          </div>
+          <div class="flex flex-col gap-4">
+            <h2 class="subtitle text-grayscale-700">Selected Categories</h2>
+            <p>
+              Tags:
+              <span v-for="tag in sanitizeMultiselect(selectedTags)"
+                >{{ tag }}
+              </span>
+            </p>
+            <p>
+              Materials:
+              <span v-for="m in sanitizeMultiselect(selectedMaterials)"
+                >{{ m }}
+              </span>
+            </p>
+          </div>
+          <div class="flex flex-col gap-4">
+            <h2 class="subtitle text-grayscale-700">Selected Dimensions</h2>
+            <p v-for="dim in sanitizeDimensions(dimensionsState)">{{ dim }}</p>
+          </div>
+          <div class="flex justify-between w-full mt-4">
+            <Button @click="() => (uploadStep = 2)" type="secondary"
+              >Back</Button
+            >
+            <div class="font-poppins text-grayscale-500">Page 2 of 3</div>
+            <Button @click="handlePublish" type="success">Publish</Button>
+          </div>
         </div>
       </div>
       <div
@@ -77,6 +186,7 @@ import { useRouter } from "vue-router";
 import Dropzone from "../components/Dropzone.vue";
 import ModelForm from "../components/ModelForm.vue";
 import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
+import Button from "../components/Button.vue";
 import Footer from "../components/Footer.vue";
 import { useModelStore } from "../stores/modelStore";
 import { useDimensions } from "../scripts/useDimensions";
@@ -88,6 +198,8 @@ import axios from "axios";
 
 const fileSelected = ref(false);
 
+const uploadStep = ref(1);
+
 const modelId = ref<string | null>(null);
 const file = ref<File | null>(null);
 
@@ -97,11 +209,34 @@ const modelStore = useModelStore();
 const toastStore = useToastStore();
 
 const { dimensions: dimensionsState } = useDimensions();
-const { thumbnail, dimensions, sanitizeDimensions, hotspots, publishModel } =
-  useUpload();
+const {
+  mName,
+  mCaption,
+  mDescription,
+  thumbnail,
+  dimensions,
+  selectedTags,
+  selectedMaterials,
+  sanitizeDimensions,
+  sanitizeMultiselect,
+  hotspots,
+  publishModel,
+  isValid,
+  validateForm,
+  uploadAttempted,
+} = useUpload();
 
 const hotspotStore = useHotspotStore();
 const { hotspots: hotspotState } = storeToRefs(hotspotStore);
+const snapCamera = ref(false);
+
+const triggerCapture = () => {
+  snapCamera.value = true;
+};
+
+const completeCapture = () => {
+  snapCamera.value = false;
+};
 
 const resetState = () => {
   fileSelected.value = false;
@@ -110,11 +245,30 @@ const resetState = () => {
   publishing.value = false;
 };
 
+const enterHotspotMode = () => {
+  hotspotStore.setHotspotMode(true);
+};
+
+const exitHotspotMode = () => {
+  hotspotStore.setHotspotMode(false);
+};
+
 const handleFileUpdate = async () => {
   if (!file.value) return;
 
   modelId.value = uuidv4();
   fileSelected.value = true;
+  uploadStep.value = 1;
+};
+
+const handleValidate = () => {
+  uploadAttempted.value = true;
+  validateForm();
+  if (!isValid.value) {
+    toastStore.showToast("error", "Please check the fields and try again.");
+    return;
+  }
+  uploadStep.value = 3;
 };
 
 const handlePublish = async () => {

@@ -204,6 +204,7 @@ export const useUpload = () => {
     dimensions,
     hotspots,
     thumbnail,
+    sanitizeMultiselect,
     sanitizeDimensions,
     selectedTags,
     selectedMaterials,

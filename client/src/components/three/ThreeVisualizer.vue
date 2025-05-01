@@ -27,8 +27,6 @@
       @download="downloadModel(downloadLink, objectUrl)"
       @options="toggleOptionsMenu"
       @help="toggleHelpOverlay"
-      @hotspots="handleHotspotToggle"
-      @thumbnail="handleThumbnailCapture"
     />
     <HelpOverlay
       v-if="isHelpOpen"
@@ -38,14 +36,24 @@
     <OptionsOverlay v-if="isOptionsOpen" state="visiting" :values="values" />
     <HotspotOverlay
       v-if="isEditingHotspot"
+      :editing-hotspot-id="editingHotspotID"
       @save="saveHotspotData"
+      @update="saveHotspotData(editingHotspotID)"
       @cancel="() => (isEditingHotspot = false)"
+    />
+    <OpenHotspot
+      v-if="isHotspotOpen && selectedHotspotID"
+      :hotspotId="selectedHotspotID"
+      @close="closeHotspot"
+      @edit="editHotspot"
+      @delete="deleteHotspot"
     />
     <!-- Three js renderer -->
     <div
       ref="container"
       class="flex w-full h-full"
       @click="handleModelClick"
+      @mousemove="throttledMouseMove"
       :class="
         !hotspotStore.isHotspotMode
           ? 'cursor-grab active:cursor-grabbing'
@@ -71,9 +79,12 @@ import HelpOverlay from "./HelpOverlay.vue";
 import OptionsOverlay from "./OptionsOverlay.vue";
 import gsap from "gsap";
 import HotspotOverlay from "./HotspotOverlay.vue";
+import OpenHotspot from "./OpenHotspot.vue";
 import { storeToRefs } from "pinia";
 import { useToastStore } from "../../stores/toastStore";
 import { useUpload } from "../../scripts/useUpload";
+import { debounce } from "../../scripts/hhUtils";
+import { useThrottleFn } from "@vueuse/core";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
@@ -81,7 +92,10 @@ const props = defineProps({
   modelId: { type: String, required: true },
   editing: { type: Boolean, default: false },
   fileRef: { type: File, required: false },
+  captureRequest: { type: Boolean, default: false },
 });
+
+const emit = defineEmits(["capture-complete"]);
 
 const toastStore = useToastStore();
 
@@ -90,7 +104,6 @@ const fov = ref("75");
 const bgColor = ref<string>("white");
 const light = ref("50");
 const rotation = ref(true);
-const wasRotating = ref(true);
 const speed = ref("50");
 
 const values = {
@@ -108,6 +121,7 @@ scene.background = new THREE.Color(0xffffff);
 
 const camera = new THREE.PerspectiveCamera(parseInt(fov.value), 1, 0.1, 1000);
 camera.position.z = 5;
+camera.layers.enableAll();
 
 const controls = ref<OrbitControls | null>(null);
 const ambientLight = ref<THREE.AmbientLight>(
@@ -139,7 +153,6 @@ watch(fov, (val) => {
 
 watch(rotation, (val) => {
   setRotate(controls.value, val);
-  wasRotating.value = val;
 });
 
 watch(speed, (val) => {
@@ -154,27 +167,58 @@ watch(bgColor, (val) => {
   setBackgroundColor(scene, val);
 });
 
-// Hotspot store
+// Hotspots
 const hotspotStore = useHotspotStore();
-const { newPosition, newMarker, newLabel, newContent } =
-  storeToRefs(hotspotStore);
-const isEditingHotspot = ref(false);
+const selectedHotspotID = ref<number | null>(null);
+const editingHotspotID = ref<number | null>(null);
+const isHotspotOpen = ref(false);
 
-const handleHotspotToggle = () => {
-  if (!controls.value) return;
-
-  if (hotspotStore.isHotspotMode) {
-    hotspotStore.setHotspotMode(false);
-    if (wasRotating.value) {
-      setRotate(controls.value, true);
-    }
-  } else {
-    hotspotStore.setHotspotMode(true);
-    setRotate(controls.value, false);
-  }
+type HotspotMarker = {
+  id: number;
+  marker: THREE.Mesh;
+  position: THREE.Vector3;
+  normal: THREE.Vector3;
 };
 
+type Hotspot = {
+  position: { x: number; y: number; z: number };
+  quaternion: { x: number; y: number; z: number; w: number };
+  label: string;
+  content: string;
+};
+
+const {
+  isHotspotMode,
+  newHotspotID,
+  newPosition,
+  newQuaternion,
+  newLabel,
+  newContent,
+} = storeToRefs(hotspotStore);
+const isEditingHotspot = ref(false);
+
+watch(isHotspotMode, (newVal) => {
+  if (newVal) {
+    rotation.value = false;
+  }
+});
+
 const handleModelClick = (event: MouseEvent) => {
+  if (hoveredMarker.value) {
+    rotation.value = false;
+    moveCameraToHotspot(
+      hoveredMarker.value.position,
+      hoveredMarker.value.normal,
+      false,
+    );
+    openHotspot(hoveredMarker.value.id);
+    return;
+  }
+
+  newHotspotOnClick(event);
+};
+
+const newHotspotOnClick = (event: MouseEvent) => {
   if (!hotspotStore.isHotspotMode || !renderer.value || !model.value) return;
 
   const rect = renderer.value.domElement.getBoundingClientRect();
@@ -203,7 +247,7 @@ const handleModelClick = (event: MouseEvent) => {
     const offsetPoint = point.clone().add(worldNormal!.multiplyScalar(0.01));
 
     addHotspotMarker(offsetPoint, worldNormal);
-    moveCameraToHotspot(offsetPoint, worldNormal);
+    moveCameraToHotspot(offsetPoint, worldNormal, true);
   }
 };
 
@@ -233,14 +277,109 @@ const addHotspotMarker = (position: THREE.Vector3, normal: THREE.Vector3) => {
   marker.quaternion.premultiply(quat);
   marker.position.copy(position);
 
+  const markerId = newHotspotID.value;
+  marker.name = `HH_Hotspot_${markerId}`;
+  marker.layers.set(1);
   scene.add(marker);
+  hotspotStore.addMarker(markerId, marker, position.clone(), normal.clone());
+
   newPosition.value = marker.position;
-  newMarker.value = marker;
+  newQuaternion.value = marker.quaternion;
 };
+
+const createMarker = (id: number, hotspot: Hotspot) => {
+  const radius = 0.025;
+  const height = 0.005;
+
+  const geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x0d0d0d,
+    transparent: true,
+    opacity: 0.5,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false,
+  });
+
+  const marker = new THREE.Mesh(geometry, material);
+
+  marker.rotation.x = Math.PI / 2;
+
+  marker.quaternion.set(
+    hotspot.quaternion.x,
+    hotspot.quaternion.y,
+    hotspot.quaternion.z,
+    hotspot.quaternion.w,
+  );
+
+  marker.position.set(
+    hotspot.position.x,
+    hotspot.position.y,
+    hotspot.position.z,
+  );
+
+  const baseNormal = new THREE.Vector3(0, 0, 1);
+  const worldNormal = baseNormal.clone().applyQuaternion(marker.quaternion);
+
+  marker.layers.set(1);
+  marker.name = `HH_Hotspot_${id}`;
+  scene.add(marker);
+
+  hotspotStore.addMarker(
+    id,
+    marker,
+    marker.position.clone(),
+    worldNormal.clone(),
+  );
+};
+
+const hoveredMarker = ref<HotspotMarker | null>(null);
+
+const handleMouseMove = (event: MouseEvent) => {
+  if (!renderer.value || !camera || hotspotStore.sceneMarkers.length === 0)
+    return;
+
+  const rect = renderer.value.domElement.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  );
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.layers.set(1);
+  raycaster.setFromCamera(mouse, camera);
+
+  const markerMeshes = hotspotStore.sceneMarkers.map((m) => m.marker);
+
+  const intersects = raycaster.intersectObjects(markerMeshes, false);
+
+  if (intersects.length > 0) {
+    const intersected = intersects[0].object;
+    const found = hotspotStore.sceneMarkers.find(
+      (m) => m.marker === intersected,
+    );
+
+    if (found) {
+      hoveredMarker.value = found;
+      (found.marker.material as THREE.MeshBasicMaterial).color.set(0x801323);
+    }
+  } else {
+    if (hoveredMarker.value) {
+      (
+        hoveredMarker.value.marker.material as THREE.MeshBasicMaterial
+      ).color.set(0x0d0d0d);
+      hoveredMarker.value = null;
+    }
+  }
+};
+
+const throttledMouseMove = useThrottleFn(handleMouseMove, 20);
 
 const moveCameraToHotspot = (
   targetPosition: THREE.Vector3,
   normal: THREE.Vector3,
+  isEditing: boolean,
 ) => {
   if (!controls.value) return;
 
@@ -265,36 +404,96 @@ const moveCameraToHotspot = (
     },
     onComplete: () => {
       controls.value!.enabled = true;
-      isEditingHotspot.value = true;
+
+      if (isEditing) {
+        isEditingHotspot.value = true;
+      }
     },
   });
 };
 
-const saveHotspotData = () => {
-  if (
-    !newPosition.value ||
-    newLabel.value === "" ||
-    newContent.value === "" ||
-    !newMarker.value
-  ) {
-    toastStore.showToast("error", "Invalid hotspot data!");
+const openHotspot = (hotspotID: number) => {
+  const hotspot = hotspotStore.hotspots[hotspotID];
+
+  if (!hotspot) {
+    toastStore.showToast("error", "Could not find hotspot information");
     return;
   }
 
-  hotspotStore.addHotspot(
-    newPosition.value,
-    newLabel.value,
-    newContent.value,
-    newMarker.value,
-  );
-  printHotspotState();
-  isEditingHotspot.value = false;
-  toastStore.showToast("success", "Hotspot saved!");
+  selectedHotspotID.value = hotspotID;
+  isHotspotOpen.value = true;
 };
 
-const printHotspotState = () => {
-  console.log("==== HOTSPOT STATE ====");
-  console.log(hotspotStore.hotspots);
+const closeHotspot = () => {
+  selectedHotspotID.value = null;
+  isHotspotOpen.value = false;
+};
+
+const editHotspot = () => {
+  if (!selectedHotspotID.value) {
+    toastStore.showToast("error", "Could not find hotspot");
+    console.error("Hotspot ID not found");
+    return;
+  }
+
+  editingHotspotID.value = selectedHotspotID.value;
+
+  closeHotspot();
+  isEditingHotspot.value = true;
+};
+
+const deleteHotspot = () => {
+  if (!selectedHotspotID.value) {
+    toastStore.showToast("error", "Could not delete hotspot");
+    console.error("Hotspot ID not found.");
+    return;
+  }
+
+  const id = selectedHotspotID.value;
+
+  closeHotspot();
+
+  hotspotStore.deleteHotspot(id, scene);
+  renderer.value?.render(scene, camera);
+};
+
+const saveHotspotData = (id: number | null = null) => {
+  if (!id) {
+    // New hotspot
+    if (
+      !newPosition.value ||
+      !newQuaternion.value ||
+      newLabel.value === "" ||
+      newContent.value === ""
+    ) {
+      toastStore.showToast("error", "Invalid hotspot data!");
+      return;
+    }
+
+    hotspotStore.addHotspot(
+      newLabel.value,
+      newContent.value,
+      newPosition.value,
+      newQuaternion.value,
+    );
+    hotspotStore.setHotspotMode(false);
+  } else {
+    // Update hotspot
+    if (!(id in hotspotStore.hotspots)) {
+      toastStore.showToast("error", "Could not update hotspot");
+      console.error("Hotspot ID not found");
+      return;
+    }
+
+    if (newLabel.value === "" || newContent.value === "") {
+      toastStore.showToast("error", "Invalid hotspot data");
+      return;
+    }
+
+    hotspotStore.saveHotspotData(id, newLabel.value, newContent.value);
+  }
+  isEditingHotspot.value = false;
+  toastStore.showToast("success", "Hotspot saved!");
 };
 
 // Thumbnail
@@ -312,7 +511,10 @@ const handleThumbnailCapture = () => {
 };
 
 const captureThumbnail = () => {
-  if (!renderer.value) return;
+  if (!renderer.value || !camera) return;
+
+  camera.layers.disable(1);
+  renderer.value.render(scene, camera);
 
   const canvas = renderer.value.domElement;
   const width = canvas.width;
@@ -343,7 +545,19 @@ const captureThumbnail = () => {
   const squareDataUrl = croppedCanvas.toDataURL("image/png");
 
   thumbnail.value = squareDataUrl;
+
+  camera.layers.enableAll();
 };
+
+watch(
+  () => props.captureRequest,
+  (newVal) => {
+    if (newVal) {
+      handleThumbnailCapture();
+      emit("capture-complete");
+    }
+  },
+);
 
 // Model 3D Object
 const modelStore = useModelStore();
@@ -382,6 +596,8 @@ const handleResize = () => {
   renderer.value.setSize(width, height);
 };
 
+const debouncedResize = debounce(handleResize);
+
 const toggleHelpOverlay = () => {
   isHelpOpen.value = !isHelpOpen.value;
 };
@@ -391,6 +607,12 @@ const toggleOptionsMenu = () => {
 };
 
 onMounted(async () => {
+  if (renderer.value) {
+    renderer.value.dispose();
+    renderer.value.forceContextLoss();
+    renderer.value.domElement.remove();
+  }
+
   if (WebGL.isWebGL2Available()) {
     // Initialize renderer
     renderer.value = new THREE.WebGLRenderer({ antialias: true });
@@ -414,6 +636,8 @@ onMounted(async () => {
         props.editing,
         props.fileRef,
       );
+
+      hotspotStore.cleanMarkers(scene);
 
       loader.load(
         objectUrl.value,
@@ -462,6 +686,10 @@ onMounted(async () => {
           }
 
           scene.add(gltf.scene);
+
+          Object.entries(hotspotStore.hotspots).forEach(([id, hotspot]) => {
+            createMarker(Number(id), hotspot);
+          });
           loading.value = false;
         },
         (xhr) => {
@@ -477,7 +705,8 @@ onMounted(async () => {
       console.error("Error fetching model URL: ", error);
       loading.value = false;
     }
-    window.addEventListener("resize", handleResize);
+
+    window.addEventListener("resize", debouncedResize);
   } else {
     const warning = WebGL.getWebGL2ErrorMessage();
     container.value?.appendChild(warning);
@@ -486,7 +715,7 @@ onMounted(async () => {
 
 // Cleanup
 onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
+  window.removeEventListener("resize", debouncedResize);
   if (renderer.value) {
     renderer.value.setAnimationLoop(null);
   }
@@ -500,6 +729,18 @@ onUnmounted(() => {
       mesh.material.forEach((material) => disposeThreeMaterial(material));
     } else {
       disposeThreeMaterial(mesh.material);
+    }
+  });
+
+  Object.values(hotspotStore.sceneMarkers).forEach((m) => {
+    if (m.marker.geometry) {
+      m.marker.geometry.dispose();
+    }
+
+    if (Array.isArray(m.marker.material)) {
+      m.marker.material.forEach((material) => disposeThreeMaterial(material));
+    } else {
+      disposeThreeMaterial(m.marker.material);
     }
   });
 
@@ -529,6 +770,8 @@ onUnmounted(() => {
       domElement.parentNode.removeChild(domElement);
     }
     renderer.value.dispose();
+    renderer.value.forceContextLoss();
+    renderer.value.domElement.remove();
     renderer.value = null;
   }
 });

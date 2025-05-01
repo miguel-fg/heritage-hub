@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col w-full">
-    <label :for="props.fieldId" class="subtitle text-primary-500">{{
+    <label :for="props.fieldId" class="subtitle text-grayscale-700">{{
       props.label
     }}</label>
     <textarea

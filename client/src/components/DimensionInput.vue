@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-1 w-full">
     <label
-      class="subtitle text-primary-500"
+      class="subtitle text-grayscale-700"
       :for="`${props.dimension}-num-input`"
     >
       {{ dimensions[props.dimension].name }}

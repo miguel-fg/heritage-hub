@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loading && options" class="flex flex-col w-full gap-1">
-    <label :for="`${props.fieldId}`" class="subtitle text-primary-500">{{
+    <label :for="`${props.fieldId}`" class="subtitle text-grayscale-700">{{
       props.label
     }}</label>
     <v-select
