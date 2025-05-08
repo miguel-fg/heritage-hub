@@ -31,7 +31,7 @@
             <div class="flex flex-col gap-4">
               <p
                 v-for="p in descriptionParagraphs()"
-                class="body text-grayscale-900"
+                class="body text-grayscale-900 whitespace-pre-line"
               >
                 {{ p }}
               </p>

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col w-full gap-1">
     <label :for="props.fieldId" class="subtitle text-grayscale-700">{{
-      props.label
+      props.label + mandatory
     }}</label>
     <input
       type="text"
@@ -22,13 +22,17 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useUpload } from "../scripts/useUpload";
 const props = defineProps<{
   fieldId: string;
-  label: "Name" | "Caption" | "Description";
-  error: string | null;
+  label: "Name" | "Caption" | "Description" | "Accession Number";
+  error?: string | null;
+  mandatory?: boolean;
 }>();
 
 const model = defineModel();
 const { uploadAttempted } = useUpload();
+
+const mandatory = computed(() => (props.mandatory ? "*" : ""));
 </script>

@@ -29,17 +29,12 @@
         </h1>
         <p class="font-garamond text-primary-900">{{ hotspot.content }}</p>
       </div>
-      <div class="flex gap-1">
-        <Button @click="emit('edit')" type="secondary">Edit</Button>
-        <Button @click="emit('delete')" type="danger">Delete</Button>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import Button from "../Button.vue";
 import { useHotspotStore } from "../../stores/hotspotStore";
 
 type Hotspot = {
@@ -52,7 +47,7 @@ const props = defineProps<{
   hotspotId: number;
 }>();
 
-const emit = defineEmits(["close", "edit", "delete"]);
+const emit = defineEmits(["close"]);
 
 const hotspotStore = useHotspotStore();
 

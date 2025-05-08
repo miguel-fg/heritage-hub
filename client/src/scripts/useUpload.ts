@@ -8,15 +8,50 @@ const mCaption = ref<string>("");
 const captionError = ref<string | null>(null);
 const mDescription = ref<string>("");
 const descriptionError = ref<string | null>(null);
+const mAccNum = ref<string>("");
 
-// Dimension
-const dimensions = ref<
-  {
-    type: string;
-    value: number;
-    unit: string;
-  }[]
->([]);
+// Dimensions
+type DimensionKey = "width" | "height" | "depth" | "weight" | "volume";
+type DimensionType = "Width" | "Height" | "Depth" | "Weight" | "Volume";
+
+interface Dimension {
+  name: DimensionType;
+  value: number | null;
+  unit: string | null;
+  units: string[];
+}
+const selectedDimensions = ref<Record<DimensionKey, Dimension>>({
+  width: {
+    name: "Width",
+    value: null,
+    unit: null,
+    units: ["mm", "cm", "m", "in", "ft"],
+  },
+  height: {
+    name: "Height",
+    value: null,
+    unit: null,
+    units: ["mm", "cm", "m", "in", "ft"],
+  },
+  depth: {
+    name: "Depth",
+    value: null,
+    unit: null,
+    units: ["mm", "cm", "m", "in", "ft"],
+  },
+  weight: {
+    name: "Weight",
+    value: null,
+    unit: null,
+    units: ["g", "kg", "oz", "lb"],
+  },
+  volume: {
+    name: "Volume",
+    value: null,
+    unit: null,
+    units: ["ml", "l", "fl oz", "gal"],
+  },
+});
 
 // Tags
 const selectedTags = ref<{ value: string; label: string }[] | null>(null);
@@ -25,21 +60,14 @@ const selectedTags = ref<{ value: string; label: string }[] | null>(null);
 const selectedMaterials = ref<{ value: string; label: string }[] | null>(null);
 
 // Hotspots
-const hotspots = ref<
-  | {
-      modelId: number;
-      posX: number;
-      posY: number;
-      posZ: number;
-      quatX: number;
-      quatY: number;
-      quatZ: number;
-      quatW: number;
-      label: string;
-      content: string;
-    }[]
-  | any
->([]);
+interface Hotspot {
+  label: string;
+  content: string;
+  position: { x: number; y: number; z: number };
+  quaternion: { x: number; y: number; z: number; w: number };
+}
+
+const selectedHotspots = ref<Record<number, Hotspot>>({});
 
 // Thumbnail
 const thumbnail = ref<string | null>(null);
@@ -61,8 +89,8 @@ export const useUpload = () => {
       description: mDescription.value,
       materials: sanitizeMultiselect(selectedMaterials.value),
       tags: sanitizeMultiselect(selectedTags.value),
-      dimensions: dimensions.value,
-      hotspots: hotspots.value,
+      dimensions: sanitizeDimensions(selectedDimensions.value, modelId),
+      hotspots: sanitizeHotspots(selectedHotspots.value, modelId),
     };
 
     let uploadSuccess = false;
@@ -158,19 +186,11 @@ export const useUpload = () => {
     return result;
   };
 
-  type DimensionKey = "width" | "height" | "depth" | "weight" | "volume";
-  type DimensionType = "Width" | "Height" | "Depth" | "Weight" | "Volume";
-
-  interface Dimension {
-    name: DimensionType;
-    value: number | null;
-    unit: string | null;
-    units: string[];
-  }
-
   const sanitizeDimensions = (
     dimensions: Record<DimensionKey, Dimension>,
+    modelId: string,
   ): {
+    modelId: string;
     type: string;
     value: number;
     unit: string;
@@ -178,6 +198,7 @@ export const useUpload = () => {
     if (!dimensions) return [];
 
     const result: {
+      modelId: string;
       type: string;
       value: number;
       unit: string;
@@ -188,7 +209,42 @@ export const useUpload = () => {
 
       if (!value || !unit) continue;
 
-      result.push({ type: name.toUpperCase(), value, unit });
+      result.push({ modelId, type: name.toUpperCase(), value, unit });
+    }
+
+    return result;
+  };
+
+  const sanitizeHotspots = (
+    hotspots: Record<number, Hotspot>,
+    modelId: string,
+  ) => {
+    const result: {
+      modelId: string;
+      label: string;
+      content: string;
+      posX: number;
+      posY: number;
+      posZ: number;
+      quatX: number;
+      quatY: number;
+      quatZ: number;
+      quatW: number;
+    }[] = [];
+
+    for (const h of Object.values(hotspots)) {
+      result.push({
+        modelId,
+        label: h.label,
+        content: h.content,
+        posX: h.position.x,
+        posY: h.position.y,
+        posZ: h.position.z,
+        quatX: h.quaternion.x,
+        quatY: h.quaternion.y,
+        quatZ: h.quaternion.z,
+        quatW: h.quaternion.w,
+      });
     }
 
     return result;
@@ -201,13 +257,12 @@ export const useUpload = () => {
     captionError,
     mDescription,
     descriptionError,
-    dimensions,
-    hotspots,
+    mAccNum,
     thumbnail,
-    sanitizeMultiselect,
-    sanitizeDimensions,
     selectedTags,
     selectedMaterials,
+    selectedDimensions,
+    selectedHotspots,
     isValid,
     uploadAttempted,
     validateField,

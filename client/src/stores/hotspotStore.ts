@@ -1,20 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { type Mesh, type Vector3, type Scene } from "three";
-
-type Hotspot = {
-  position: { x: number; y: number; z: number };
-  quaternion: { x: number; y: number; z: number; w: number };
-  label: string;
-  content: string;
-};
-
-type HotspotMarker = {
-  id: number;
-  marker: Mesh;
-  position: Vector3;
-  normal: Vector3;
-};
+import { type Hotspot, type HotspotMarker } from "../types/model";
 
 export const useHotspotStore = defineStore("hotspots", () => {
   const hotspots = ref<Record<number, Hotspot>>({});
@@ -34,6 +21,9 @@ export const useHotspotStore = defineStore("hotspots", () => {
 
   const newMarker = ref<Mesh | null>(null);
   const newNormal = ref<{ x: number; y: number; z: number } | null>(null);
+
+  const requestedEdit = ref<number | null>(null);
+  const requestedDelete = ref<number | null>(null);
 
   const setHotspotMode = (enabled: boolean) => {
     isHotspotMode.value = enabled;
@@ -56,8 +46,6 @@ export const useHotspotStore = defineStore("hotspots", () => {
 
     newHotspotID.value++;
     isHotspotMode.value = false;
-
-    printHotspotState();
   };
 
   const addMarker = (
@@ -74,7 +62,6 @@ export const useHotspotStore = defineStore("hotspots", () => {
     };
 
     sceneMarkers.value.push(newMarker);
-    printHotspotState();
   };
 
   const saveHotspotData = (id: number, label: string, content: string) => {
@@ -84,7 +71,9 @@ export const useHotspotStore = defineStore("hotspots", () => {
     hotspots.value[id].content = content;
   };
 
-  const getHotspot = (id: number): Hotspot => {
+  const getHotspot = (id: number): Hotspot | undefined => {
+    if (!(id in hotspots.value)) return;
+
     return hotspots.value[id];
   };
 
@@ -121,8 +110,6 @@ export const useHotspotStore = defineStore("hotspots", () => {
     const markerIndex = sceneMarkers.value.findIndex((m) => m.id === id);
     if (markerIndex === -1) return;
     sceneMarkers.value.splice(markerIndex, 1);
-
-    printHotspotState();
   };
 
   const cleanMarkers = (scene: Scene) => {
@@ -190,5 +177,7 @@ export const useHotspotStore = defineStore("hotspots", () => {
     deleteHotspot,
     cleanMarkers,
     printHotspotState,
+    requestedEdit,
+    requestedDelete,
   };
 });

@@ -99,6 +99,9 @@ onMounted(async () => {
 
 <style>
 .multiselect-chooser {
+  font-family: var(--font-garamond);
+  font-weight: 400;
+  font-size: 1rem;
   background: white;
 }
 

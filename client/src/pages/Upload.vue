@@ -17,11 +17,13 @@
             class="flex flex-col md:flex-row w-full h-[550px] lg:h-[600px] 2xl:[h-700px] gap-2"
           >
             <div class="flex flex-col w-full md:w-8/10">
-              <h1 class="subtitle text-grayscale-700 w-full">Preview</h1>
+              <h1 class="subtitle text-grayscale-700 w-full text-center">
+                3D Model Preview
+              </h1>
               <div
                 class="flex max-h-[550px] lg:max-h-[600px] 2xl:max-h-[700px] h-full w-full bg-white"
               >
-                <ThreeVisualizer
+                <Visualizer
                   v-if="modelId && file"
                   :modelId="modelId"
                   editing
@@ -32,7 +34,7 @@
               </div>
             </div>
             <div class="flex flex-col w-60 md:w-2/10 gap-8">
-              <div class="flex flex-col w-full">
+              <div class="flex flex-col w-full items-center">
                 <h1 class="subtitle text-grayscale-700">Thumbnail</h1>
                 <img
                   v-if="thumbnail"
@@ -42,40 +44,60 @@
                 />
                 <Button
                   @click="triggerCapture"
-                  type="outline"
+                  type="ghost-icon"
                   class="mt-1 w-full justify-center"
-                  >Re-capture</Button
                 >
+                  <svg
+                    width="19"
+                    height="16"
+                    viewBox="0 0 19 16"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="fill-current"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M12.5415 0H6.45854L4.71688 2.7H0.791667L0 3.5V15.2L0.791667 16H18.2083L19 15.2V3.5L18.2083 2.7H14.2831L12.5415 0ZM5.57479 4.3L7.31646 1.6H11.6835L13.4252 4.3H17.4167V14.4H1.58333V4.3H5.57479ZM7.125 8.8C7.125 7.47456 8.18837 6.4 9.5 6.4C10.8116 6.4 11.875 7.47456 11.875 8.8C11.875 10.1254 10.8116 11.2 9.5 11.2C8.18837 11.2 7.125 10.1254 7.125 8.8ZM9.5 4.8C7.31387 4.8 5.54167 6.59083 5.54167 8.8C5.54167 11.0092 7.31387 12.8 9.5 12.8C11.6862 12.8 13.4583 11.0092 13.4583 8.8C13.4583 6.59083 11.6862 4.8 9.5 4.8Z"
+                    />
+                  </svg>
+                  <span class="ml-1">Re-capture</span>
+                </Button>
               </div>
-              <div class="flex flex-col w-full">
+              <div class="flex flex-col w-full items-center">
                 <h1 class="subtitle text-grayscale-700">Hotspots</h1>
-                <div class="flex flex-col w-full">
-                  <div v-for="(h, _k) in hotspotState">
-                    <div class="flex gap-2">
-                      <span class="font-poppins text-grayscale-900">{{
-                        h.label
-                      }}</span>
-                    </div>
+                <div class="flex flex-col w-full gap-2">
+                  <div v-for="(h, k) in hotspotState">
+                    <HotspotCard :hotspotId="Number(k)" :hotspot="h" />
                   </div>
                 </div>
                 <Button
                   @click="enterHotspotMode"
                   v-if="!hotspotStore.isHotspotMode"
-                  type="outline"
+                  type="ghost-icon"
                   class="w-full justify-center"
-                  >Add New</Button
-                >
+                  ><svg
+                    width="16"
+                    height="16"
+                    class="fill-current"
+                    viewBox="0 0 16 16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M7 9V16H9V9H16V7H9V0H7V7H0V9H7Z"
+                    />
+                  </svg>
+                  <span class="ml-1">Add New</span>
+                </Button>
                 <Button
                   @click="exitHotspotMode"
                   v-else
                   type="secondary"
                   class="w-full justify-center"
-                  >Cancel</Button
                 >
-              </div>
-              <div class="flex items-center gap-1 w-full">
-                <input type="checkbox" />
-                <h1 class="subtitle text-grayscale-700">Allow Download</h1>
+                  Cancel
+                </Button>
               </div>
             </div>
           </div>
@@ -106,37 +128,12 @@
           v-show="uploadStep === 3"
           class="flex flex-col gap-8 w-full max-w-[1080px] mx-auto"
         >
-          <h1 class="title text-primary-500">Review and Confirm</h1>
-          <div class="flex flex-col gap-4">
-            <h2 class="subtitle text-grayscale-700">Model Information</h2>
-            <p>Name: {{ mName }}</p>
-            <p>Caption: {{ mCaption }}</p>
-            <p>Description: {{ mDescription }}</p>
-          </div>
-          <div class="flex flex-col gap-4">
-            <h2 class="subtitle text-grayscale-700">Selected Categories</h2>
-            <p>
-              Tags:
-              <span v-for="tag in sanitizeMultiselect(selectedTags)"
-                >{{ tag }}
-              </span>
-            </p>
-            <p>
-              Materials:
-              <span v-for="m in sanitizeMultiselect(selectedMaterials)"
-                >{{ m }}
-              </span>
-            </p>
-          </div>
-          <div class="flex flex-col gap-4">
-            <h2 class="subtitle text-grayscale-700">Selected Dimensions</h2>
-            <p v-for="dim in sanitizeDimensions(dimensionsState)">{{ dim }}</p>
-          </div>
+          <Summary />
           <div class="flex justify-between w-full mt-4">
             <Button @click="() => (uploadStep = 2)" type="secondary"
               >Back</Button
             >
-            <div class="font-poppins text-grayscale-500">Page 2 of 3</div>
+            <div class="font-poppins text-grayscale-500">Page 3 of 3</div>
             <Button @click="handlePublish" type="success">Publish</Button>
           </div>
         </div>
@@ -185,9 +182,11 @@ import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "vue-router";
 import Dropzone from "../components/Dropzone.vue";
 import ModelForm from "../components/ModelForm.vue";
-import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
+//import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
+import Visualizer from "../components/three/Visualizer.vue";
 import Button from "../components/Button.vue";
 import Footer from "../components/Footer.vue";
+import HotspotCard from "../components/upload/HotspotCard.vue";
 import { useModelStore } from "../stores/modelStore";
 import { useDimensions } from "../scripts/useDimensions";
 import { useHotspotStore } from "../stores/hotspotStore";
@@ -195,6 +194,7 @@ import { useToastStore } from "../stores/toastStore";
 import { useUpload } from "../scripts/useUpload";
 import axiosInstance from "../scripts/axiosConfig";
 import axios from "axios";
+import Summary from "../components/upload/Summary.vue";
 
 const fileSelected = ref(false);
 
@@ -210,16 +210,9 @@ const toastStore = useToastStore();
 
 const { dimensions: dimensionsState } = useDimensions();
 const {
-  mName,
-  mCaption,
-  mDescription,
   thumbnail,
-  dimensions,
-  selectedTags,
-  selectedMaterials,
-  sanitizeDimensions,
-  sanitizeMultiselect,
-  hotspots,
+  selectedDimensions,
+  selectedHotspots,
   publishModel,
   isValid,
   validateForm,
@@ -293,8 +286,8 @@ const handlePublish = async () => {
 
   // Database write
   console.log("[Upload.vue] Writing model data to database...");
-  dimensions.value = sanitizeDimensions(dimensionsState.value);
-  hotspots.value = hotspotState.value; // Missing sanitazion
+  selectedDimensions.value = dimensionsState.value;
+  selectedHotspots.value = hotspotState.value; // Missing sanitazion
 
   const success = await publishModel(modelId.value);
 

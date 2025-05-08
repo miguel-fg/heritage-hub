@@ -11,11 +11,21 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-const props = defineProps({
-  type: { type: String, required: true },
-  class: String,
-  disabled: { type: Boolean, default: false },
-});
+type ButtonType =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "danger"
+  | "ghost"
+  | "ghost-icon"
+  | "search"
+  | "outline";
+
+const props = defineProps<{
+  type: ButtonType;
+  class?: string;
+  disabled?: boolean;
+}>();
 
 const buttonClass = computed(() => {
   switch (props.type) {
@@ -28,7 +38,9 @@ const buttonClass = computed(() => {
     case "danger":
       return "px-2 py-1 bg-danger-200 text-danger-800 drop-shadow-sm hover:bg-danger-300 active:bg-danger-700 active:text-danger-100";
     case "ghost":
-      return "px-0 py-0 bg-transparent text-grayscale-500 hover:text-grayscale-800 active:font-bold active:text-primary-500";
+      return "px-0 py-0 bg-transparent text-grayscale-500 hover:text-grayscale-800 hover:underline active:font-bold active:text-primary-500 active:underline";
+    case "ghost-icon":
+      return "px-0 py-1 bg-transparent text-grayscale-700 hover:text-grayscale-900 hover:underline active:font-bold active:text-primary-500 active:underline";
     case "search":
       return "px-2 py-1 bg-transparent border border-grayscale-300 text-grayscale-500 grow-1";
     case "outline":

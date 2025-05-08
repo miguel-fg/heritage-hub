@@ -177,89 +177,45 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
 
       // Handle tags
       if (Array.isArray(tags)) {
-        for (const tagName of tags) {
-          const existing = await tx.tag.findUnique({
-            where: { name: tagName },
-          });
-
-          if (existing) {
-            await tx.model.update({
-              where: { id },
-              data: {
-                tags: {
-                  connect: { id: existing.id },
-                },
-              },
-            });
-          } else {
-            await tx.tag.create({
-              data: {
-                name: tagName,
-                models: {
-                  connect: { id },
-                },
-              },
-            });
-          }
-        }
+        await tx.model.update({
+          where: { id },
+          data: {
+            tags: {
+              connectOrCreate: tags.map((tagName) => ({
+                where: { name: tagName },
+                create: { name: tagName },
+              })),
+            },
+          },
+        });
       }
 
       // Handle materials
       if (Array.isArray(materials)) {
-        for (const materialName of materials) {
-          const existing = await tx.material.findUnique({
-            where: { name: materialName },
-          });
-
-          if (existing) {
-            await tx.model.update({
-              where: { id },
-              data: {
-                materials: {
-                  connect: { id: existing.id },
-                },
-              },
-            });
-          } else {
-            await tx.material.create({
-              data: {
-                name: materialName,
-                models: {
-                  connect: { id },
-                },
-              },
-            });
-          }
-        }
+        await tx.model.update({
+          where: { id },
+          data: {
+            materials: {
+              connectOrCreate: materials.map((materialName) => ({
+                where: { name: materialName },
+                create: { name: materialName },
+              })),
+            },
+          },
+        });
       }
 
       // Create Dimensions
       if (Array.isArray(dimensions)) {
         await tx.dimension.createMany({
-          data: dimensions.map((dim) => ({
-            modelId: id,
-            type: dim.type,
-            value: dim.value,
-            unit: dim.unit,
-          })),
+          data: dimensions,
         });
       }
 
       // Create Hotspots
       if (Array.isArray(hotspots)) {
         await tx.hotspot.createMany({
-          data: hotspots.map((h) => ({
-            modelId: id,
-            label: h.label,
-            content: h.content,
-            posX: h.position.x,
-            posY: h.position.y,
-            posZ: h.position.z,
-            quatX: h.quaternion.x,
-            quatY: h.quaternion.y,
-            quatZ: h.quaternion.z,
-            quatW: h.quaternion.w,
-          })),
+          data: hotspots,
         });
       }
     });

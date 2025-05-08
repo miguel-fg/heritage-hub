@@ -173,6 +173,21 @@ const selectedHotspotID = ref<number | null>(null);
 const editingHotspotID = ref<number | null>(null);
 const isHotspotOpen = ref(false);
 
+const hotspotGeometry = new THREE.CylinderGeometry(0.025, 0.025, 0.005, 32);
+const hotspotMaterial = new THREE.MeshBasicMaterial({
+  color: 0x0d0d0d,
+  transparent: true,
+  opacity: 0.5,
+  side: THREE.DoubleSide,
+  depthTest: true,
+  depthWrite: false,
+});
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+const vector3 = new THREE.Vector3();
+const quaternion = new THREE.Quaternion();
+const normalMatrix = new THREE.Matrix3();
+
 type HotspotMarker = {
   id: number;
   marker: THREE.Mesh;
@@ -194,12 +209,28 @@ const {
   newQuaternion,
   newLabel,
   newContent,
+  requestedEdit,
+  requestedDelete,
 } = storeToRefs(hotspotStore);
 const isEditingHotspot = ref(false);
 
 watch(isHotspotMode, (newVal) => {
   if (newVal) {
     rotation.value = false;
+  }
+});
+
+watch(requestedEdit, (newVal) => {
+  if (newVal) {
+    selectedHotspotID.value = newVal;
+    editHotspot();
+  }
+});
+
+watch(requestedDelete, (newVal) => {
+  if (newVal) {
+    selectedHotspotID.value = newVal;
+    deleteHotspot();
   }
 });
 
@@ -222,12 +253,12 @@ const newHotspotOnClick = (event: MouseEvent) => {
   if (!hotspotStore.isHotspotMode || !renderer.value || !model.value) return;
 
   const rect = renderer.value.domElement.getBoundingClientRect();
-  const mouse = new THREE.Vector2(
+  mouse.set(
     ((event.clientX - rect.left) / rect.width) * 2 - 1,
     -((event.clientY - rect.top) / rect.height) * 2 + 1,
   );
 
-  const raycaster = new THREE.Raycaster();
+  raycaster.layers.enableAll();
   raycaster.near = camera.near;
   raycaster.far = camera.far;
   raycaster.firstHitOnly = true;
@@ -237,9 +268,7 @@ const newHotspotOnClick = (event: MouseEvent) => {
   if (intersects.length > 0) {
     const { point, face, object } = intersects[0];
 
-    const normalMatrix = new THREE.Matrix3().getNormalMatrix(
-      object.matrixWorld,
-    );
+    normalMatrix.getNormalMatrix(object.matrixWorld);
     const worldNormal = face!.normal
       .clone()
       .applyMatrix3(normalMatrix)
@@ -252,29 +281,15 @@ const newHotspotOnClick = (event: MouseEvent) => {
 };
 
 const addHotspotMarker = (position: THREE.Vector3, normal: THREE.Vector3) => {
-  const radius = 0.025;
-  const height = 0.005;
-
-  const geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
-
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x0d0d0d,
-    transparent: true,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
-    depthTest: true,
-    depthWrite: false,
-  });
-  const marker = new THREE.Mesh(geometry, material);
+  const marker = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
 
   marker.rotation.x = Math.PI / 2;
 
-  const quat = new THREE.Quaternion();
-  quat.setFromUnitVectors(
+  quaternion.setFromUnitVectors(
     new THREE.Vector3(0, 0, 1),
     normal.clone().normalize(),
   );
-  marker.quaternion.premultiply(quat);
+  marker.quaternion.premultiply(quaternion);
   marker.position.copy(position);
 
   const markerId = newHotspotID.value;
@@ -288,21 +303,7 @@ const addHotspotMarker = (position: THREE.Vector3, normal: THREE.Vector3) => {
 };
 
 const createMarker = (id: number, hotspot: Hotspot) => {
-  const radius = 0.025;
-  const height = 0.005;
-
-  const geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
-
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x0d0d0d,
-    transparent: true,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
-    depthTest: true,
-    depthWrite: false,
-  });
-
-  const marker = new THREE.Mesh(geometry, material);
+  const marker = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
 
   marker.rotation.x = Math.PI / 2;
 
@@ -320,18 +321,13 @@ const createMarker = (id: number, hotspot: Hotspot) => {
   );
 
   const baseNormal = new THREE.Vector3(0, 0, 1);
-  const worldNormal = baseNormal.clone().applyQuaternion(marker.quaternion);
+  vector3.copy(baseNormal).applyQuaternion(marker.quaternion);
 
   marker.layers.set(1);
   marker.name = `HH_Hotspot_${id}`;
   scene.add(marker);
 
-  hotspotStore.addMarker(
-    id,
-    marker,
-    marker.position.clone(),
-    worldNormal.clone(),
-  );
+  hotspotStore.addMarker(id, marker, marker.position.clone(), vector3.clone());
 };
 
 const hoveredMarker = ref<HotspotMarker | null>(null);
@@ -341,12 +337,11 @@ const handleMouseMove = (event: MouseEvent) => {
     return;
 
   const rect = renderer.value.domElement.getBoundingClientRect();
-  const mouse = new THREE.Vector2(
+  mouse.set(
     ((event.clientX - rect.left) / rect.width) * 2 - 1,
     -((event.clientY - rect.top) / rect.height) * 2 + 1,
   );
 
-  const raycaster = new THREE.Raycaster();
   raycaster.layers.set(1);
   raycaster.setFromCamera(mouse, camera);
 
@@ -615,8 +610,14 @@ onMounted(async () => {
 
   if (WebGL.isWebGL2Available()) {
     // Initialize renderer
-    renderer.value = new THREE.WebGLRenderer({ antialias: true });
-    renderer.value.setPixelRatio(window.devicePixelRatio);
+    renderer.value = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance",
+      alpha: false,
+      stencil: false,
+      preserveDrawingBuffer: false,
+    });
+    renderer.value.setPixelRatio(Math.min(window.devicePixelRatio, 3));
     renderer.value.shadowMap.enabled = true;
     container.value?.appendChild(renderer.value.domElement);
     handleResize();
@@ -720,6 +721,9 @@ onUnmounted(() => {
     renderer.value.setAnimationLoop(null);
   }
 
+  if (hotspotGeometry) hotspotGeometry.dispose();
+  if (hotspotMaterial) hotspotMaterial.dispose();
+
   modelMeshes.value.forEach((mesh) => {
     if (mesh.geometry) {
       mesh.geometry.dispose();
@@ -729,18 +733,6 @@ onUnmounted(() => {
       mesh.material.forEach((material) => disposeThreeMaterial(material));
     } else {
       disposeThreeMaterial(mesh.material);
-    }
-  });
-
-  Object.values(hotspotStore.sceneMarkers).forEach((m) => {
-    if (m.marker.geometry) {
-      m.marker.geometry.dispose();
-    }
-
-    if (Array.isArray(m.marker.material)) {
-      m.marker.material.forEach((material) => disposeThreeMaterial(material));
-    } else {
-      disposeThreeMaterial(m.marker.material);
     }
   });
 

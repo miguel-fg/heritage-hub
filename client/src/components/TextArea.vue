@@ -1,11 +1,12 @@
 <template>
   <div class="flex flex-col w-full">
     <label :for="props.fieldId" class="subtitle text-grayscale-700">{{
-      props.label
+      props.label + mandatory
     }}</label>
     <textarea
       name="description"
       v-model="mDescription"
+      rows="4"
       :id="props.fieldId"
       class="px-2 py-1 bg-white rounded-xs body"
       :class="
@@ -21,11 +22,12 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from "vue";
+import { watch, computed } from "vue";
 import { useUpload } from "../scripts/useUpload";
 const props = defineProps<{
   fieldId: string;
   label: "Name" | "Caption" | "Description";
+  mandatory: boolean;
 }>();
 
 const { mDescription, descriptionError, uploadAttempted, validateField } =
@@ -34,4 +36,6 @@ const { mDescription, descriptionError, uploadAttempted, validateField } =
 watch(mDescription, () => {
   validateField("Description");
 });
+
+const mandatory = computed(() => (props.mandatory ? "*" : ""));
 </script>
