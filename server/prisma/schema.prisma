@@ -37,6 +37,10 @@ model Hotspot {
     posY      Float
     posZ      Float
 
+    norX      Float
+    norY      Float
+    norZ      Float
+
     quatX     Float
     quatY     Float
     quatZ     Float

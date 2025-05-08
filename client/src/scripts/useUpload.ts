@@ -1,5 +1,10 @@
 import { ref } from "vue";
 import axiosInstance from "./axiosConfig";
+import {
+  type DimensionKey,
+  type Dimension,
+  type Hotspot,
+} from "../types/model";
 
 // ModelForm fields
 const mName = ref<string>("");
@@ -11,15 +16,6 @@ const descriptionError = ref<string | null>(null);
 const mAccNum = ref<string>("");
 
 // Dimensions
-type DimensionKey = "width" | "height" | "depth" | "weight" | "volume";
-type DimensionType = "Width" | "Height" | "Depth" | "Weight" | "Volume";
-
-interface Dimension {
-  name: DimensionType;
-  value: number | null;
-  unit: string | null;
-  units: string[];
-}
 const selectedDimensions = ref<Record<DimensionKey, Dimension>>({
   width: {
     name: "Width",
@@ -60,13 +56,6 @@ const selectedTags = ref<{ value: string; label: string }[] | null>(null);
 const selectedMaterials = ref<{ value: string; label: string }[] | null>(null);
 
 // Hotspots
-interface Hotspot {
-  label: string;
-  content: string;
-  position: { x: number; y: number; z: number };
-  quaternion: { x: number; y: number; z: number; w: number };
-}
-
 const selectedHotspots = ref<Record<number, Hotspot>>({});
 
 // Thumbnail
@@ -226,6 +215,9 @@ export const useUpload = () => {
       posX: number;
       posY: number;
       posZ: number;
+      norX: number;
+      norY: number;
+      norZ: number;
       quatX: number;
       quatY: number;
       quatZ: number;
@@ -240,6 +232,9 @@ export const useUpload = () => {
         posX: h.position.x,
         posY: h.position.y,
         posZ: h.position.z,
+        norX: h.normal.x,
+        norY: h.normal.y,
+        norZ: h.normal.z,
         quatX: h.quaternion.x,
         quatY: h.quaternion.y,
         quatZ: h.quaternion.z,

@@ -158,6 +158,15 @@ watch(bgColor, (val) => {
   setBackgroundColor(scene, val);
 });
 
+// Visualizer overlays
+const toggleHelpOverlay = () => {
+  isHelpOpen.value = !isHelpOpen.value;
+};
+
+const toggleOptionsMenu = () => {
+  isOptionsOpen.value = !isOptionsOpen.value;
+};
+
 // Hotspots
 const hotspotStore = useHotspotStore();
 const { isHotspotMode, requestedEdit, requestedDelete } =
@@ -201,6 +210,26 @@ watch(requestedDelete, (newVal) => {
   }
 });
 
+// Thumbnail
+const { thumbnail } = useUpload();
+const { showFlash, handleThumbnailCapture, setInitialThumbnail } = useThumbnail(
+  renderer,
+  camera,
+  scene,
+  thumbnail,
+);
+
+watch(
+  () => props.captureRequest,
+  (newVal) => {
+    if (newVal) {
+      handleThumbnailCapture();
+      emit("capture-complete");
+    }
+  },
+);
+
+// User interaction
 const handleModelClick = (event: MouseEvent) => {
   if (!controls.value || !renderer.value) return;
 
@@ -237,36 +266,8 @@ const handleMouseMove = (event: MouseEvent) => {
   hightlightHotspotsOnHover(event, renderer.value, camera);
 };
 
-const throttledMouseMove = useThrottleFn(handleMouseMove, 20);
-
-// Thumbnail
-const { thumbnail } = useUpload();
-const { showFlash, handleThumbnailCapture, setInitialThumbnail } = useThumbnail(
-  renderer,
-  camera,
-  scene,
-  thumbnail,
-);
-
-watch(
-  () => props.captureRequest,
-  (newVal) => {
-    if (newVal) {
-      handleThumbnailCapture();
-      emit("capture-complete");
-    }
-  },
-);
-
 const debouncedResize = debounce(handleResize);
-
-const toggleHelpOverlay = () => {
-  isHelpOpen.value = !isHelpOpen.value;
-};
-
-const toggleOptionsMenu = () => {
-  isOptionsOpen.value = !isOptionsOpen.value;
-};
+const throttledMouseMove = useThrottleFn(handleMouseMove, 20);
 
 onMounted(async () => {
   const initialized = init();
@@ -282,6 +283,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  hotspotStore.cleanMarkers(scene);
   cleanup();
   window.removeEventListener("resize", debouncedResize);
 });

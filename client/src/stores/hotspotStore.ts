@@ -1,7 +1,11 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { type Mesh, type Vector3, type Scene } from "three";
-import { type Hotspot, type HotspotMarker } from "../types/model";
+import {
+  type Hotspot,
+  type HotspotMarker,
+  type ModelHotspot,
+} from "../types/model";
 
 export const useHotspotStore = defineStore("hotspots", () => {
   const hotspots = ref<Record<number, Hotspot>>({});
@@ -33,12 +37,14 @@ export const useHotspotStore = defineStore("hotspots", () => {
     label: string,
     content: string,
     position: { x: number; y: number; z: number },
+    normal: { x: number; y: number; z: number },
     quaternion: { x: number; y: number; z: number; w: number },
   ) => {
     const newHotspot: Hotspot = {
       label,
       content,
       position,
+      normal,
       quaternion,
     };
     const id = newHotspotID.value;
@@ -112,6 +118,37 @@ export const useHotspotStore = defineStore("hotspots", () => {
     sceneMarkers.value.splice(markerIndex, 1);
   };
 
+  /**
+   * Set hotspot state from database array
+   */
+  const setHotspotState = (modelHotspots: ModelHotspot[]) => {
+    hotspots.value = {};
+
+    let newHotspot: Hotspot;
+
+    modelHotspots.forEach((hs) => {
+      newHotspot = {
+        label: hs.label,
+        content: hs.content,
+        position: { x: hs.posX, y: hs.posY, z: hs.posZ },
+        normal: { x: hs.norX, y: hs.norY, z: hs.norZ },
+        quaternion: { x: hs.quatX, y: hs.quatY, z: hs.quatZ, w: hs.quatW },
+      };
+
+      hotspots.value[hs.id] = newHotspot;
+    });
+  };
+
+  /**
+   * Clean hotspot record
+   */
+  const cleanHotspotState = () => {
+    hotspots.value = {};
+  };
+
+  /**
+   * Remove markers from Three.js scene
+   */
   const cleanMarkers = (scene: Scene) => {
     sceneMarkers.value.forEach(({ marker }) => {
       scene.remove(marker);
@@ -169,6 +206,8 @@ export const useHotspotStore = defineStore("hotspots", () => {
     newMarker,
     isHotspotMode,
     setHotspotMode,
+    setHotspotState,
+    cleanHotspotState,
     addHotspot,
     addMarker,
     saveHotspotData,

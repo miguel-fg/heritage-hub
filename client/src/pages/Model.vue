@@ -21,7 +21,7 @@
         <div
           class="flex h-120 lg:h-200 lg:w-3/5 max-h-[650px] rounded-sm justify-center items-center"
         >
-          <ThreeVisualizer :modelId="model.id" />
+          <Visualizer :modelId="model.id" />
         </div>
         <div class="flex flex-col gap-4 lg:w-2/5">
           <div>
@@ -149,45 +149,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axiosInstance from "../scripts/axiosConfig";
 import Button from "../components/Button.vue";
 import Tag from "../components/Tag.vue";
 import Skeleton from "../components/Skeleton.vue";
-import ThreeVisualizer from "../components/three/ThreeVisualizer.vue";
+import Visualizer from "../components/three/Visualizer.vue";
 import { useDimensions } from "../scripts/useDimensions";
 import Footer from "../components/Footer.vue";
 import { useModelStore } from "../stores/modelStore";
+import { useHotspotStore } from "../stores/hotspotStore";
 import { useToastStore } from "../stores/toastStore";
 import ConfirmationModal from "../components/ConfirmationModal.vue";
-
-interface Tag {
-  name: string;
-}
-
-interface Material {
-  name: string;
-}
-
-interface Dimension {
-  type: "WIDTH" | "HEIGHT" | "DEPTH" | "WEIGHT" | "VOLUME";
-  value: number;
-  unit: string;
-}
-
-interface Model {
-  id: string;
-  name: string;
-  caption: string;
-  description: string;
-  materials: Array<Material>;
-  tags: Array<Tag>;
-  dimensions: Array<Dimension>;
-  modelPath: string;
-  thumbnailPath: string;
-  createdAt: string;
-}
+import { type Model } from "../types/model";
 
 const route = useRoute();
 const router = useRouter();
@@ -200,6 +175,7 @@ const isTruncated = ref(true);
 const { formatDimension } = useDimensions();
 
 const modelStore = useModelStore();
+const hotspotStore = useHotspotStore();
 const toastStore = useToastStore();
 
 const showConfirmModal = ref(false);
@@ -240,6 +216,10 @@ const fetchModelData = async (): Promise<void> => {
   try {
     const response = await axiosInstance.get(`models/${modelId}`);
     model.value = response.data.model;
+
+    if (model.value) {
+      hotspotStore.setHotspotState(model.value.hotspots);
+    }
   } catch (err: any) {
     console.error("Failed to fetch data from model. ERR: ", err);
     toastStore.showToast("error", "Failed to fetch model data.");
@@ -289,5 +269,12 @@ const showReadMore = computed(() => {
 
 onMounted(() => {
   fetchModelData();
+});
+
+onUnmounted(() => {
+  model.value = null;
+  loading.value = false;
+  error.value = null;
+  hotspotStore.cleanHotspotState();
 });
 </script>

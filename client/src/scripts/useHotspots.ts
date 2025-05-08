@@ -20,7 +20,6 @@ const hotspotMaterial = new THREE.MeshBasicMaterial({
   depthWrite: false,
 });
 
-const baseNormal = new THREE.Vector3(0, 0, 1);
 const quaternion = new THREE.Quaternion();
 const vector3 = new THREE.Vector3();
 const normalMatrix = new THREE.Matrix3();
@@ -33,6 +32,7 @@ export const useHotspots = (scene: THREE.Scene) => {
   const {
     newHotspotID,
     newPosition,
+    newNormal,
     newQuaternion,
     newLabel,
     newContent,
@@ -68,6 +68,7 @@ export const useHotspots = (scene: THREE.Scene) => {
 
     newPosition.value = marker.position;
     newQuaternion.value = marker.quaternion;
+    newNormal.value = normal.clone();
   };
 
   /**
@@ -90,17 +91,17 @@ export const useHotspots = (scene: THREE.Scene) => {
       hotspot.position.z,
     );
 
-    vector3.copy(baseNormal).applyQuaternion(marker.quaternion);
+    const normal = vector3.set(
+      hotspot.normal.x,
+      hotspot.normal.y,
+      hotspot.normal.z,
+    );
+
     marker.layers.set(1);
     marker.name = `HH_Hotspot_${id}`;
     scene.add(marker);
 
-    hotspotStore.addMarker(
-      id,
-      marker,
-      marker.position.clone(),
-      vector3.clone(),
-    );
+    hotspotStore.addMarker(id, marker, marker.position.clone(), normal.clone());
   };
 
   /**
@@ -297,6 +298,7 @@ export const useHotspots = (scene: THREE.Scene) => {
       // New hotspot
       if (
         !newPosition.value ||
+        !newNormal.value ||
         !newQuaternion.value ||
         newLabel.value === "" ||
         newContent.value === ""
@@ -309,6 +311,7 @@ export const useHotspots = (scene: THREE.Scene) => {
         newLabel.value,
         newContent.value,
         newPosition.value,
+        newNormal.value,
         newQuaternion.value,
       );
       hotspotStore.setHotspotMode(false);
