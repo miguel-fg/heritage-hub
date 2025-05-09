@@ -19,6 +19,14 @@ const hotspotMaterial = new THREE.MeshBasicMaterial({
   depthTest: true,
   depthWrite: false,
 });
+const highlightMaterial = new THREE.MeshBasicMaterial({
+  color: 0x801323,
+  transparent: true,
+  opacity: 0.5,
+  side: THREE.DoubleSide,
+  depthTest: true,
+  depthWrite: false,
+});
 
 const quaternion = new THREE.Quaternion();
 const vector3 = new THREE.Vector3();
@@ -206,15 +214,13 @@ export const useHotspots = (scene: THREE.Scene) => {
         (m) => m.marker === intersected,
       );
 
-      if (found) {
+      if (found && found.marker.material !== highlightMaterial) {
         hoveredMarker.value = found;
-        (found.marker.material as THREE.MeshBasicMaterial).color.set(0x801323);
+        found.marker.material = highlightMaterial;
       }
     } else {
       if (hoveredMarker.value) {
-        (
-          hoveredMarker.value.marker.material as THREE.MeshBasicMaterial
-        ).color.set(0x0d0d0d);
+        hoveredMarker.value.marker.material = hotspotMaterial;
         hoveredMarker.value = null;
       }
     }
