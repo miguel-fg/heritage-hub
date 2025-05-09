@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { type Mesh, type Vector3, type Scene } from "three";
+import { useHotspots } from "../scripts/useHotspots";
 import {
   type Hotspot,
   type HotspotMarker,
@@ -23,7 +24,6 @@ export const useHotspotStore = defineStore("hotspots", () => {
   const newLabel = ref("");
   const newContent = ref("");
 
-  const newMarker = ref<Mesh | null>(null);
   const newNormal = ref<{ x: number; y: number; z: number } | null>(null);
 
   const requestedEdit = ref<number | null>(null);
@@ -98,17 +98,10 @@ export const useHotspotStore = defineStore("hotspots", () => {
     delete hotspots.value[id];
 
     const marker = scene.getObjectByName(`HH_Hotspot_${id}`) as Mesh | null;
+    const { deleteHotspot3DObject } = useHotspots(scene);
 
     if (marker) {
-      scene.remove(marker);
-      marker.geometry.dispose();
-
-      const material = marker.material;
-      if (Array.isArray(material)) {
-        material.forEach((mat) => mat.dispose());
-      } else {
-        material.dispose();
-      }
+      deleteHotspot3DObject(marker);
     } else {
       console.warn(`Marker with ID: ${id} not found in scene`);
     }
@@ -150,17 +143,9 @@ export const useHotspotStore = defineStore("hotspots", () => {
    * Remove markers from Three.js scene
    */
   const cleanMarkers = (scene: Scene) => {
+    const { deleteHotspot3DObject } = useHotspots(scene);
     sceneMarkers.value.forEach(({ marker }) => {
-      scene.remove(marker);
-      marker.geometry.dispose();
-
-      const material = marker.material;
-
-      if (Array.isArray(material)) {
-        material.forEach((mat) => mat.dispose());
-      } else {
-        material.dispose();
-      }
+      deleteHotspot3DObject(marker);
     });
 
     sceneMarkers.value = [];
@@ -203,7 +188,6 @@ export const useHotspotStore = defineStore("hotspots", () => {
     newNormal,
     newLabel,
     newContent,
-    newMarker,
     isHotspotMode,
     setHotspotMode,
     setHotspotState,

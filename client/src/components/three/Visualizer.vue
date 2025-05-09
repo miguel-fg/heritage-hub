@@ -187,6 +187,7 @@ const {
   editingHotspotID,
   deleteHotspot,
   saveHotspotData,
+  textureCleanup,
 } = useHotspots(scene);
 
 watch(isHotspotMode, (newVal) => {
@@ -284,6 +285,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   hotspotStore.cleanMarkers(scene);
+  textureCleanup();
   cleanup();
   window.removeEventListener("resize", debouncedResize);
 });

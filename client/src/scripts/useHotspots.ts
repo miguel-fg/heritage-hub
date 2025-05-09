@@ -10,20 +10,24 @@ import type { OrbitControls } from "three/examples/jsm/Addons.js";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
+const textureLoader = new THREE.TextureLoader();
+const defaultIconTexture = textureLoader.load("/textures/default-icon.png");
+const highlightIconTexture = textureLoader.load("/textures/highlight-icon.png");
+
 const hotspotGeometry = new THREE.CylinderGeometry(0.025, 0.025, 0.005, 32);
 const hotspotMaterial = new THREE.MeshBasicMaterial({
-  color: 0x0d0d0d,
+  map: defaultIconTexture,
   transparent: true,
-  opacity: 0.5,
-  side: THREE.DoubleSide,
+  opacity: 0.7,
+  side: THREE.FrontSide,
   depthTest: true,
   depthWrite: false,
 });
 const highlightMaterial = new THREE.MeshBasicMaterial({
-  color: 0x801323,
+  map: highlightIconTexture,
   transparent: true,
-  opacity: 0.5,
-  side: THREE.DoubleSide,
+  opacity: 0.7,
+  side: THREE.FrontSide,
   depthTest: true,
   depthWrite: false,
 });
@@ -57,8 +61,9 @@ export const useHotspots = (scene: THREE.Scene) => {
    * Create a new Hotspot Record and Three.js marker based on mouse click
    */
   const addHotspotMarker = (position: THREE.Vector3, normal: THREE.Vector3) => {
-    const marker = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
-    marker.rotation.x = Math.PI / 2;
+    const id = newHotspotID.value;
+
+    const marker = create3DHotspotObject(id);
 
     quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 0, 1),
@@ -67,9 +72,6 @@ export const useHotspots = (scene: THREE.Scene) => {
     marker.quaternion.premultiply(quaternion);
     marker.position.copy(position);
 
-    const id = newHotspotID.value;
-    marker.name = `HH_Hotspot_${id}`;
-    marker.layers.set(1);
     scene.add(marker);
 
     hotspotStore.addMarker(id, marker, position.clone(), normal.clone());
@@ -83,8 +85,7 @@ export const useHotspots = (scene: THREE.Scene) => {
    * Create a Three.js marker based on an existing Hotspot Record
    */
   const createMarker = (id: number, hotspot: Hotspot) => {
-    const marker = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
-    marker.rotation.x = Math.PI / 2;
+    const marker = create3DHotspotObject(id);
 
     marker.quaternion.set(
       hotspot.quaternion.x,
@@ -105,11 +106,23 @@ export const useHotspots = (scene: THREE.Scene) => {
       hotspot.normal.z,
     );
 
-    marker.layers.set(1);
-    marker.name = `HH_Hotspot_${id}`;
     scene.add(marker);
 
     hotspotStore.addMarker(id, marker, marker.position.clone(), normal.clone());
+  };
+
+  /**
+   * Create Three.js hotspot marker object
+   */
+  const create3DHotspotObject = (id: number): THREE.Mesh => {
+    const marker = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
+    marker.name = `HH_Hotspot_${id}`;
+    marker.layers.set(1);
+
+    marker.rotation.x = Math.PI / 2;
+    marker.rotation.y = Math.PI / 2;
+
+    return marker;
   };
 
   /**
@@ -215,6 +228,10 @@ export const useHotspots = (scene: THREE.Scene) => {
       );
 
       if (found && found.marker.material !== highlightMaterial) {
+        if (hoveredMarker.value && hoveredMarker.value !== found) {
+          hoveredMarker.value.marker.material = hotspotMaterial;
+        }
+
         hoveredMarker.value = found;
         found.marker.material = highlightMaterial;
       }
@@ -340,6 +357,28 @@ export const useHotspots = (scene: THREE.Scene) => {
     toastStore.showToast("success", "Hotspot saved!");
   };
 
+  /**
+   * Disposes geometries and materials of the Hotspot marker
+   */
+  const deleteHotspot3DObject = (marker: THREE.Mesh) => {
+    scene.remove(marker);
+
+    marker.geometry.dispose();
+    if (Array.isArray(marker.material)) {
+      marker.material.forEach((mat) => mat.dispose());
+    } else {
+      marker.material.dispose();
+    }
+  };
+
+  /**
+   * Cleans loaded textures used for 3D hotspots
+   */
+  const textureCleanup = () => {
+    defaultIconTexture.dispose();
+    highlightIconTexture.dispose();
+  };
+
   return {
     addHotspotMarker,
     loadExistingHotspots,
@@ -356,5 +395,7 @@ export const useHotspots = (scene: THREE.Scene) => {
     saveHotspotData,
     hightlightHotspotsOnHover,
     hoveredMarker,
+    deleteHotspot3DObject,
+    textureCleanup,
   };
 };
