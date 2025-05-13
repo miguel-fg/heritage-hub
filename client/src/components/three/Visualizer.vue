@@ -39,7 +39,7 @@
       :editing-hotspot-id="editingHotspotID"
       @save="saveHotspotData"
       @update="saveHotspotData(editingHotspotID)"
-      @cancel="() => (isEditingHotspot = false)"
+      @toggleMarker="toggleHotspotMarkers(camera)"
     />
     <OpenHotspot
       v-if="isHotspotOpen && selectedHotspotID"
@@ -86,9 +86,10 @@ const props = defineProps({
   editing: { type: Boolean, default: false },
   fileRef: { type: File, required: false },
   captureRequest: { type: Boolean, default: false },
+  deleteUnsaved: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["capture-complete"]);
+const emit = defineEmits(["capture-complete", "unsaved-deleted"]);
 
 // Visualizer configuration
 const fov = ref("75");
@@ -188,6 +189,9 @@ const {
   deleteHotspot,
   saveHotspotData,
   textureCleanup,
+  toggleHotspotMarkers,
+  deleteHotspot3DObject,
+  unsavedMarker,
 } = useHotspots(scene);
 
 watch(isHotspotMode, (newVal) => {
@@ -200,6 +204,7 @@ watch(requestedEdit, (newVal) => {
   if (newVal) {
     selectedHotspotID.value = newVal;
     editHotspot();
+    requestedEdit.value = null;
   }
 });
 
@@ -208,6 +213,7 @@ watch(requestedDelete, (newVal) => {
     selectedHotspotID.value = newVal;
     deleteHotspot();
     renderer.value?.render(scene, camera);
+    requestedDelete.value = null;
   }
 });
 
@@ -220,6 +226,7 @@ const { showFlash, handleThumbnailCapture, setInitialThumbnail } = useThumbnail(
   thumbnail,
 );
 
+// Editor interactions
 watch(
   () => props.captureRequest,
   (newVal) => {
@@ -227,6 +234,18 @@ watch(
       handleThumbnailCapture();
       emit("capture-complete");
     }
+  },
+);
+
+watch(
+  () => props.deleteUnsaved,
+  (newVal) => {
+    if (newVal && unsavedMarker.value) {
+      deleteHotspot3DObject(unsavedMarker.value);
+      unsavedMarker.value = null;
+      isEditingHotspot.value = false;
+    }
+    emit("unsaved-deleted");
   },
 );
 

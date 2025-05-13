@@ -61,6 +61,9 @@ const selectedHotspots = ref<Record<number, Hotspot>>({});
 // Thumbnail
 const thumbnail = ref<string | null>(null);
 
+// Download
+const downloadable = ref(false);
+
 const isValid = ref(false);
 const uploadAttempted = ref(false);
 
@@ -254,6 +257,7 @@ export const useUpload = () => {
     descriptionError,
     mAccNum,
     thumbnail,
+    downloadable,
     selectedTags,
     selectedMaterials,
     selectedDimensions,

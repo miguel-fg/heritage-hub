@@ -52,6 +52,8 @@ export const useHotspotStore = defineStore("hotspots", () => {
 
     newHotspotID.value++;
     isHotspotMode.value = false;
+
+    return id;
   };
 
   const addMarker = (

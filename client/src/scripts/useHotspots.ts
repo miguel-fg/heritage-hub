@@ -38,6 +38,8 @@ const normalMatrix = new THREE.Matrix3();
 const mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
 
+const unsavedMarker = ref<THREE.Mesh | null>(null);
+
 export const useHotspots = (scene: THREE.Scene) => {
   const toastStore = useToastStore();
   const hotspotStore = useHotspotStore();
@@ -73,8 +75,7 @@ export const useHotspots = (scene: THREE.Scene) => {
     marker.position.copy(position);
 
     scene.add(marker);
-
-    hotspotStore.addMarker(id, marker, position.clone(), normal.clone());
+    unsavedMarker.value = marker;
 
     newPosition.value = marker.position;
     newQuaternion.value = marker.quaternion;
@@ -244,6 +245,17 @@ export const useHotspots = (scene: THREE.Scene) => {
   };
 
   /**
+   * Toggles camera membership to layer that contains the hotspot markers.
+   */
+  const toggleHotspotMarkers = (camera: THREE.PerspectiveCamera) => {
+    if (camera.layers.isEnabled(1)) {
+      camera.layers.disable(1);
+    } else {
+      camera.layers.enable(1);
+    }
+  };
+
+  /**
    * Normalize mouse coordinates on the Three.js renderer
    */
   const normalizeMouse = (
@@ -330,13 +342,30 @@ export const useHotspots = (scene: THREE.Scene) => {
         return;
       }
 
-      hotspotStore.addHotspot(
+      const newKey = hotspotStore.addHotspot(
         newLabel.value,
         newContent.value,
         newPosition.value,
         newNormal.value,
         newQuaternion.value,
       );
+
+      const pos = new THREE.Vector3(
+        newPosition.value.x,
+        newPosition.value.y,
+        newPosition.value.z,
+      );
+      const nor = new THREE.Vector3(
+        newNormal.value.x,
+        newNormal.value.y,
+        newNormal.value.z,
+      );
+
+      if (unsavedMarker.value) {
+        hotspotStore.addMarker(newKey, unsavedMarker.value, pos, nor);
+        unsavedMarker.value = null;
+      }
+
       hotspotStore.setHotspotMode(false);
     } else {
       // Update hotspot
@@ -352,6 +381,7 @@ export const useHotspots = (scene: THREE.Scene) => {
       }
 
       hotspotStore.saveHotspotData(id, newLabel.value, newContent.value);
+      editingHotspotID.value = null;
     }
     isEditingHotspot.value = false;
     toastStore.showToast("success", "Hotspot saved!");
@@ -361,7 +391,9 @@ export const useHotspots = (scene: THREE.Scene) => {
    * Disposes geometries and materials of the Hotspot marker
    */
   const deleteHotspot3DObject = (marker: THREE.Mesh) => {
-    scene.remove(marker);
+    console.log(`Deleting marker ${marker.name}`);
+
+    marker.parent?.remove(marker);
 
     marker.geometry.dispose();
     if (Array.isArray(marker.material)) {
@@ -397,5 +429,7 @@ export const useHotspots = (scene: THREE.Scene) => {
     hoveredMarker,
     deleteHotspot3DObject,
     textureCleanup,
+    toggleHotspotMarkers,
+    unsavedMarker,
   };
 };

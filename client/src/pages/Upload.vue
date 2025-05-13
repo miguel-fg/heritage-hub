@@ -16,7 +16,7 @@
           <div
             class="flex flex-col md:flex-row w-full h-[550px] lg:h-[600px] 2xl:[h-700px] gap-2"
           >
-            <div class="flex flex-col w-full md:w-8/10">
+            <div class="flex flex-col w-full gap-1 md:w-8/10">
               <h1 class="subtitle text-grayscale-700 w-full text-center">
                 3D Model Preview
               </h1>
@@ -30,11 +30,34 @@
                   :fileRef="file"
                   :capture-request="snapCamera"
                   @capture-complete="completeCapture"
+                  :delete-unsaved="clearUnsavedMarker"
+                  @unsaved-deleted="completeDeleteUnsaved"
                 />
               </div>
+              <label
+                for="allow-download"
+                class="flex gap-2 items-center cursor-pointer font-poppins text-grayscale-900 mt-2"
+              >
+                <input
+                  id="allow-download"
+                  type="checkbox"
+                  class="sr-only absolute overflow-hidden"
+                  tabindex="-1"
+                  v-model="downloadable"
+                />
+                <span
+                  class="relative w-4 h-4 rounded-xs border border-grayscale-300 text-grayscale-100 flex items-center justify-center bg-white"
+                >
+                  <span
+                    v-show="downloadable"
+                    class="w-2 h-2 bg-primary-500 rounded-xs"
+                  ></span>
+                </span>
+                Allow model download
+              </label>
             </div>
             <div class="flex flex-col w-60 md:w-2/10 gap-8">
-              <div class="flex flex-col w-full items-center">
+              <div class="flex flex-col gap-1 w-full items-center">
                 <h1 class="subtitle text-grayscale-700">Thumbnail</h1>
                 <img
                   v-if="thumbnail"
@@ -45,7 +68,7 @@
                 <Button
                   @click="triggerCapture"
                   type="ghost-icon"
-                  class="mt-1 w-full justify-center"
+                  class="mt-3 w-full justify-center"
                 >
                   <svg
                     width="19"
@@ -63,9 +86,20 @@
                   <span class="ml-1">Re-capture</span>
                 </Button>
               </div>
-              <div class="flex flex-col w-full items-center">
-                <h1 class="subtitle text-grayscale-700">Hotspots</h1>
-                <div class="flex flex-col w-full gap-2">
+              <div class="flex flex-col w-full items-center gap-3">
+                <div class="flex flex-col gap-1 w-full">
+                  <h1 class="subtitle text-grayscale-700 w-full text-center">
+                    Hotspots
+                  </h1>
+                  <InfoMessage v-if="hotspotStore.isHotspotMode" type="info">
+                    <template #title>Hotspot Mode</template>
+                    <template #content
+                      >Click or tap anywhere on the model to add a new
+                      hotspot.</template
+                    >
+                  </InfoMessage>
+                </div>
+                <div class="flex flex-col w-full gap-1">
                   <div v-for="(h, k) in hotspotState">
                     <HotspotCard :hotspotId="Number(k)" :hotspot="h" />
                   </div>
@@ -195,6 +229,7 @@ import { useUpload } from "../scripts/useUpload";
 import axiosInstance from "../scripts/axiosConfig";
 import axios from "axios";
 import Summary from "../components/upload/Summary.vue";
+import InfoMessage from "../components/InfoMessage.vue";
 
 const fileSelected = ref(false);
 
@@ -211,6 +246,7 @@ const toastStore = useToastStore();
 const { dimensions: dimensionsState } = useDimensions();
 const {
   thumbnail,
+  downloadable,
   selectedDimensions,
   selectedHotspots,
   publishModel,
@@ -231,6 +267,12 @@ const completeCapture = () => {
   snapCamera.value = false;
 };
 
+const clearUnsavedMarker = ref(false);
+
+const completeDeleteUnsaved = () => {
+  clearUnsavedMarker.value = false;
+};
+
 const resetState = () => {
   fileSelected.value = false;
   file.value = null;
@@ -244,6 +286,7 @@ const enterHotspotMode = () => {
 
 const exitHotspotMode = () => {
   hotspotStore.setHotspotMode(false);
+  clearUnsavedMarker.value = true;
 };
 
 const handleFileUpdate = async () => {

@@ -10,16 +10,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-
-type ButtonType =
-  | "primary"
-  | "secondary"
-  | "success"
-  | "danger"
-  | "ghost"
-  | "ghost-icon"
-  | "search"
-  | "outline";
+import { type ButtonType } from "../types/ui";
 
 const props = defineProps<{
   type: ButtonType;

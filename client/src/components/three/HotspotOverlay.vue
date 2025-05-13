@@ -47,12 +47,10 @@
         >
       </div>
       <div class="flex justify-between font-medium">
-        <Button
-          @click="handleSaveClick"
-          type="success"
-          class="w-full justify-center"
-          >Save Hotspot</Button
+        <Button @click="emit('toggle-marker')" type="secondary"
+          >Toggle Marker</Button
         >
+        <Button @click="handleSaveClick" type="success">Save Hotspot</Button>
       </div>
     </div>
   </div>
@@ -69,7 +67,7 @@ const props = defineProps<{
   editingHotspotId: number | null;
 }>();
 
-const emit = defineEmits(["save", "update", "cancel"]);
+const emit = defineEmits(["save", "update", "toggle-marker"]);
 
 const hotspotStore = useHotspotStore();
 const { newLabel, newContent } = storeToRefs(hotspotStore);
@@ -103,9 +101,9 @@ watch(newContent, (val) => {
 
 onMounted(() => {
   if (props.editingHotspotId) {
-    const { label, content } = hotspotStore.getHotspot(props.editingHotspotId);
-    newLabel.value = label;
-    newContent.value = content;
+    const hotspot = hotspotStore.getHotspot(props.editingHotspotId);
+    newLabel.value = hotspot?.label || "";
+    newContent.value = hotspot?.content || "";
   }
 });
 </script>

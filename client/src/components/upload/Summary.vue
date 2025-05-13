@@ -10,6 +10,18 @@
           alt="Model preview"
           class="rounded-xs shadow-sm size-60"
         />
+        <div v-if="downloadable" class="flex gap-2 items-center mt-2">
+          <DownloadIcon :width="15" :height="20" class="fill-success-700" />
+          <span class="font-poppins font-medium text-success-700"
+            >Downloadable</span
+          >
+        </div>
+        <div v-else class="flex gap-2 items-center mt-2">
+          <DownloadIcon :width="15" :height="20" class="fill-danger-700" />
+          <span class="font-poppins font-medium text-danger-700"
+            >Not Downloadable</span
+          >
+        </div>
       </div>
       <div>
         <h2 class="subtitle text-grayscale-700 mb-1">Accession Number</h2>
@@ -83,12 +95,14 @@
 import { useUpload } from "../../scripts/useUpload";
 import { useDimensions } from "../../scripts/useDimensions";
 import { useHotspotStore } from "../../stores/hotspotStore";
+import DownloadIcon from "../icons/DownloadIcon.vue";
 
 const {
   mName,
   mCaption,
   mDescription,
   thumbnail,
+  downloadable,
   mAccNum,
   selectedMaterials,
   selectedTags,
