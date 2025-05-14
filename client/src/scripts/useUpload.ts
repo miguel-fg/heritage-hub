@@ -79,6 +79,7 @@ export const useUpload = () => {
       name: mName.value,
       caption: mCaption.value,
       description: mDescription.value,
+      downloadable: downloadable.value,
       materials: sanitizeMultiselect(selectedMaterials.value),
       tags: sanitizeMultiselect(selectedTags.value),
       dimensions: sanitizeDimensions(selectedDimensions.value, modelId),

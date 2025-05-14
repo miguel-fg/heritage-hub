@@ -23,26 +23,30 @@
     ></div>
     <Toolbar
       :editing="props.editing"
+      :rotation="rotation"
+      :hotspots-visible="areHSVisible"
       @fullscreen="toggleFullscreen(fsContainer)"
       @download="downloadModel(downloadLink, objectUrl)"
+      @hotspots="handleToolbarHSToggle"
       @options="toggleOptionsMenu"
+      @rotation="toggleRotate"
       @help="toggleHelpOverlay"
     />
     <HelpOverlay
-      v-if="isHelpOpen"
+      v-show="isHelpOpen"
       @click="toggleHelpOverlay"
       state="visiting"
     />
-    <OptionsOverlay v-if="isOptionsOpen" state="visiting" :values="values" />
+    <OptionsOverlay v-show="isOptionsOpen" state="visiting" :values="values" />
     <HotspotOverlay
-      v-if="isEditingHotspot"
+      v-show="isEditingHotspot"
       :editing-hotspot-id="editingHotspotID"
       @save="saveHotspotData"
       @update="saveHotspotData(editingHotspotID)"
       @toggleMarker="toggleHotspotMarkers(camera)"
     />
     <OpenHotspot
-      v-if="isHotspotOpen && selectedHotspotID"
+      v-show="isHotspotOpen"
       :hotspotId="selectedHotspotID"
       @close="closeHotspot"
       @edit="editHotspot"
@@ -65,7 +69,14 @@
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef, onMounted, ref, watch, onBeforeUnmount } from "vue";
+import {
+  useTemplateRef,
+  onMounted,
+  ref,
+  watch,
+  onBeforeUnmount,
+  computed,
+} from "vue";
 import { useHotspotStore } from "../../stores/hotspotStore";
 import { useToolbar } from "../../scripts/useToolbar";
 import Toolbar from "./Toolbar.vue";
@@ -124,6 +135,12 @@ const {
   cleanup,
 } = useModelViewer(container);
 
+const areHSVisible = ref(true);
+
+const handleToolbarHSToggle = () => {
+  areHSVisible.value = toggleHotspotMarkers(camera);
+};
+
 // Toolbar config
 const {
   toggleFullscreen,
@@ -158,6 +175,10 @@ watch(light, (val) => {
 watch(bgColor, (val) => {
   setBackgroundColor(scene, val);
 });
+
+const toggleRotate = () => {
+  rotation.value = !rotation.value;
+};
 
 // Visualizer overlays
 const toggleHelpOverlay = () => {
@@ -303,6 +324,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  hotspotStore.cleanHotspotState();
   hotspotStore.cleanMarkers(scene);
   textureCleanup();
   cleanup();

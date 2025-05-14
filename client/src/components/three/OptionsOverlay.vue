@@ -42,10 +42,6 @@
         <Chevron v-model="animationOpen" />
       </div>
       <div v-if="animationOpen" class="flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <span>Auto-Rotation</span>
-          <Switch label="rotation" v-model="props.values.rotation.value" />
-        </div>
         <ValueSlider
           max="200"
           v-model="props.values.speed.value"
@@ -61,7 +57,6 @@ import type { Ref } from "vue";
 import { ref } from "vue";
 import Chevron from "./Chevron.vue";
 import ValueSlider from "../ValueSlider.vue";
-import Switch from "../Switch.vue";
 import BackgroundPicker from "./BackgroundPicker.vue";
 
 interface ThreeValues {

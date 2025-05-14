@@ -1,7 +1,7 @@
 <template>
   <button
     class="flex grow-0 shrink-0 w-fit items-center gap-1 font-medium font-poppins cursor-pointer rounded-xs"
-    :class="[buttonClass, props.class]"
+    :class="[buttonClass, props.class, disabledClass]"
     :disabled="props.disabled"
   >
     <slot />
@@ -37,5 +37,11 @@ const buttonClass = computed(() => {
     case "outline":
       return "px-2 py-1 bg-transparent border border-primary-300 text-primary-500";
   }
+});
+
+const disabledClass = computed(() => {
+  return props.disabled
+    ? "opacity-50 cursor-not-allowed pointer-events-none"
+    : "";
 });
 </script>

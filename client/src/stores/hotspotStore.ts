@@ -139,6 +139,19 @@ export const useHotspotStore = defineStore("hotspots", () => {
    */
   const cleanHotspotState = () => {
     hotspots.value = {};
+
+    isHotspotMode.value = false;
+
+    newHotspotID.value = 1;
+    newPosition.value = null;
+    newQuaternion.value = null;
+    newNormal.value = null;
+
+    newLabel.value = "";
+    newContent.value = "";
+
+    requestedEdit.value = null;
+    requestedDelete.value = null;
   };
 
   /**

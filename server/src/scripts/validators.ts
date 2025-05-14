@@ -29,6 +29,7 @@ export const newModelSchema = z.object({
   name: z.string().min(3).max(75),
   caption: z.string().min(10).max(250),
   description: z.string().min(20).max(2000),
+  downloadable: z.boolean(),
   tags: z.array(z.string().min(1)),
   materials: z.array(z.string().min(1)),
   dimensions: z.array(

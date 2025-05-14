@@ -220,7 +220,7 @@ export const useHotspots = (scene: THREE.Scene) => {
 
     const markerMeshes = hotspotStore.sceneMarkers.map((m) => m.marker);
 
-    const intersects = raycaster.intersectObjects(markerMeshes, false);
+    const intersects = raycaster.intersectObjects(markerMeshes, true);
 
     if (intersects.length > 0) {
       const intersected = intersects[0].object;
@@ -253,6 +253,8 @@ export const useHotspots = (scene: THREE.Scene) => {
     } else {
       camera.layers.enable(1);
     }
+
+    return camera.layers.isEnabled(1);
   };
 
   /**
@@ -391,8 +393,6 @@ export const useHotspots = (scene: THREE.Scene) => {
    * Disposes geometries and materials of the Hotspot marker
    */
   const deleteHotspot3DObject = (marker: THREE.Mesh) => {
-    console.log(`Deleting marker ${marker.name}`);
-
     marker.parent?.remove(marker);
 
     marker.geometry.dispose();
