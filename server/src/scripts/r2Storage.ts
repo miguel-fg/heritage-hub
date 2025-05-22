@@ -1,5 +1,6 @@
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
@@ -41,7 +42,6 @@ export const deleteObjectFromR2 = async (
 
   try {
     await s3Client.send(command);
-    console.log(`Successfully deleted object: ${objectKey}`);
     return true;
   } catch (error) {
     console.error(

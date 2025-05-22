@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import axiosInstance from "../scripts/axiosConfig";
-import fakeModelsData from "../../assets/fakeModels.json";
 
 interface Tag {
   name: string;
@@ -95,47 +94,6 @@ export const useModelStore = defineStore("models", () => {
     await fetchModels(pagination.value.limit, nextSkip);
   };
 
-  // Fake Models For Testing Only
-  const fetchFakeModels = async (limit = 24, skip = 0) => {
-    error.value = null;
-    loading.value = true;
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const total = fakeModelsData.length;
-      const pagedData = fakeModelsData.slice(skip, skip + limit);
-
-      if (models.value) {
-        models.value = [...models.value, ...pagedData];
-      } else {
-        models.value = pagedData;
-      }
-
-      pagination.value = {
-        page: Math.floor(skip / limit) + 1,
-        limit,
-        total,
-        hasMore: skip + limit < total,
-      };
-    } catch (err: any) {
-      console.error("[model store]: Failed to fetch fake models. ERR: ", err);
-      error.value = err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const loadMoreFakeModels = async () => {
-    if (loading.value || !pagination.value.hasMore) return;
-
-    const nextSkip = models.value?.length || 0;
-    console.log(
-      `Loading more with values: limit: ${pagination.value.limit}, skip: ${nextSkip}`,
-    );
-    await fetchFakeModels(pagination.value.limit, nextSkip);
-  };
-
   const getThumbnailUrl = async (modelId: string) => {
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedThumbnail = cachedModel.thumbnail;
@@ -173,7 +131,17 @@ export const useModelStore = defineStore("models", () => {
     return `https://picsum.photos/400/500?random=${modelId}`;
   };
 
-  const getObjectUrl = async (modelId: string, temp = false) => {
+  const getObjectUrl = async (
+    modelId: string,
+    editing = false,
+    file: File | null | undefined,
+  ) => {
+    // Load model from local file
+    if (editing && file) {
+      return await getLocalObjectUrl(file);
+    }
+
+    // Fetch model from cache or Cloudflare
     const cachedModel = presignedUrlCache.value[modelId] || {};
     const cachedObject = cachedModel.object;
 
@@ -182,9 +150,7 @@ export const useModelStore = defineStore("models", () => {
     }
 
     try {
-      const response = await axiosInstance.get(`/models/${modelId}/object`, {
-        params: { temp },
-      });
+      const response = await axiosInstance.get(`/models/${modelId}/object`);
       const newUrl = response.data.objectUrl;
 
       presignedUrlCache.value[modelId] = {
@@ -205,6 +171,24 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
+  const getLocalObjectUrl = (file: File) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("No file provided"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        resolve(event.target?.result);
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const resetPagination = () => {
     pagination.value = {
       page: 1,
@@ -215,6 +199,18 @@ export const useModelStore = defineStore("models", () => {
     models.value = null;
   };
 
+  const removeCachedUrls = (modelId: string) => {
+    delete presignedUrlCache.value[modelId];
+  };
+
+  const removeModelById = (modelId: string) => {
+    if (models.value) {
+      models.value = models.value.filter((m) => m.id !== modelId);
+    }
+
+    delete presignedUrlCache.value[modelId];
+  };
+
   return {
     models,
     loading,
@@ -223,11 +219,11 @@ export const useModelStore = defineStore("models", () => {
     resetPagination,
     fetchModels,
     loadMoreModels,
-    fetchFakeModels,
-    loadMoreFakeModels,
     presignedUrlCache,
     getThumbnailUrl,
     getFakeThumbnailUrl,
     getObjectUrl,
+    removeModelById,
+    removeCachedUrls,
   };
 });

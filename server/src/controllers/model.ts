@@ -67,6 +67,10 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
         tags: {
           select: { name: true },
         },
+        dimensions: {
+          select: { type: true, value: true, unit: true },
+        },
+        hotspots: true,
       },
     });
 
@@ -104,11 +108,9 @@ export const getModelObjectUrl = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id;
-  const { temp = "false" } = req.query;
 
   try {
-    const objectKey =
-      temp === "true" ? `temp/${modelId}/model.glb` : `${modelId}/model.glb`;
+    const objectKey = `${modelId}/model.glb`;
 
     const objectUrl = await generatePresignedUrl(BUCKET_NAME, objectKey);
     res.status(200).json({ objectUrl });
@@ -127,12 +129,17 @@ export const getModelUploadUrl = async (
   const { modelId } = req.body;
 
   try {
-    const uploadUrl = await generatePresignedUploadUrl(
+    const modelUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
-      `temp/${modelId}/model.glb`,
+      `${modelId}/model.glb`,
     );
 
-    res.status(200).json({ uploadUrl });
+    const thumbnailUrl = await generatePresignedUploadUrl(
+      BUCKET_NAME,
+      `${modelId}/thumbnail.png`,
+    );
+
+    res.status(200).json({ modelUrl, thumbnailUrl });
   } catch (error) {
     console.error("[server]: Failed to generate upload URL. ERR: ", error);
     res.status(500).json({
@@ -142,7 +149,88 @@ export const getModelUploadUrl = async (
 };
 
 export const newModel = async (req: Request, res: Response): Promise<void> => {
-  res.status(200).json({ message: "Create a new model" });
+  const {
+    id,
+    name,
+    caption,
+    description,
+    downloadable,
+    tags,
+    materials,
+    dimensions,
+    hotspots,
+  } = req.body;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Create model
+      await tx.model.create({
+        data: {
+          id,
+          name,
+          caption,
+          description,
+          downloadable,
+          modelPath: `${id}/model.glb`,
+          thumbnailPath: `${id}/thumbnail.png`,
+          multimediaPath: [],
+        },
+      });
+
+      // Handle tags
+      if (Array.isArray(tags)) {
+        await tx.model.update({
+          where: { id },
+          data: {
+            tags: {
+              connectOrCreate: tags.map((tagName) => ({
+                where: { name: tagName },
+                create: { name: tagName },
+              })),
+            },
+          },
+        });
+      }
+
+      // Handle materials
+      if (Array.isArray(materials)) {
+        await tx.model.update({
+          where: { id },
+          data: {
+            materials: {
+              connectOrCreate: materials.map((materialName) => ({
+                where: { name: materialName },
+                create: { name: materialName },
+              })),
+            },
+          },
+        });
+      }
+
+      // Create Dimensions
+      if (Array.isArray(dimensions)) {
+        await tx.dimension.createMany({
+          data: dimensions,
+        });
+      }
+
+      // Create Hotspots
+      if (Array.isArray(hotspots)) {
+        await tx.hotspot.createMany({
+          data: hotspots,
+        });
+      }
+    });
+
+    res
+      .status(201)
+      .json({ message: "Model created successfully", modelId: id });
+  } catch (error) {
+    console.error("[server] Failed to create model. ERR:", error);
+    res.status(500).json({
+      error: `[server]: Failed to create model. ERR: ${error}`,
+    });
+  }
 };
 
 export const deleteModel = async (
@@ -150,17 +238,38 @@ export const deleteModel = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id;
-  const { temp = "false" } = req.query;
+
+  if (!modelId) {
+    res.status(400).json({ error: "Model ID is required" });
+    return;
+  }
 
   try {
-    const objectKey =
-      temp === "true" ? `temp/${modelId}/model.glb` : `${modelId}/model.glb`;
+    const existing = await prisma.model.findUnique({
+      where: { id: modelId },
+    });
 
-    await deleteObjectFromR2(BUCKET_NAME, objectKey);
+    if (!existing) {
+      res.status(404).json({ error: `Model ${modelId} not found.` });
+      return;
+    }
 
-    res
-      .status(200)
-      .json({ message: `Model ${objectKey} deleted successfully!` });
+    await prisma.model.delete({
+      where: {
+        id: modelId,
+      },
+    });
+
+    const filesToDelete = [
+      `${modelId}/model.glb`,
+      // Add thumbnail and multimedia files here
+    ];
+
+    for (const file of filesToDelete) {
+      await deleteObjectFromR2(BUCKET_NAME, file);
+    }
+
+    res.status(200).json({ message: `Model ${modelId} deleted successfully!` });
   } catch (error) {
     console.error("[server]: Failed to delete model. ERR: ", error);
     res.status(500).json({

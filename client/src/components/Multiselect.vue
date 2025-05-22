@@ -1,17 +1,17 @@
 <template>
   <div v-if="!loading && options" class="flex flex-col w-full gap-1">
-    <label :for="`${props.label}-input`" class="subtitle text-primary-500">{{
+    <label :for="`${props.fieldId}`" class="subtitle text-grayscale-700">{{
       props.label
     }}</label>
     <v-select
       class="w-full multiselect-chooser"
-      :inputId="`${props.label}-input`"
+      :inputId="`${props.fieldId}`"
       multiple
       taggable
       :options="options"
       label="label"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
-      v-model="selected"
+      v-model="model"
     >
     </v-select>
   </div>
@@ -36,13 +36,25 @@
     <span class="sr-only">Loading {{ props.label }} multiselect...</span>
   </div>
   <div v-else-if="!loading && error" class="flex flex-col w-full gap-1">
-    <label :for="`${props.label}-input`" class="subtitle text-primary-500">{{
+    <label :for="`${props.fieldId}`" class="subtitle text-primary-500">{{
       props.label
     }}</label>
     <v-select
       class="w-full multiselect-chooser"
-      :inputId="`${props.label}-input`"
+      :inputId="`${props.fieldId}`"
       :placeholder="`Could not fetch ${props.label} options :(`"
+      :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
+      disabled
+    >
+    </v-select>
+  </div>
+  <div v-else class="flex flex-col w-full gap-1">
+    <label :for="`${props.fieldId}`" class="subtitle text-primary-500">
+      {{ props.label }}
+    </label>
+    <v-select
+      class="w-full multiselect-chooser"
+      :inputId="`${props.fieldId}`"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
       disabled
     >
@@ -65,6 +77,7 @@ interface Option {
 
 const props = defineProps<{
   label: "Tags" | "Materials";
+  fieldId: string;
 }>();
 
 const { fetchTags, fetchMaterials } = useSearchBar();
@@ -73,29 +86,22 @@ const loading = ref(false);
 const options = ref<Option[] | null>(null);
 const error = ref<any>(null);
 
-const selected = ref<Option[] | null>(null);
+const model = defineModel<Option[] | null>();
 
 onMounted(async () => {
-  if (!options.value) {
-    loading.value = true;
-    try {
-      if (props.label === "Tags") {
-        options.value = await fetchTags();
-      } else if (props.label === "Materials") {
-        options.value = await fetchMaterials();
-      }
-    } catch (err) {
-      console.log("[Multiselect.vue] Error fetching options. ERR: ", err);
-      error.value = err;
-    } finally {
-      loading.value = false;
-    }
+  if (props.label === "Tags") {
+    options.value = await fetchTags();
+  } else {
+    options.value = await fetchMaterials();
   }
 });
 </script>
 
 <style>
 .multiselect-chooser {
+  font-family: var(--font-garamond);
+  font-weight: 400;
+  font-size: 1rem;
   background: white;
 }
 

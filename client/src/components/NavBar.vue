@@ -132,6 +132,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
+import { useUpload } from "../scripts/useUpload";
 import Button from "./Button.vue";
 
 const route = useRoute();
@@ -147,6 +148,8 @@ const handleSearch = () => {
 };
 
 const handleUpload = () => {
-  router.push("/new");
+  openUpload();
 };
+
+const { openUpload } = useUpload();
 </script>

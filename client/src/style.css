@@ -55,6 +55,16 @@
   --color-danger-800: #60140a;
   --color-danger-900: #300a05;
 
+  --color-info-100: #d1eefc;
+  --color-info-200: #a3def9;
+  --color-info-300: #75cdf6;
+  --color-info-400: #47bdf3;
+  --color-info-500: #19acf0;
+  --color-info-600: #148ac0;
+  --color-info-700: #0f6790;
+  --color-info-800: #0a4560;
+  --color-info-900: #052230;
+
   --font-poppins: "Poppins", "sans-serif";
   --font-garamond: "EB Garamond", "serif";
 }

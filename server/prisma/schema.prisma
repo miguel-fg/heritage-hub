@@ -15,12 +15,36 @@ model Model {
     description     String
     materials       Material[]
     tags            Tag[]
-    dimensions      Json?
     modelPath       String
     thumbnailPath   String
     multimediaPath  String[]
     downloadable    Boolean     @default(true)
     createdAt       DateTime    @default(now())
+
+    dimensions      Dimension[]
+    hotspots        Hotspot[]
+}
+
+model Hotspot {
+    id        Int         @id @default(autoincrement())
+    model     Model       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+    modelId   String      @db.Uuid
+
+    label     String
+    content   String
+
+    posX      Float
+    posY      Float
+    posZ      Float
+
+    norX      Float
+    norY      Float
+    norZ      Float
+
+    quatX     Float
+    quatY     Float
+    quatZ     Float
+    quatW     Float
 }
 
 model Tag {
@@ -34,4 +58,21 @@ model Material {
     name      String     @unique
     models    Model[]
 }
-    
+
+model Dimension {
+    id        Int        @id @default(autoincrement())
+    model     Model      @relation(fields: [modelId], references: [id], onDelete: Cascade)
+    modelId   String     @db.Uuid
+
+    type      DimensionType
+    value     Float
+    unit      String
+}
+
+enum DimensionType {
+    WIDTH
+    HEIGHT
+    DEPTH
+    WEIGHT
+    VOLUME
+}
