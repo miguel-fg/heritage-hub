@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div
       v-if="props.visible"
-      class="fixed flex justify-center items-center inset-0 z-50 bg-grayscale-900/70"
+      class="fixed flex justify-center items-center inset-0 z-200 bg-grayscale-900/70 px-4"
     >
       <div
         class="flex flex-col justify-center items-center bg-grayscale-100 px-6 py-3 gap-5 shadow-lg w-full max-w-md rounded-sm"

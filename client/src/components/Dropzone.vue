@@ -1,11 +1,12 @@
 <template>
+  <h1 class="title text-primary-500">File Select</h1>
   <div
     @dragenter.prevent="toggleActive"
     @dragleave="toggleActive"
     @dragover.prevent
     @drop.prevent="handleDrop"
-    :class="active ? 'bg-grayscale-300 border-grayscale-500' : ''"
-    class="flex justify-center items-center w-full h-148 px-3 border-2 border-grayscale-400 bg-grayscale-200 rounded-xs hover:bg-grayscale-300 hover:border-grayscale-500"
+    :class="active ? 'bg-grayscale-200 border-grayscale-400' : ''"
+    class="flex justify-center items-center w-full h-148 px-3 border-2 border-dashed border-grayscale-300 bg-grayscale-100 rounded-xs hover:bg-grayscale-200 hover:border-grayscale-400"
   >
     <label
       for="objectInput"

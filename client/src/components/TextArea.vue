@@ -5,37 +5,38 @@
     }}</label>
     <textarea
       name="description"
-      v-model="mDescription"
+      v-model="model"
       rows="4"
       :id="props.fieldId"
       class="px-2 py-1 bg-white rounded-xs body"
       :class="
-        descriptionError && uploadAttempted
+        props.error && displayError
           ? 'border-2 border-danger-300'
           : 'border border-grayscale-300'
       "
     ></textarea>
-    <span v-if="uploadAttempted" class="tag text-danger-600">{{
-      descriptionError
+    <span v-if="displayError" class="tag text-danger-600">{{
+      props.error
     }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { watch, computed } from "vue";
+import { computed } from "vue";
 import { useUpload } from "../scripts/useUpload";
+
 const props = defineProps<{
   fieldId: string;
-  label: "Name" | "Caption" | "Description";
-  mandatory: boolean;
+  label: "Name" | "Caption" | "Description" | "Content" | "Label";
+  mandatory?: boolean;
+  error?: string | null;
+  showError?: boolean;
 }>();
 
-const { mDescription, descriptionError, uploadAttempted, validateField } =
-  useUpload();
+const model = defineModel<string>();
 
-watch(mDescription, () => {
-  validateField("Description");
-});
+const { uploadAttempted } = useUpload();
 
 const mandatory = computed(() => (props.mandatory ? "*" : ""));
+const displayError = computed(() => uploadAttempted || props.showError);
 </script>

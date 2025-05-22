@@ -5,6 +5,13 @@ import {
   type Dimension,
   type Hotspot,
 } from "../types/model";
+import axios from "axios";
+
+// GLB File
+const file = ref<File | null>(null);
+
+// Upload modal control
+const isUploadOpen = ref(false);
 
 // ModelForm fields
 const mName = ref<string>("");
@@ -249,7 +256,119 @@ export const useUpload = () => {
     return result;
   };
 
+  const getObjectUploadUrl = async (modelId: string) => {
+    try {
+      const response = await axiosInstance.post(`/models/upload-url`, {
+        modelId,
+      });
+
+      const urls = response.data;
+
+      return urls;
+    } catch (error) {
+      console.error("Failed to fetch upload presigned URL. ERR: ", error);
+      return null;
+    }
+  };
+
+  const uploadModeltoR2 = async (file: File, presignedUrl: string) => {
+    try {
+      const response = await axios.put(presignedUrl, file);
+
+      if (response.status >= 200 && response.status < 300) {
+        return true;
+      } else {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error uploading file to Cloudflare R2. ERR: ", error);
+      return false;
+    }
+  };
+
+  const openUpload = () => {
+    isUploadOpen.value = true;
+  };
+
+  const closeUpload = () => {
+    resetUploadState();
+    isUploadOpen.value = false;
+  };
+
+  const resetUploadState = () => {
+    // Reset file
+    file.value = null;
+
+    // Reset modal control
+    isUploadOpen.value = false;
+
+    // Reset form fields
+    mName.value = "";
+    nameError.value = null;
+    mCaption.value = "";
+    captionError.value = null;
+    mDescription.value = "";
+    descriptionError.value = null;
+    mAccNum.value = "";
+
+    // Reset dimensions
+    selectedDimensions.value = {
+      width: {
+        name: "Width",
+        value: null,
+        unit: null,
+        units: ["mm", "cm", "m", "in", "ft"],
+      },
+      height: {
+        name: "Height",
+        value: null,
+        unit: null,
+        units: ["mm", "cm", "m", "in", "ft"],
+      },
+      depth: {
+        name: "Depth",
+        value: null,
+        unit: null,
+        units: ["mm", "cm", "m", "in", "ft"],
+      },
+      weight: {
+        name: "Weight",
+        value: null,
+        unit: null,
+        units: ["g", "kg", "oz", "lb"],
+      },
+      volume: {
+        name: "Volume",
+        value: null,
+        unit: null,
+        units: ["ml", "l", "fl oz", "gal"],
+      },
+    };
+
+    // Reset tags and materials
+    selectedTags.value = null;
+    selectedMaterials.value = null;
+
+    // Reset hotspots
+    selectedHotspots.value = {};
+
+    // Reset thumbnail
+    thumbnail.value = null;
+
+    // Reset download option
+    downloadable.value = false;
+
+    // Reset validation states
+    isValid.value = false;
+    uploadAttempted.value = false;
+
+    // Reset loading and error states
+    loading.value = false;
+    error.value = null;
+  };
+
   return {
+    file,
     mName,
     nameError,
     mCaption,
@@ -269,5 +388,11 @@ export const useUpload = () => {
     validateForm,
     loading,
     publishModel,
+    isUploadOpen,
+    openUpload,
+    closeUpload,
+    getObjectUploadUrl,
+    uploadModeltoR2,
+    resetUploadState,
   };
 };

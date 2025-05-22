@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import axiosInstance from "../scripts/axiosConfig";
-import fakeModelsData from "../../assets/fakeModels.json";
 
 interface Tag {
   name: string;
@@ -93,47 +92,6 @@ export const useModelStore = defineStore("models", () => {
 
     const nextSkip = models.value?.length || 0;
     await fetchModels(pagination.value.limit, nextSkip);
-  };
-
-  // Fake Models For Testing Only
-  const fetchFakeModels = async (limit = 24, skip = 0) => {
-    error.value = null;
-    loading.value = true;
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const total = fakeModelsData.length;
-      const pagedData = fakeModelsData.slice(skip, skip + limit);
-
-      if (models.value) {
-        models.value = [...models.value, ...pagedData];
-      } else {
-        models.value = pagedData;
-      }
-
-      pagination.value = {
-        page: Math.floor(skip / limit) + 1,
-        limit,
-        total,
-        hasMore: skip + limit < total,
-      };
-    } catch (err: any) {
-      console.error("[model store]: Failed to fetch fake models. ERR: ", err);
-      error.value = err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const loadMoreFakeModels = async () => {
-    if (loading.value || !pagination.value.hasMore) return;
-
-    const nextSkip = models.value?.length || 0;
-    console.log(
-      `Loading more with values: limit: ${pagination.value.limit}, skip: ${nextSkip}`,
-    );
-    await fetchFakeModels(pagination.value.limit, nextSkip);
   };
 
   const getThumbnailUrl = async (modelId: string) => {
@@ -261,8 +219,6 @@ export const useModelStore = defineStore("models", () => {
     resetPagination,
     fetchModels,
     loadMoreModels,
-    fetchFakeModels,
-    loadMoreFakeModels,
     presignedUrlCache,
     getThumbnailUrl,
     getFakeThumbnailUrl,

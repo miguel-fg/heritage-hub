@@ -25,7 +25,7 @@ const buttonClass = computed(() => {
     case "secondary":
       return "px-2 py-1 bg-grayscale-300 text-grayscale-800 drop-shadow-sm hover:bg-grayscale-400 active:bg-grayscale-600 active:text-grayscale-200";
     case "success":
-      return "px-2 py-1 bg-success-300 text-grayscale-900 drop-shadow-sm hover:bg-success-400 active:bg-success-700 active:text-success-100";
+      return "px-2 py-1 bg-success-700 text-grayscale-100 drop-shadow-sm hover:bg-success-600 hover:text-white active:bg-success-300 active:text-success-900";
     case "danger":
       return "px-2 py-1 bg-danger-200 text-danger-800 drop-shadow-sm hover:bg-danger-300 active:bg-danger-700 active:text-danger-100";
     case "ghost":

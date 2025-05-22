@@ -1,9 +1,10 @@
 <template>
   <div
-    class="flex px-3 py-2 rounded-xs border gap-2 font-poppins text-xs"
+    class="flex px-3 py-2 rounded-xs border gap-2 font-poppins text-xs items-center"
     :class="containerStyle"
   >
-    <img :src="iconSrc" alt="Message icon" />
+    <InfoIcon v-if="props.type === 'info'" :width="19" :height="24" />
+    <WarningIcon v-else-if="props.type === 'warning'" :size="30" />
     <div class="flex flex-col gap-1">
       <p class="font-medium" :class="titleStyle"><slot name="title" /></p>
       <p :class="contentStyle"><slot name="content" /></p>
@@ -14,6 +15,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { type MessageType } from "../types/ui";
+import WarningIcon from "./icons/WarningIcon.vue";
+import InfoIcon from "./icons/InfoIcon.vue";
 
 const props = defineProps<{
   type: MessageType;
@@ -51,19 +54,6 @@ const contentStyle = computed(() => {
       return "text-warning-900";
     case "danger":
       return "text-danger-900";
-  }
-});
-
-const iconSrc = computed(() => {
-  switch (props.type) {
-    case "info":
-      return "../../assets/icons/info.svg";
-
-    case "warning":
-      return "../../assets/icons/warning.svg";
-
-    case "danger":
-      return "../../assets/icons/error.svg";
   }
 });
 </script>

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, type Ref } from "vue";
 import { type Mesh, type Vector3, type Scene } from "three";
 import { useHotspots } from "../scripts/useHotspots";
 import {
@@ -94,13 +94,13 @@ export const useHotspotStore = defineStore("hotspots", () => {
     };
   };
 
-  const deleteHotspot = (id: number, scene: Scene) => {
+  const deleteHotspot = (id: number, scene: Scene, modelScale: Ref<number>) => {
     if (!(id in hotspots.value)) return;
 
     delete hotspots.value[id];
 
     const marker = scene.getObjectByName(`HH_Hotspot_${id}`) as Mesh | null;
-    const { deleteHotspot3DObject } = useHotspots(scene);
+    const { deleteHotspot3DObject } = useHotspots(scene, modelScale);
 
     if (marker) {
       deleteHotspot3DObject(marker);
@@ -157,8 +157,8 @@ export const useHotspotStore = defineStore("hotspots", () => {
   /**
    * Remove markers from Three.js scene
    */
-  const cleanMarkers = (scene: Scene) => {
-    const { deleteHotspot3DObject } = useHotspots(scene);
+  const cleanMarkers = (scene: Scene, modelScale: Ref<number>) => {
+    const { deleteHotspot3DObject } = useHotspots(scene, modelScale);
     sceneMarkers.value.forEach(({ marker }) => {
       deleteHotspot3DObject(marker);
     });

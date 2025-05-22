@@ -1,0 +1,17 @@
+<template>
+  <svg
+    width="20"
+    height="12"
+    viewBox="0 0 20 12"
+    class="fill-current"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M9.99992 8.42604L18.3757 0.5L20 2.03699L9.99992 11.5L0 2.03699L1.6242 0.5L9.99992 8.42604Z"
+    />
+  </svg>
+</template>
+
+<script setup lang="ts"></script>

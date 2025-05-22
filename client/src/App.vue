@@ -1,10 +1,11 @@
 <template>
   <div class="flex flex-col h-screen">
+    <UploadModal v-if="isUploadOpen" />
     <ToastPlayer />
-    <NavBar v-if="route.name !== 'Search'" />
-    <SearchBar v-else />
+    <NavBar v-if="shouldShowNavBar" />
+    <SearchBar v-else-if="shouldShowSearchBar" />
     <div
-      class="h-full"
+      class="h-full flex-1"
       :class="shouldLoadMore ? 'overflow-y-auto px-0' : ''"
       ref="app"
     >
@@ -22,15 +23,23 @@ import { useTemplateRef, computed, watch, provide } from "vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useModelStore } from "./stores/modelStore";
 import { useSearchStore } from "./stores/searchStore";
+import UploadModal from "./components/upload/UploadModal.vue";
+import { useUpload } from "./scripts/useUpload";
 
 const route = useRoute();
 const appRef = useTemplateRef<HTMLElement>("app");
 const modelStore = useModelStore();
 const searchStore = useSearchStore();
+const { isUploadOpen } = useUpload();
 
 const shouldLoadMore = computed(
   () => route.name === "Gallery" || route.name === "Search",
 );
+
+const shouldShowNavBar = computed(
+  () => route.name !== "Search" && route.name !== "Upload",
+);
+const shouldShowSearchBar = computed(() => route.name === "Search");
 
 const hasMore = computed(() => {
   if (route.name === "Gallery") {

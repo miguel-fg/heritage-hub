@@ -14,6 +14,8 @@ export const useModelViewer = (
 ) => {
   const modelStore = useModelStore();
   const toastStore = useToastStore();
+
+  const modelScale = ref(1);
   // Core scene setup
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
@@ -125,11 +127,12 @@ export const useModelViewer = (
 
             // Adjust model position
             gltf.scene.position.x -= center.x;
-            gltf.scene.position.y -= center.y;
+            gltf.scene.position.y -= center.y - size.y / 2;
             gltf.scene.position.z -= center.z;
 
             // Adjust camera to fit model
             const maxDim = Math.max(size.x, size.y, size.z);
+            modelScale.value = maxDim;
             const fov = camera.fov * (Math.PI / 180);
             let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
             cameraZ *= 1.5; // Padding
@@ -141,6 +144,7 @@ export const useModelViewer = (
             camera.updateProjectionMatrix();
 
             if (controls.value) {
+              controls.value.target.set(0, size.y / 2, 0);
               controls.value.update();
             }
 
@@ -296,5 +300,6 @@ export const useModelViewer = (
     animate,
     handleResize,
     cleanup,
+    modelScale,
   };
 };

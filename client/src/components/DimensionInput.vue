@@ -1,8 +1,8 @@
 <template>
-  <div class="flex gap-2">
-    <div class="flex items-center w-20 shrink">
+  <div class="flex flex-col gap-1">
+    <div class="flex items-center w-21 shrink">
       <label
-        class="font-poppins font-medium text-grayscale-600 w-full"
+        class="subtitle text-grayscale-700 w-full"
         :for="`${props.dimension}-num-input`"
       >
         {{ dimensions[props.dimension].name }}

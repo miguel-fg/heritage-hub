@@ -5,7 +5,7 @@ import { useHotspotStore } from "../stores/hotspotStore";
 import { storeToRefs } from "pinia";
 import { type Hotspot, type HotspotMarker } from "../types/model.ts";
 import { useToastStore } from "../stores/toastStore.ts";
-import { ref } from "vue";
+import { ref, type Ref } from "vue";
 import type { OrbitControls } from "three/examples/jsm/Addons.js";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -40,7 +40,7 @@ const raycaster = new THREE.Raycaster();
 
 const unsavedMarker = ref<THREE.Mesh | null>(null);
 
-export const useHotspots = (scene: THREE.Scene) => {
+export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
   const toastStore = useToastStore();
   const hotspotStore = useHotspotStore();
   const {
@@ -123,6 +123,8 @@ export const useHotspots = (scene: THREE.Scene) => {
     marker.rotation.x = Math.PI / 2;
     marker.rotation.y = Math.PI / 2;
 
+    marker.scale.setScalar(modelScale.value);
+
     return marker;
   };
 
@@ -165,7 +167,9 @@ export const useHotspots = (scene: THREE.Scene) => {
         .clone()
         .applyMatrix3(normalMatrix)
         .normalize();
-      const offsetPoint = point.clone().add(worldNormal!.multiplyScalar(0.01));
+      const offsetPoint = point
+        .clone()
+        .add(worldNormal!.multiplyScalar(0.01 * modelScale.value));
 
       addHotspotMarker(offsetPoint, worldNormal);
       moveCameraToHotspot(offsetPoint, worldNormal, camera, controls);
@@ -324,69 +328,56 @@ export const useHotspots = (scene: THREE.Scene) => {
 
     const id = selectedHotspotID.value;
     closeHotspot();
-    hotspotStore.deleteHotspot(id, scene);
+    hotspotStore.deleteHotspot(id, scene, modelScale);
   };
 
   /**
    * Save new or update hotspot data
    */
-  const saveHotspotData = (id: number | null = null) => {
-    if (!id) {
-      // New hotspot
-      if (
-        !newPosition.value ||
-        !newNormal.value ||
-        !newQuaternion.value ||
-        newLabel.value === "" ||
-        newContent.value === ""
-      ) {
-        toastStore.showToast("error", "Invalid hotspot data!");
-        return;
-      }
-
-      const newKey = hotspotStore.addHotspot(
-        newLabel.value,
-        newContent.value,
-        newPosition.value,
-        newNormal.value,
-        newQuaternion.value,
-      );
-
-      const pos = new THREE.Vector3(
-        newPosition.value.x,
-        newPosition.value.y,
-        newPosition.value.z,
-      );
-      const nor = new THREE.Vector3(
-        newNormal.value.x,
-        newNormal.value.y,
-        newNormal.value.z,
-      );
-
-      if (unsavedMarker.value) {
-        hotspotStore.addMarker(newKey, unsavedMarker.value, pos, nor);
-        unsavedMarker.value = null;
-      }
-
-      hotspotStore.setHotspotMode(false);
-    } else {
-      // Update hotspot
-      if (!(id in hotspotStore.hotspots)) {
-        toastStore.showToast("error", "Could not update hotspot");
-        console.error("Hotspot ID not found");
-        return;
-      }
-
-      if (newLabel.value === "" || newContent.value === "") {
-        toastStore.showToast("error", "Invalid hotspot data");
-        return;
-      }
-
-      hotspotStore.saveHotspotData(id, newLabel.value, newContent.value);
-      editingHotspotID.value = null;
+  const saveHotspotData = () => {
+    // New hotspot
+    if (
+      !newPosition.value ||
+      !newNormal.value ||
+      !newQuaternion.value ||
+      newLabel.value === "" ||
+      newContent.value === ""
+    ) {
+      toastStore.showToast("error", "Invalid hotspot data!");
+      return;
     }
+
+    const newKey = hotspotStore.addHotspot(
+      newLabel.value,
+      newContent.value,
+      newPosition.value,
+      newNormal.value,
+      newQuaternion.value,
+    );
+
+    const pos = new THREE.Vector3(
+      newPosition.value.x,
+      newPosition.value.y,
+      newPosition.value.z,
+    );
+    const nor = new THREE.Vector3(
+      newNormal.value.x,
+      newNormal.value.y,
+      newNormal.value.z,
+    );
+
+    if (unsavedMarker.value) {
+      hotspotStore.addMarker(newKey, unsavedMarker.value, pos, nor);
+      unsavedMarker.value = null;
+    }
+
+    hotspotStore.setHotspotMode(false);
+
     isEditingHotspot.value = false;
     toastStore.showToast("success", "Hotspot saved!");
+
+    newLabel.value = "";
+    newContent.value = "";
   };
 
   /**

@@ -1,6 +1,5 @@
 <template>
   <div
-    v-if="!props.editing"
     class="absolute z-40 bottom-2 right-2 py-1 flex flex-col gap-4 bg-grayscale-100 rounded-xs shadow-xs"
   >
     <button
@@ -11,6 +10,7 @@
       <ToolbarIcon action="help" />
     </button>
     <button
+      v-if="!props.editing"
       @click="emit('download')"
       title="Download Model"
       class="cursor-pointer hover:bg-grayscale-200"
@@ -40,41 +40,6 @@
     >
       <ToolbarIcon action="options" />
     </button>
-    <button
-      @click="emit('fullscreen')"
-      title="Toggle Fullscreen"
-      class="cursor-pointer hover:bg-grayscale-200"
-    >
-      <ToolbarIcon action="fullscreen" />
-    </button>
-  </div>
-  <div
-    v-else
-    class="absolute z-40 bottom-2 right-2 py-1 flex flex-col gap-4 bg-grayscale-100 rounded-xs shadow-xs"
-  >
-    <button
-      @click="emit('help')"
-      title="Help Menu"
-      class="cursor-pointer hover:bg-grayscale-200"
-    >
-      <ToolbarIcon action="help" />
-    </button>
-    <button
-      @click="emit('rotation')"
-      title="Play Animation"
-      class="cursor-pointer hover:bg-grayscale-200"
-    >
-      <ToolbarIcon v-show="!props.rotation" action="play" />
-      <ToolbarIcon v-show="props.rotation" action="pause" />
-    </button>
-    <button
-      @click="emit('options')"
-      title="Toggle Options"
-      class="cursor-pointer hover:bg-grayscale-200"
-    >
-      <ToolbarIcon action="options" />
-    </button>
-
     <button
       @click="emit('fullscreen')"
       title="Toggle Fullscreen"

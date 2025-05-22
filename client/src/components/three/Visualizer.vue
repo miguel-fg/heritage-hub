@@ -38,13 +38,6 @@
       state="visiting"
     />
     <OptionsOverlay v-show="isOptionsOpen" state="visiting" :values="values" />
-    <HotspotOverlay
-      v-show="isEditingHotspot"
-      :editing-hotspot-id="editingHotspotID"
-      @save="saveHotspotData"
-      @update="saveHotspotData(editingHotspotID)"
-      @toggleMarker="toggleHotspotMarkers(camera)"
-    />
     <OpenHotspot
       v-show="isHotspotOpen"
       :hotspotId="selectedHotspotID"
@@ -69,20 +62,12 @@
 </template>
 
 <script setup lang="ts">
-import {
-  useTemplateRef,
-  onMounted,
-  ref,
-  watch,
-  onBeforeUnmount,
-  computed,
-} from "vue";
+import { useTemplateRef, onMounted, ref, watch, onBeforeUnmount } from "vue";
 import { useHotspotStore } from "../../stores/hotspotStore";
 import { useToolbar } from "../../scripts/useToolbar";
 import Toolbar from "./Toolbar.vue";
 import HelpOverlay from "./HelpOverlay.vue";
 import OptionsOverlay from "./OptionsOverlay.vue";
-import HotspotOverlay from "./HotspotOverlay.vue";
 import OpenHotspot from "./OpenHotspot.vue";
 import { storeToRefs } from "pinia";
 import { useUpload } from "../../scripts/useUpload";
@@ -98,9 +83,14 @@ const props = defineProps({
   fileRef: { type: File, required: false },
   captureRequest: { type: Boolean, default: false },
   deleteUnsaved: { type: Boolean, default: false },
+  commitUnsaved: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["capture-complete", "unsaved-deleted"]);
+const emit = defineEmits([
+  "capture-complete",
+  "unsaved-deleted",
+  "unsaved-commited",
+]);
 
 // Visualizer configuration
 const fov = ref("75");
@@ -133,6 +123,7 @@ const {
   fetchAndLoadModel,
   handleResize,
   cleanup,
+  modelScale,
 } = useModelViewer(container);
 
 const areHSVisible = ref(true);
@@ -206,14 +197,13 @@ const {
   closeHotspot,
   editHotspot,
   isEditingHotspot,
-  editingHotspotID,
   deleteHotspot,
-  saveHotspotData,
   textureCleanup,
   toggleHotspotMarkers,
   deleteHotspot3DObject,
+  saveHotspotData,
   unsavedMarker,
-} = useHotspots(scene);
+} = useHotspots(scene, modelScale);
 
 watch(isHotspotMode, (newVal) => {
   if (newVal) {
@@ -265,8 +255,18 @@ watch(
       deleteHotspot3DObject(unsavedMarker.value);
       unsavedMarker.value = null;
       isEditingHotspot.value = false;
+      emit("unsaved-deleted");
     }
-    emit("unsaved-deleted");
+  },
+);
+
+watch(
+  () => props.commitUnsaved,
+  (newVal) => {
+    if (newVal && unsavedMarker.value) {
+      saveHotspotData();
+      emit("unsaved-commited");
+    }
   },
 );
 
@@ -325,7 +325,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   hotspotStore.cleanHotspotState();
-  hotspotStore.cleanMarkers(scene);
+  hotspotStore.cleanMarkers(scene, modelScale);
   textureCleanup();
   cleanup();
   window.removeEventListener("resize", debouncedResize);

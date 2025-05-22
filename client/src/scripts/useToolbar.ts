@@ -69,10 +69,10 @@ export const useToolbar = () => {
         scene.background = new Color(0xffffff);
         break;
       case "gray":
-        scene.background = new Color(0x888888);
+        scene.background = new Color(0x817e7f);
         break;
       case "black":
-        scene.background = new Color(0x000000);
+        scene.background = new Color(0x0d0d0d);
         break;
     }
   };
