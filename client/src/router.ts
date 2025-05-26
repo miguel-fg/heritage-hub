@@ -5,6 +5,7 @@ import About from "./pages/About.vue";
 import Gallery from "./pages/Gallery.vue";
 import Model from "./pages/Model.vue";
 import Search from "./pages/Search.vue";
+import Edit from "./pages/Edit.vue";
 import { nextTick } from "vue";
 
 const routes = [
@@ -23,6 +24,11 @@ const routes = [
     path: "/model/:id",
     name: "Model",
     component: Model,
+  },
+  {
+    path: "/edit/:id",
+    name: "Edit",
+    component: Edit,
   },
   { path: "/search", name: "Search", component: Search },
 ];

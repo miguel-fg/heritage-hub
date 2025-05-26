@@ -2,6 +2,7 @@ import { type Mesh, type Vector3 } from "three";
 
 export type Model = {
   id: string;
+  accNum: string;
   name: string;
   caption: string;
   description: string;
@@ -15,7 +16,7 @@ export type Model = {
   createdAt: string;
 };
 
-type ModelDimension = {
+export type ModelDimension = {
   type: "WIDTH" | "HEIGHT" | "DEPTH" | "WEIGHT" | "VOLUME";
   value: number;
   unit: string;

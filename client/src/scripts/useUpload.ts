@@ -57,10 +57,10 @@ const selectedDimensions = ref<Record<DimensionKey, Dimension>>({
 });
 
 // Tags
-const selectedTags = ref<{ value: string; label: string }[] | null>(null);
+const selectedTags = ref<{ name: string }[] | null>(null);
 
 // Materials
-const selectedMaterials = ref<{ value: string; label: string }[] | null>(null);
+const selectedMaterials = ref<{ name: string }[] | null>(null);
 
 // Hotspots
 const selectedHotspots = ref<Record<number, Hotspot>>({});
@@ -173,14 +173,14 @@ export const useUpload = () => {
   };
 
   const sanitizeMultiselect = (
-    selected: { label: string; value: string }[] | null,
+    selected: { name: string }[] | null,
   ): string[] => {
     if (!selected) return [];
 
     const result: string[] = [];
 
     for (const s of selected) {
-      result.push(s.label);
+      result.push(s.name);
     }
 
     return result;

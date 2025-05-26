@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import convert, { type Unit } from "convert";
+import type { ModelDimension } from "../types/model";
 
 type DimensionKey = "width" | "height" | "depth" | "weight" | "volume";
 type DimensionType = "Width" | "Height" | "Depth" | "Weight" | "Volume";
@@ -97,5 +98,47 @@ export const useDimensions = () => {
     }
   };
 
-  return { dimensions, setValue, setUnit, clearDimension, formatDimension };
+  const dbToRecord = (dbDimensions: ModelDimension[]) => {
+    if (!dbDimensions) {
+      console.error("[useDimensions]: ModelDimensions[] parameter not found.");
+      return false;
+    }
+
+    const dimensionMap = {
+      WIDTH: "width",
+      HEIGHT: "height",
+      DEPTH: "depth",
+      WEIGHT: "weight",
+      VOLUME: "volume",
+    } as const;
+
+    dbDimensions.forEach((dim) => {
+      const key = dimensionMap[dim.type] as keyof typeof dimensions.value;
+
+      if (key && dimensions.value[key]) {
+        dimensions.value[key].value = dim.value;
+        dimensions.value[key].unit = dim.unit;
+      }
+    });
+
+    return true;
+  };
+
+  const resetDimensions = () => {
+    clearDimension("width");
+    clearDimension("height");
+    clearDimension("depth");
+    clearDimension("weight");
+    clearDimension("volume");
+  };
+
+  return {
+    dimensions,
+    setValue,
+    setUnit,
+    clearDimension,
+    formatDimension,
+    resetDimensions,
+    dbToRecord,
+  };
 };

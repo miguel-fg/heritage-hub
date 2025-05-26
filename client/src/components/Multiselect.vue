@@ -9,7 +9,7 @@
       multiple
       taggable
       :options="options"
-      label="label"
+      label="name"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
       v-model="model"
     >
@@ -68,32 +68,24 @@ import OpenIndicator from "./upload/OpenIndicator.vue";
 import DeselectMultiselect from "./upload/DeselectMultiselect.vue";
 import "vue-select/dist/vue-select.css";
 import { onMounted, ref } from "vue";
-import { useSearchBar } from "../scripts/searchUtils";
-
-interface Option {
-  value: string;
-  label: string;
-}
+import { useMultiselect } from "../scripts/useMultiselect";
+import { type Material, type Tag } from "../types/model";
 
 const props = defineProps<{
   label: "Tags" | "Materials";
   fieldId: string;
+  editing?: boolean;
 }>();
 
-const { fetchTags, fetchMaterials } = useSearchBar();
+const { options, fetchOptions } = useMultiselect();
 
 const loading = ref(false);
-const options = ref<Option[] | null>(null);
 const error = ref<any>(null);
 
-const model = defineModel<Option[] | null>();
+const model = defineModel<Material[] | Tag[] | null>();
 
 onMounted(async () => {
-  if (props.label === "Tags") {
-    options.value = await fetchTags();
-  } else {
-    options.value = await fetchMaterials();
-  }
+  options.value = await fetchOptions(props.label);
 });
 </script>
 

@@ -82,16 +82,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useHotspotStore } from "../../stores/hotspotStore";
 import { useUpload } from "../../scripts/useUpload";
 import { isEmptyRecord } from "../../scripts/hhUtils";
 import HotspotCard from "./HotspotCard.vue";
 import Spinner from "../Spinner.vue";
 import CollapsableFormSection from "./CollapsableFormSection.vue";
+import { useEdit } from "../../scripts/useEdit";
+import { useModelStore } from "../../stores/modelStore";
 
 const hotspotStore = useHotspotStore();
+const modelStore = useModelStore();
+
+const props = defineProps<{
+  editing?: boolean;
+}>();
 
 const { thumbnail, downloadable } = useUpload();
+const { toEdit } = useEdit();
+
 const commentsAllowed = ref(false);
+
+onMounted(async () => {
+  if (props.editing && toEdit.value) {
+    thumbnail.value = await modelStore.getThumbnailUrl(toEdit.value.id);
+    downloadable.value = toEdit.value.downloadable;
+  }
+});
 </script>
