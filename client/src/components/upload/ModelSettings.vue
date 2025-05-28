@@ -90,10 +90,8 @@ import HotspotCard from "./HotspotCard.vue";
 import Spinner from "../Spinner.vue";
 import CollapsableFormSection from "./CollapsableFormSection.vue";
 import { useEdit } from "../../scripts/useEdit";
-import { useModelStore } from "../../stores/modelStore";
 
 const hotspotStore = useHotspotStore();
-const modelStore = useModelStore();
 
 const props = defineProps<{
   editing?: boolean;
@@ -104,9 +102,8 @@ const { toEdit } = useEdit();
 
 const commentsAllowed = ref(false);
 
-onMounted(async () => {
+onMounted(() => {
   if (props.editing && toEdit.value) {
-    thumbnail.value = await modelStore.getThumbnailUrl(toEdit.value.id);
     downloadable.value = toEdit.value.downloadable;
   }
 });

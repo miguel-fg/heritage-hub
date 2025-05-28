@@ -1,8 +1,20 @@
 import { ref, nextTick } from "vue";
+import { useUpload } from "./useUpload.ts";
 import { type Model } from "../types/model.ts";
+import axiosInstance from "./axiosConfig.ts";
+import { dataUrlToFile } from "./hhUtils.ts";
+import { useToastStore } from "../stores/toastStore.ts";
+import {
+  type DimensionKey,
+  type Dimension,
+  type Hotspot,
+} from "../types/model";
+import { useDimensions } from "./useDimensions.ts";
+import { useHotspotStore } from "../stores/hotspotStore.ts";
 
 const toEdit = ref<Model | null>();
 const originalModel = ref<Model | null>();
+const originalThumbnail = ref("");
 const isEditOpen = ref(false);
 
 const isValid = ref(false);
@@ -13,6 +25,9 @@ const descriptionError = ref<string | null>(null);
 export const useEdit = () => {
   const loading = ref(false);
   const error = ref<any>(null);
+
+  const toastStore = useToastStore();
+  const hotspotStore = useHotspotStore();
 
   const initEditState = async (model: Model): Promise<boolean> => {
     originalModel.value = model;
@@ -30,6 +45,10 @@ export const useEdit = () => {
   const resetEditState = () => {
     toEdit.value = null;
     originalModel.value = null;
+
+    nameError.value = null;
+    captionError.value = null;
+    descriptionError.value = null;
   };
 
   const openEdit = () => {
@@ -104,6 +123,155 @@ export const useEdit = () => {
       !nameError.value && !captionError.value && !descriptionError.value;
   };
 
+  const saveChanges = async () => {
+    if (!isValid || !toEdit.value) return;
+
+    const { thumbnail, getObjectUploadUrl, uploadModeltoR2 } = useUpload();
+
+    if (!thumbnail.value) return;
+
+    loading.value = true;
+
+    if (originalThumbnail.value !== thumbnail.value) {
+      console.log("[useEdit.ts]: New thumbnail detected.");
+      console.log("[useEdit.ts]: Uploading new thumbnail to Cloudflare...");
+
+      const { thumbnailUrl } = await getObjectUploadUrl(toEdit.value.id);
+      const thumbnailUploaded = await uploadModeltoR2(
+        dataUrlToFile(thumbnail.value),
+        thumbnailUrl,
+      );
+
+      if (!thumbnailUploaded) {
+        toastStore.showToast("error", "Failed to update thumbnail");
+        return false;
+      }
+      console.log("[useEdit.ts]: SUCCESS");
+    } else {
+      console.log("[useEdit.ts]: Thumbnail unchanged. R2 upload skipped.");
+    }
+
+    console.log("[useEdit.ts]: Writing changes to database");
+    try {
+      const data = buildFormData();
+      await axiosInstance.post("/models/update", data);
+      console.log(`[useEdit.ts]: SUCCESS`);
+      loading.value = false;
+      return true;
+    } catch (err) {
+      console.error(`[useEdit.ts]: Failed to update model. ERR: ${err}`);
+      error.value = err;
+      loading.value = false;
+      return false;
+    }
+  };
+
+  const buildFormData = () => {
+    if (!toEdit.value) return;
+
+    const { dimensions } = useDimensions();
+    const { downloadable } = useUpload();
+
+    const formData = {
+      id: toEdit.value.id,
+      name: toEdit.value.name,
+      caption: toEdit.value.caption,
+      description: toEdit.value.description,
+      downloadable: downloadable.value,
+      accNum: toEdit.value.accNum,
+      materials: sanitizeMultiselect(toEdit.value.materials),
+      tags: sanitizeMultiselect(toEdit.value.tags),
+      dimensions: sanitizeDimensions(dimensions.value, toEdit.value.id),
+      hotspots: sanitizeHotspots(hotspotStore.hotspots, toEdit.value.id),
+    };
+
+    return formData;
+  };
+
+  const sanitizeMultiselect = (
+    selected: { name: string }[] | null,
+  ): string[] => {
+    if (!selected) return [];
+
+    const result: string[] = [];
+
+    for (const s of selected) {
+      result.push(s.name);
+    }
+
+    return result;
+  };
+
+  const sanitizeDimensions = (
+    dimensions: Record<DimensionKey, Dimension>,
+    modelId: string,
+  ): {
+    modelId: string;
+    type: string;
+    value: number;
+    unit: string;
+  }[] => {
+    if (!dimensions) return [];
+
+    const result: {
+      modelId: string;
+      type: string;
+      value: number;
+      unit: string;
+    }[] = [];
+
+    for (const key of Object.keys(dimensions)) {
+      const { name, value, unit } = dimensions[key as keyof typeof dimensions];
+
+      if (!value || !unit) continue;
+
+      result.push({ modelId, type: name.toUpperCase(), value, unit });
+    }
+
+    return result;
+  };
+
+  const sanitizeHotspots = (
+    hotspots: Record<number, Hotspot>,
+    modelId: string,
+  ) => {
+    const result: {
+      modelId: string;
+      label: string;
+      content: string;
+      posX: number;
+      posY: number;
+      posZ: number;
+      norX: number;
+      norY: number;
+      norZ: number;
+      quatX: number;
+      quatY: number;
+      quatZ: number;
+      quatW: number;
+    }[] = [];
+
+    for (const h of Object.values(hotspots)) {
+      result.push({
+        modelId,
+        label: h.label,
+        content: h.content,
+        posX: h.position.x,
+        posY: h.position.y,
+        posZ: h.position.z,
+        norX: h.normal.x,
+        norY: h.normal.y,
+        norZ: h.normal.z,
+        quatX: h.quaternion.x,
+        quatY: h.quaternion.y,
+        quatZ: h.quaternion.z,
+        quatW: h.quaternion.w,
+      });
+    }
+
+    return result;
+  };
+
   return {
     initEditState,
     resetEditState,
@@ -119,5 +287,7 @@ export const useEdit = () => {
     descriptionError,
     validateField,
     validateForm,
+    originalThumbnail,
+    saveChanges,
   };
 };

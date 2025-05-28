@@ -24,11 +24,12 @@ const DIMENSION_UNITS = [
   "gal",
 ] as const;
 
-export const newModelSchema = z.object({
+export const modelSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(3).max(75),
   caption: z.string().min(10).max(250),
   description: z.string().min(20).max(2000),
+  accNum: z.string().nullable(),
   downloadable: z.boolean(),
   tags: z.array(z.string().min(1)),
   materials: z.array(z.string().min(1)),
@@ -58,3 +59,5 @@ export const newModelSchema = z.object({
     }),
   ),
 });
+
+export type ModelRequestBody = z.infer<typeof modelSchema>;

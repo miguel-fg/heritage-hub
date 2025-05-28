@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useHotspotStore } from "../../stores/hotspotStore";
 import Button from "../Button.vue";
@@ -80,6 +80,8 @@ import EditForm from "./EditForm.vue";
 import ConfirmationModal from "../ConfirmationModal.vue";
 import { useEdit } from "../../scripts/useEdit";
 import Visualizer from "../three/Visualizer.vue";
+import { useToastStore } from "../../stores/toastStore";
+import { useModelStore } from "../../stores/modelStore";
 
 const emit = defineEmits(["save", "cancel"]);
 const router = useRouter();
@@ -96,9 +98,11 @@ const hideConfirmation = () => {
 
 const saving = ref(false);
 
+const modelStore = useModelStore();
 const hotspotStore = useHotspotStore();
 
-const { toEdit, resetEditState } = useEdit();
+const { toEdit, resetEditState, validateForm, isValid, saveChanges } =
+  useEdit();
 
 const snapCamera = ref(false);
 
@@ -117,7 +121,35 @@ const setCommitUnsaved = (active: boolean) => {
   commitUnsaved.value = active;
 };
 
-const handleValidate = () => {};
+const toastStore = useToastStore();
+
+const handleValidate = async () => {
+  if (!toEdit.value) return;
+
+  saving.value = true;
+  validateForm();
+
+  if (!isValid.value) {
+    toastStore.showToast("error", "Failed to save model changes.");
+    saving.value = false;
+    return;
+  }
+
+  const success = await saveChanges();
+
+  if (!success) {
+    toastStore.showToast("error", "Failed to save model changes.");
+    saving.value = false;
+    return;
+  }
+
+  toastStore.showToast("success", "Model updated successfully!");
+
+  modelStore.removeCachedUrls(toEdit.value.id);
+  modelStore.resetPagination();
+  saving.value = false;
+  router.back();
+};
 
 const handleCancel = () => {
   confirmationVisible.value = false;
@@ -138,6 +170,13 @@ onMounted(() => {
     console.error("[EditModal.vue] No model provided for editing.");
     resetEditState();
     router.back();
+  } else {
+    hotspotStore.setHotspotState(toEdit.value.hotspots);
   }
+});
+
+onUnmounted(() => {
+  hotspotStore.cleanHotspotState();
+  resetEditState();
 });
 </script>

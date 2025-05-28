@@ -120,8 +120,6 @@ export const useDimensions = () => {
         dimensions.value[key].unit = dim.unit;
       }
     });
-
-    return true;
   };
 
   const resetDimensions = () => {

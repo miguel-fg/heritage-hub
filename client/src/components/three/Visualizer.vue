@@ -319,7 +319,9 @@ onMounted(async () => {
   loadExistingHotspots();
 
   if (props.editing) {
-    setInitialThumbnail();
+    await setInitialThumbnail();
+  } else {
+    await setInitialThumbnail(props.modelId);
   }
 
   window.addEventListener("resize", debouncedResize);
