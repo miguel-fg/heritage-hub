@@ -36,7 +36,7 @@
     <HelpOverlay
       v-show="isHelpOpen"
       @click="toggleHelpOverlay"
-      state="visiting"
+      :show-download="props.downloadable"
     />
     <OptionsOverlay v-show="isOptionsOpen" state="visiting" :values="values" />
     <OpenHotspot
