@@ -10,7 +10,7 @@
       <ToolbarIcon action="help" />
     </button>
     <button
-      v-if="!props.editing"
+      v-if="!props.editing && props.showDownload"
       @click="emit('download')"
       title="Download Model"
       class="cursor-pointer hover:bg-grayscale-200"
@@ -57,6 +57,7 @@ const props = defineProps({
   editing: { type: Boolean, default: false },
   rotation: { type: Boolean, required: true },
   hotspotsVisible: { type: Boolean, required: true },
+  showDownload: { type: Boolean, required: true },
 });
 
 const emit = defineEmits([

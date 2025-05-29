@@ -25,6 +25,7 @@
       :editing="props.editing"
       :rotation="rotation"
       :hotspots-visible="areHSVisible"
+      :show-download="props.downloadable"
       @fullscreen="toggleFullscreen(fsContainer)"
       @download="downloadModel(downloadLink, objectUrl)"
       @hotspots="handleToolbarHSToggle"
@@ -79,6 +80,7 @@ import { useThumbnail } from "../../scripts/useThumbnail";
 
 const props = defineProps({
   modelId: { type: String, required: true },
+  downloadable: { type: Boolean, default: false },
   editing: { type: Boolean, default: false },
   fileRef: { type: File, required: false },
   captureRequest: { type: Boolean, default: false },
