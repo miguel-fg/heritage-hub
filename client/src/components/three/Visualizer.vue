@@ -43,8 +43,6 @@
       v-show="isHotspotOpen"
       :hotspotId="selectedHotspotID"
       @close="closeHotspot"
-      @edit="editHotspot"
-      @delete="deleteHotspot"
     />
     <!-- Three js renderer -->
     <div
@@ -175,10 +173,18 @@ const toggleRotate = () => {
 
 // Visualizer overlays
 const toggleHelpOverlay = () => {
+  if (!isHelpOpen.value) {
+    closeHotspot();
+    isOptionsOpen.value = false;
+  }
   isHelpOpen.value = !isHelpOpen.value;
 };
 
 const toggleOptionsMenu = () => {
+  if (!isOptionsOpen.value) {
+    closeHotspot();
+    isHelpOpen.value = false;
+  }
   isOptionsOpen.value = !isOptionsOpen.value;
 };
 
@@ -285,6 +291,8 @@ const handleModelClick = (event: MouseEvent) => {
       controls.value,
     );
     isEditingHotspot.value = false;
+    isHelpOpen.value = false;
+    isOptionsOpen.value = false;
     openHotspot(hoveredMarker.value.id);
     return;
   }
