@@ -1,4 +1,6 @@
 import { ref, type Ref } from "vue";
+import { useModelStore } from "../stores/modelStore";
+import { useEdit } from "./useEdit";
 import * as THREE from "three";
 
 export const useThumbnail = (
@@ -9,6 +11,7 @@ export const useThumbnail = (
 ) => {
   const showFlash = ref(false);
   const captureReady = ref(false);
+  const modelStore = useModelStore();
 
   /**
    * Manual thumbnail capture (adds flash effect for feedback)
@@ -65,9 +68,22 @@ export const useThumbnail = (
     camera.layers.enableAll();
   };
 
-  const setInitialThumbnail = () => {
+  const setInitialThumbnail = async (
+    modelId: string | undefined = undefined,
+  ) => {
     captureReady.value = true;
-    captureThumbnail();
+
+    const { originalThumbnail } = useEdit();
+
+    if (modelId) {
+      const thumbnail = await modelStore.getThumbnailUrl(modelId);
+
+      originalThumbnail.value = thumbnail;
+      thumbnailRef.value = thumbnail;
+      origin;
+    } else {
+      captureThumbnail();
+    }
   };
 
   return {

@@ -171,6 +171,11 @@ export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
         .clone()
         .add(worldNormal!.multiplyScalar(0.01 * modelScale.value));
 
+      if (unsavedMarker.value) {
+        deleteHotspot3DObject(unsavedMarker.value);
+        unsavedMarker.value = null;
+      }
+
       addHotspotMarker(offsetPoint, worldNormal);
       moveCameraToHotspot(offsetPoint, worldNormal, camera, controls);
     }

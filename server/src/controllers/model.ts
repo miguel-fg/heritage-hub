@@ -5,6 +5,7 @@ import {
   generatePresignedUploadUrl,
   deleteObjectFromR2,
 } from "../scripts/r2Storage";
+import { ModelRequestBody } from "../scripts/validators";
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
 
@@ -148,12 +149,16 @@ export const getModelUploadUrl = async (
   }
 };
 
-export const newModel = async (req: Request, res: Response): Promise<void> => {
+export const newModel = async (
+  req: Request<unknown, unknown, ModelRequestBody>,
+  res: Response,
+): Promise<void> => {
   const {
     id,
     name,
     caption,
     description,
+    accNum,
     downloadable,
     tags,
     materials,
@@ -170,6 +175,7 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
           name,
           caption,
           description,
+          accNum,
           downloadable,
           modelPath: `${id}/model.glb`,
           thumbnailPath: `${id}/thumbnail.png`,
@@ -178,48 +184,40 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
       });
 
       // Handle tags
-      if (Array.isArray(tags)) {
-        await tx.model.update({
-          where: { id },
-          data: {
-            tags: {
-              connectOrCreate: tags.map((tagName) => ({
-                where: { name: tagName },
-                create: { name: tagName },
-              })),
-            },
+      await tx.model.update({
+        where: { id },
+        data: {
+          tags: {
+            connectOrCreate: tags.map((tagName) => ({
+              where: { name: tagName },
+              create: { name: tagName },
+            })),
           },
-        });
-      }
+        },
+      });
 
       // Handle materials
-      if (Array.isArray(materials)) {
-        await tx.model.update({
-          where: { id },
-          data: {
-            materials: {
-              connectOrCreate: materials.map((materialName) => ({
-                where: { name: materialName },
-                create: { name: materialName },
-              })),
-            },
+      await tx.model.update({
+        where: { id },
+        data: {
+          materials: {
+            connectOrCreate: materials.map((materialName) => ({
+              where: { name: materialName },
+              create: { name: materialName },
+            })),
           },
-        });
-      }
+        },
+      });
 
       // Create Dimensions
-      if (Array.isArray(dimensions)) {
-        await tx.dimension.createMany({
-          data: dimensions,
-        });
-      }
+      await tx.dimension.createMany({
+        data: dimensions,
+      });
 
       // Create Hotspots
-      if (Array.isArray(hotspots)) {
-        await tx.hotspot.createMany({
-          data: hotspots,
-        });
-      }
+      await tx.hotspot.createMany({
+        data: hotspots,
+      });
     });
 
     res
@@ -227,6 +225,107 @@ export const newModel = async (req: Request, res: Response): Promise<void> => {
       .json({ message: "Model created successfully", modelId: id });
   } catch (error) {
     console.error("[server] Failed to create model. ERR:", error);
+    res.status(500).json({
+      error: `[server]: Failed to create model. ERR: ${error}`,
+    });
+  }
+};
+
+export const updateModel = async (
+  req: Request<unknown, unknown, ModelRequestBody>,
+  res: Response,
+): Promise<void> => {
+  const {
+    id,
+    name,
+    caption,
+    description,
+    accNum,
+    downloadable,
+    tags,
+    materials,
+    dimensions,
+    hotspots,
+  } = req.body;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Model base fields
+      await tx.model.update({
+        where: { id },
+        data: {
+          name,
+          caption,
+          description,
+          accNum,
+          downloadable,
+        },
+      });
+
+      // Replace tags
+      await tx.model.update({
+        where: { id },
+        data: {
+          tags: { set: [] },
+        },
+      });
+
+      await tx.model.update({
+        where: { id },
+        data: {
+          tags: {
+            connectOrCreate: tags.map((tagName) => ({
+              where: { name: tagName },
+              create: { name: tagName },
+            })),
+          },
+        },
+      });
+
+      // Replace materials
+      await tx.model.update({
+        where: { id },
+        data: {
+          materials: { set: [] },
+        },
+      });
+
+      await tx.model.update({
+        where: { id },
+        data: {
+          materials: {
+            connectOrCreate: materials.map((materialName) => ({
+              where: { name: materialName },
+              create: { name: materialName },
+            })),
+          },
+        },
+      });
+
+      // Replace dimensions
+      await tx.dimension.deleteMany({
+        where: { modelId: id },
+      });
+
+      await tx.dimension.createMany({
+        data: dimensions,
+      });
+
+      // Replace hotspots
+      await tx.hotspot.deleteMany({
+        where: { modelId: id },
+      });
+
+      await tx.hotspot.createMany({
+        data: hotspots,
+      });
+    });
+
+    res
+      .status(200)
+      .json({ message: "Model updated successfully", modelId: id });
+  } catch (error) {
+    console.error("[server]: Failed to update model. ERR: ", error);
     res.status(500).json({
       error: `[server]: Failed to create model. ERR: ${error}`,
     });

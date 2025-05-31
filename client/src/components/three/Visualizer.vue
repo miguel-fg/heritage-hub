@@ -25,6 +25,7 @@
       :editing="props.editing"
       :rotation="rotation"
       :hotspots-visible="areHSVisible"
+      :show-download="props.downloadable"
       @fullscreen="toggleFullscreen(fsContainer)"
       @download="downloadModel(downloadLink, objectUrl)"
       @hotspots="handleToolbarHSToggle"
@@ -35,15 +36,13 @@
     <HelpOverlay
       v-show="isHelpOpen"
       @click="toggleHelpOverlay"
-      state="visiting"
+      :show-download="props.downloadable"
     />
     <OptionsOverlay v-show="isOptionsOpen" state="visiting" :values="values" />
     <OpenHotspot
       v-show="isHotspotOpen"
       :hotspotId="selectedHotspotID"
       @close="closeHotspot"
-      @edit="editHotspot"
-      @delete="deleteHotspot"
     />
     <!-- Three js renderer -->
     <div
@@ -79,6 +78,7 @@ import { useThumbnail } from "../../scripts/useThumbnail";
 
 const props = defineProps({
   modelId: { type: String, required: true },
+  downloadable: { type: Boolean, default: false },
   editing: { type: Boolean, default: false },
   fileRef: { type: File, required: false },
   captureRequest: { type: Boolean, default: false },
@@ -173,10 +173,18 @@ const toggleRotate = () => {
 
 // Visualizer overlays
 const toggleHelpOverlay = () => {
+  if (!isHelpOpen.value) {
+    closeHotspot();
+    isOptionsOpen.value = false;
+  }
   isHelpOpen.value = !isHelpOpen.value;
 };
 
 const toggleOptionsMenu = () => {
+  if (!isOptionsOpen.value) {
+    closeHotspot();
+    isHelpOpen.value = false;
+  }
   isOptionsOpen.value = !isOptionsOpen.value;
 };
 
@@ -283,6 +291,8 @@ const handleModelClick = (event: MouseEvent) => {
       controls.value,
     );
     isEditingHotspot.value = false;
+    isHelpOpen.value = false;
+    isOptionsOpen.value = false;
     openHotspot(hoveredMarker.value.id);
     return;
   }
@@ -318,7 +328,11 @@ onMounted(async () => {
 
   loadExistingHotspots();
 
-  setInitialThumbnail();
+  if (props.editing) {
+    await setInitialThumbnail();
+  } else {
+    await setInitialThumbnail(props.modelId);
+  }
 
   window.addEventListener("resize", debouncedResize);
 });

@@ -4,7 +4,7 @@
     height="30"
     viewBox="0 0 30 30"
     xmlns="http://www.w3.org/2000/svg"
-    class="fill-grayscale-700"
+    :class="theme"
   >
     <path
       v-if="props.action === 'help'"
@@ -69,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 const props = defineProps<{
   action:
     | "help"
@@ -79,5 +80,12 @@ const props = defineProps<{
     | "pause"
     | "show"
     | "hide";
+  theme?: "light" | "dark";
 }>();
+
+const theme = computed(() =>
+  props.theme && props.theme === "light"
+    ? "fill-grayscale-100"
+    : "fill-grayscale-700",
+);
 </script>

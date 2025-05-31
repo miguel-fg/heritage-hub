@@ -21,7 +21,7 @@
         <div
           class="flex h-120 lg:h-200 lg:w-3/5 max-h-[650px] rounded-sm justify-center items-center"
         >
-          <Visualizer :modelId="model.id" />
+          <Visualizer :modelId="model.id" :downloadable="model.downloadable" />
         </div>
         <div class="flex flex-col gap-4 lg:w-2/5">
           <div>
@@ -100,9 +100,11 @@
               </p>
             </div>
             <div class="flex gap-4">
-              <Button type="secondary">Edit</Button>
+              <Button @click="handleEdit(model)" type="secondary"
+                >Edit model</Button
+              >
               <Button @click="() => (showConfirmModal = true)" type="danger"
-                >Delete</Button
+                >Delete model</Button
               >
             </div>
           </div>
@@ -163,6 +165,7 @@ import { useHotspotStore } from "../stores/hotspotStore";
 import { useToastStore } from "../stores/toastStore";
 import ConfirmationModal from "../components/ConfirmationModal.vue";
 import { type Model } from "../types/model";
+import { useEdit } from "../scripts/useEdit";
 
 const route = useRoute();
 const router = useRouter();
@@ -173,6 +176,8 @@ const error = ref<any>(null);
 
 const isTruncated = ref(true);
 const { formatDimension } = useDimensions();
+
+const { initEditState } = useEdit();
 
 const modelStore = useModelStore();
 const hotspotStore = useHotspotStore();
@@ -266,6 +271,16 @@ const showReadMore = computed(() => {
 
   return description && description.length > 350;
 });
+
+const handleEdit = async (model: Model) => {
+  const initialized = await initEditState(model);
+
+  if (initialized) {
+    router.push({ name: "Edit", params: { id: model.id } });
+  } else {
+    console.error("Failed to initialize edit state");
+  }
+};
 
 onMounted(() => {
   fetchModelData();
