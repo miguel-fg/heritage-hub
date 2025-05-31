@@ -132,7 +132,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
-import { useUpload } from "../scripts/useUpload";
 import { useHotspotStore } from "../stores/hotspotStore";
 import Button from "./Button.vue";
 
@@ -152,8 +151,6 @@ const handleSearch = () => {
 
 const handleUpload = () => {
   hotspotStore.cleanHotspotState();
-  openUpload();
+  router.push("/upload");
 };
-
-const { openUpload } = useUpload();
 </script>

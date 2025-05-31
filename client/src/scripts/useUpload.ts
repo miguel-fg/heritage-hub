@@ -10,9 +10,6 @@ import axios from "axios";
 // GLB File
 const file = ref<File | null>(null);
 
-// Upload modal control
-const isUploadOpen = ref(false);
-
 // ModelForm fields
 const mName = ref<string>("");
 const nameError = ref<string | null>(null);
@@ -287,21 +284,9 @@ export const useUpload = () => {
     }
   };
 
-  const openUpload = () => {
-    isUploadOpen.value = true;
-  };
-
-  const closeUpload = () => {
-    resetUploadState();
-    isUploadOpen.value = false;
-  };
-
   const resetUploadState = () => {
     // Reset file
     file.value = null;
-
-    // Reset modal control
-    isUploadOpen.value = false;
 
     // Reset form fields
     mName.value = "";
@@ -389,9 +374,6 @@ export const useUpload = () => {
     validateForm,
     loading,
     publishModel,
-    isUploadOpen,
-    openUpload,
-    closeUpload,
     getObjectUploadUrl,
     uploadModeltoR2,
     resetUploadState,

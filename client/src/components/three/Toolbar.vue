@@ -54,7 +54,6 @@
 <script setup lang="ts">
 import ToolbarIcon from "../icons/ToolbarIcon.vue";
 import { computed } from "vue";
-import { useUpload } from "../../scripts/useUpload";
 import { useRoute } from "vue-router";
 
 const props = defineProps({
@@ -73,8 +72,7 @@ const emit = defineEmits([
   "rotation",
 ]);
 
-const { isUploadOpen } = useUpload();
 const route = useRoute();
 
-const showHelp = computed(() => route.name === "Model" && !isUploadOpen.value);
+const showHelp = computed(() => route.name === "Model");
 </script>

@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col h-screen">
-    <UploadModal v-if="isUploadOpen" />
     <ToastPlayer />
     <NavBar v-if="shouldShowNavBar" />
     <SearchBar v-else-if="shouldShowSearchBar" />
@@ -23,14 +22,11 @@ import { useTemplateRef, computed, watch, provide } from "vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useModelStore } from "./stores/modelStore";
 import { useSearchStore } from "./stores/searchStore";
-import UploadModal from "./components/upload/UploadModal.vue";
-import { useUpload } from "./scripts/useUpload";
 
 const route = useRoute();
 const appRef = useTemplateRef<HTMLElement>("app");
 const modelStore = useModelStore();
 const searchStore = useSearchStore();
-const { isUploadOpen } = useUpload();
 
 const shouldLoadMore = computed(
   () => route.name === "Gallery" || route.name === "Search",

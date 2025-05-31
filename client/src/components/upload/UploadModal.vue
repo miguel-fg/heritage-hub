@@ -1,76 +1,80 @@
 <template>
-  <div
-    class="fixed inset-0 bg-grayscale-100 z-50 px-4 py-10 md:px-8 lg:px-16 overflow-y-auto"
-  >
-    <ConfirmationModal
-      :visible="confirmationVisible"
-      @confirm="handleCancel"
-      @cancel="hideConfirmation"
-    >
-      <template #subtitle>Any changes will not be saved</template>
-    </ConfirmationModal>
-    <div v-if="!modelId">
-      <Dropzone
-        v-model="file"
-        @update="handleFileUpdate"
-        @cancel="handleCancel"
-      />
-    </div>
-    <div v-else-if="file" class="flex flex-col gap-10 md:flex-row md:gap-16">
-      <div class="w-full md:w-3/7 md:max-h-[400px]">
-        <h1 class="title text-primary-500 mb-5">New 3D Model</h1>
-        <Visualizer
-          :model-id="modelId"
-          :file-ref="file"
-          :capture-request="snapCamera"
-          @capture-complete="setSnapCamera(false)"
-          :delete-unsaved="cleanUnsaved"
-          @unsaved-deleted="setCleanUnsaved(false)"
-          :commit-unsaved="commitUnsaved"
-          @unsaved-commited="hotspotCommited"
-          editing
-        />
-        <div class="w-full grid grid-cols-2 gap-3 mt-5 mb-5">
-          <Button
-            @click="hotspotStore.setHotspotMode(true)"
-            type="primary"
-            class="w-full justify-center"
-            :disabled="publishing || hotspotStore.isHotspotMode"
-            >Add hotspot</Button
-          >
-          <Button
-            @click="setSnapCamera(true)"
-            type="outline"
-            class="w-full justify-center"
-            :disabled="publishing || hotspotStore.isHotspotMode"
-            >New thumbnail</Button
-          >
-        </div>
-        <HotspotForm
-          v-if="hotspotStore.isHotspotMode"
-          @saved="setCommitUnsaved(true)"
-          @exit="exitHotspotMode"
+  <div class="bg-grayscale-100 w-full fixed inset-0 z-50 overflow-y-auto">
+    <div class="px-4 py-10 md:px-8 lg:px-16 max-w-[1920px] mx-auto">
+      <ConfirmationModal
+        :visible="confirmationVisible"
+        @confirm="handleCancel"
+        @cancel="hideConfirmation"
+      >
+        <template #subtitle>Any changes will not be saved</template>
+      </ConfirmationModal>
+      <div v-if="!modelId">
+        <Dropzone
+          v-model="file"
+          @update="handleFileUpdate"
+          @cancel="handleCancel"
         />
       </div>
-      <div class="w-full md:w-4/7">
-        <ModelForm />
-        <div class="grid grid-cols-2 gap-3 md:gap-30 lg:gap-50 mt-20">
-          <Button
-            @click="showConfirmation"
-            type="secondary"
-            class="w-full justify-center"
-            :disabled="publishing || hotspotStore.isHotspotMode"
-            >Cancel upload</Button
-          >
-          <Button
-            @click="handleValidate"
-            type="success"
-            class="w-full justify-center"
-            :disabled="publishing || hotspotStore.isHotspotMode"
-          >
-            <Spinner v-show="publishing" :size="16" class="fill-success-900" />
-            <span v-show="!publishing">Publish model</span>
-          </Button>
+      <div v-else-if="file" class="flex flex-col gap-10 md:flex-row md:gap-16">
+        <div class="w-full md:w-3/7 md:max-h-[400px]">
+          <h1 class="title text-primary-500 mb-5">New 3D Model</h1>
+          <Visualizer
+            :model-id="modelId"
+            :file-ref="file"
+            :capture-request="snapCamera"
+            @capture-complete="setSnapCamera(false)"
+            :delete-unsaved="cleanUnsaved"
+            @unsaved-deleted="setCleanUnsaved(false)"
+            :commit-unsaved="commitUnsaved"
+            @unsaved-commited="hotspotCommited"
+            editing
+          />
+          <div class="w-full grid grid-cols-2 gap-3 mt-5 mb-5">
+            <Button
+              @click="hotspotStore.setHotspotMode(true)"
+              type="primary"
+              class="w-full justify-center"
+              :disabled="publishing || hotspotStore.isHotspotMode"
+              >Add hotspot</Button
+            >
+            <Button
+              @click="setSnapCamera(true)"
+              type="outline"
+              class="w-full justify-center"
+              :disabled="publishing || hotspotStore.isHotspotMode"
+              >New thumbnail</Button
+            >
+          </div>
+          <HotspotForm
+            v-if="hotspotStore.isHotspotMode"
+            @saved="setCommitUnsaved(true)"
+            @exit="exitHotspotMode"
+          />
+        </div>
+        <div class="w-full md:w-4/7">
+          <ModelForm />
+          <div class="grid grid-cols-2 gap-3 md:gap-30 lg:gap-50 mt-20">
+            <Button
+              @click="showConfirmation"
+              type="secondary"
+              class="w-full justify-center"
+              :disabled="publishing || hotspotStore.isHotspotMode"
+              >Cancel upload</Button
+            >
+            <Button
+              @click="handleValidate"
+              type="success"
+              class="w-full justify-center"
+              :disabled="publishing || hotspotStore.isHotspotMode"
+            >
+              <Spinner
+                v-show="publishing"
+                :size="16"
+                class="fill-success-900"
+              />
+              <span v-show="!publishing">Publish model</span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -94,6 +98,7 @@ import { storeToRefs } from "pinia";
 import { useHotspotStore } from "../../stores/hotspotStore.ts";
 import { useDimensions } from "../../scripts/useDimensions.ts";
 import HotspotForm from "./HotspotForm.vue";
+import { useRouter } from "vue-router";
 
 const modelId = ref<string | null>(null);
 const publishing = ref(false);
@@ -103,12 +108,13 @@ const modelStore = useModelStore();
 const toastStore = useToastStore();
 const hotspotStore = useHotspotStore();
 
+const router = useRouter();
+
 const {
   file,
   thumbnail,
   selectedDimensions,
   selectedHotspots,
-  closeUpload,
   uploadAttempted,
   validateForm,
   isValid,
@@ -181,7 +187,7 @@ const uploadModel = async () => {
   toastStore.showToast("success", "Model published successfully!");
 
   modelStore.fetchModels();
-  closeUpload();
+  router.replace("/");
 };
 
 const showConfirmation = () => {
@@ -196,7 +202,7 @@ const handleCancel = () => {
   file.value = null;
   modelId.value = null;
 
-  closeUpload();
+  router.back();
 };
 
 const snapCamera = ref(false);
