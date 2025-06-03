@@ -5,11 +5,19 @@ import {
   type Scene,
 } from "three";
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { useToastStore } from "../stores/toastStore";
+import { isIOS } from "@vueuse/core";
 
 export const useToolbar = () => {
   // Fullscreen
   const toggleFullscreen = (container: HTMLElement | null) => {
+    const toastStore = useToastStore();
     if (!container) return;
+
+    if (isIOS) {
+      toastStore.showToast("error", "Fullscreen not supported in iOS");
+      return;
+    }
 
     // Enter fullscreen
     if (!document.fullscreenElement) {
@@ -40,8 +48,8 @@ export const useToolbar = () => {
     link.click();
   };
 
-  const updateFOV = (camera: PerspectiveCamera, fov: string) => {
-    camera.fov = parseInt(fov);
+  const updateFOV = (camera: PerspectiveCamera, fov: number) => {
+    camera.fov = fov;
     camera.updateProjectionMatrix();
   };
 
@@ -52,15 +60,15 @@ export const useToolbar = () => {
     controls.update();
   };
 
-  const setRotationSpeed = (controls: OrbitControls | null, speed: string) => {
+  const setRotationSpeed = (controls: OrbitControls | null, speed: number) => {
     if (!controls) return;
 
-    controls.autoRotateSpeed = parseInt(speed) / 25;
+    controls.autoRotateSpeed = speed / 25;
     controls.update();
   };
 
-  const setAmbientLight = (light: AmbientLight, intensity: string) => {
-    light.intensity = parseInt(intensity) / 100;
+  const setAmbientLight = (light: AmbientLight, intensity: number) => {
+    light.intensity = intensity / 100;
   };
 
   const setBackgroundColor = (scene: Scene, color: string) => {

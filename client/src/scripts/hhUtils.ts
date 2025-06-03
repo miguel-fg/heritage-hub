@@ -39,3 +39,16 @@ export const dataUrlToFile = (dataUrl: string): File => {
 
   return file;
 };
+
+export const isIOS = (): boolean => {
+  const isClient =
+    typeof window !== "undefined" && typeof document !== "undefined";
+
+  return (
+    isClient &&
+    typeof window.navigator?.userAgent === "string" &&
+    (/iP(?:ad|hone|od)/.test(window.navigator.userAgent) || // Classic iOS
+      (window.navigator.maxTouchPoints > 2 &&
+        /iPad|Macintosh/.test(window.navigator.userAgent))) // iPadOS identifying as macOS
+  );
+};
