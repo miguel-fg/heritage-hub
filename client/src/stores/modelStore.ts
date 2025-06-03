@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import axiosInstance from "../scripts/axiosConfig";
+import { unzipSync } from "fflate";
 
 interface Tag {
   name: string;
@@ -171,22 +172,35 @@ export const useModelStore = defineStore("models", () => {
     }
   };
 
-  const getLocalObjectUrl = (file: File) => {
-    return new Promise((resolve, reject) => {
-      if (!file) {
-        reject(new Error("No file provided"));
-        return;
-      }
+  const getLocalObjectUrl = async (file: File) => {
+    if (!file) {
+      console.error("Local file not found");
+      throw new Error("Local file not found");
+    }
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        resolve(event.target?.result);
-      };
-      reader.onerror = (error) => {
-        reject(error);
-      };
-      reader.readAsDataURL(file);
-    });
+    const filename = file.name.toLowerCase();
+
+    if (filename.endsWith(".glb")) {
+      return URL.createObjectURL(file);
+    }
+
+    if (filename.endsWith(".zip")) {
+      const arrayBuffer = await file.arrayBuffer();
+      const files = unzipSync(new Uint8Array(arrayBuffer));
+
+      const glbs = Object.entries(files).filter(([path]) =>
+        path.toLowerCase().endsWith(".glb"),
+      );
+
+      if (glbs.length > 0) {
+        const [_, data] = glbs[0];
+        const blob = new Blob([data], { type: "model/gltf-binary" });
+        return URL.createObjectURL(blob);
+      }
+    }
+
+    console.error("Unsupported file format detected");
+    throw new Error("Unsupported file format detected");
   };
 
   const resetPagination = () => {

@@ -26,7 +26,6 @@
       type="file"
       name="object"
       id="objectInput"
-      accept=".glb,model/gltf-binary"
       class="hidden"
       @change="handleFileChange"
     />
@@ -41,6 +40,7 @@
 import { ref } from "vue";
 import Button from "./Button.vue";
 import { useToastStore } from "../stores/toastStore";
+import { unzipSync } from "fflate";
 
 const file = defineModel();
 
@@ -74,6 +74,40 @@ const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
 
       return magic === 0x46546c67 && version === 2;
     } catch (error) {
+      return false;
+    }
+  } else if (fileName.endsWith(".zip")) {
+    try {
+      const buffer = await targetFile.arrayBuffer();
+      const files = unzipSync(new Uint8Array(buffer));
+      const paths = Object.keys(files).map((p) => p.toLowerCase());
+
+      const glbs = paths.filter((p) => p.endsWith(".glb"));
+      const gltfs = paths.filter((p) => p.endsWith(".gltf"));
+
+      // zipped .glb file
+      if (glbs.length === 1 && gltfs.length === 0) {
+        return true;
+      }
+
+      // zipped .gltf with valid companion files
+      if (gltfs.length === 1 && glbs.length === 0) {
+        const gltfPath = gltfs[0];
+        const gltfText = new TextDecoder().decode(files[gltfPath]);
+
+        try {
+          const json = JSON.parse(gltfText);
+          return json.asset && json.asset.version ? true : false;
+        } catch (error) {
+          console.error("[Dropzone.vue]: Validation error. ERR: ", error);
+          return false;
+        }
+      }
+
+      console.error("[Dropzone.vue]: Validation error.");
+      return false;
+    } catch (error) {
+      console.error("[Dropzone.vue]: Validation error. ERR: ", error);
       return false;
     }
   }
