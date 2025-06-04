@@ -40,7 +40,7 @@
 import { ref } from "vue";
 import Button from "./Button.vue";
 import { useToastStore } from "../stores/toastStore";
-import { unzipSync } from "fflate";
+import { extractGlbFromZip } from "../scripts/hhUtils";
 
 const file = defineModel();
 
@@ -76,40 +76,6 @@ const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
     } catch (error) {
       return false;
     }
-  } else if (fileName.endsWith(".zip")) {
-    try {
-      const buffer = await targetFile.arrayBuffer();
-      const files = unzipSync(new Uint8Array(buffer));
-      const paths = Object.keys(files).map((p) => p.toLowerCase());
-
-      const glbs = paths.filter((p) => p.endsWith(".glb"));
-      const gltfs = paths.filter((p) => p.endsWith(".gltf"));
-
-      // zipped .glb file
-      if (glbs.length === 1 && gltfs.length === 0) {
-        return true;
-      }
-
-      // zipped .gltf with valid companion files
-      if (gltfs.length === 1 && glbs.length === 0) {
-        const gltfPath = gltfs[0];
-        const gltfText = new TextDecoder().decode(files[gltfPath]);
-
-        try {
-          const json = JSON.parse(gltfText);
-          return json.asset && json.asset.version ? true : false;
-        } catch (error) {
-          console.error("[Dropzone.vue]: Validation error. ERR: ", error);
-          return false;
-        }
-      }
-
-      console.error("[Dropzone.vue]: Validation error.");
-      return false;
-    } catch (error) {
-      console.error("[Dropzone.vue]: Validation error. ERR: ", error);
-      return false;
-    }
   }
 
   return false;
@@ -117,9 +83,23 @@ const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
 
 const handleFileChange = async (e: Event) => {
   const target = e.target as HTMLInputElement;
+  let targetFile: File;
 
   if (target.files && target.files[0]) {
-    const targetFile = target.files[0];
+    targetFile = target.files[0];
+
+    if (targetFile.name.toLowerCase().endsWith(".zip")) {
+      try {
+        targetFile = await extractGlbFromZip(targetFile);
+      } catch (error) {
+        console.error(error);
+        toastStore.showToast(
+          "error",
+          "Invalid file type. Please upload a .glb/.gltf file.",
+        );
+        return;
+      }
+    }
 
     const isValidFile = await validateGLTFFile(targetFile);
 

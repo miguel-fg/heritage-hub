@@ -6,6 +6,7 @@ import {
   type Hotspot,
 } from "../types/model";
 import axios from "axios";
+import { useDimensions } from "./useDimensions";
 
 // GLB File
 const file = ref<File | null>(null);
@@ -285,6 +286,7 @@ export const useUpload = () => {
   };
 
   const resetUploadState = () => {
+    const { resetDimensions } = useDimensions();
     // Reset file
     file.value = null;
 
@@ -330,6 +332,7 @@ export const useUpload = () => {
         units: ["ml", "l", "fl oz", "gal"],
       },
     };
+    resetDimensions();
 
     // Reset tags and materials
     selectedTags.value = null;
