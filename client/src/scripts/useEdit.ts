@@ -43,12 +43,16 @@ export const useEdit = () => {
   };
 
   const resetEditState = () => {
+    const { resetDimensions } = useDimensions();
+
     toEdit.value = null;
     originalModel.value = null;
 
     nameError.value = null;
     captionError.value = null;
     descriptionError.value = null;
+
+    resetDimensions();
   };
 
   const openEdit = () => {

@@ -93,11 +93,11 @@ const emit = defineEmits([
 ]);
 
 // Visualizer configuration
-const fov = ref("75");
+const fov = ref(75);
 const bgColor = ref<string>("white");
-const light = ref("50");
+const light = ref(50);
 const rotation = ref(true);
-const speed = ref("50");
+const speed = ref(50);
 
 const values = {
   fov,

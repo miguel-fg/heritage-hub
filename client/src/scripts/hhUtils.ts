@@ -1,3 +1,5 @@
+import { unzipSync } from "fflate";
+
 export const debounce = (fn: Function) => {
   let timeout: number;
 
@@ -38,4 +40,22 @@ export const dataUrlToFile = (dataUrl: string): File => {
   const file = new File([blob], "thumbnail.png", { type: mimeString });
 
   return file;
+};
+
+export const extractGlbFromZip = async (zipFile: File): Promise<File> => {
+  const buffer = await zipFile.arrayBuffer();
+  const files = unzipSync(new Uint8Array(buffer));
+  const paths = Object.keys(files);
+  const glbPath = paths.find((p) => p.toLowerCase().endsWith(".glb"));
+
+  if (!glbPath) {
+    throw new Error("No .glb found in zip");
+  }
+
+  const glbData = files[glbPath];
+  const glbBlob = new Blob([glbData], { type: "model/gltf-binary" });
+
+  const filename = "model.glb";
+
+  return new File([glbBlob], filename, { type: "model/gltf-binary" });
 };

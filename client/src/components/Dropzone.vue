@@ -26,7 +26,6 @@
       type="file"
       name="object"
       id="objectInput"
-      accept=".glb,model/gltf-binary"
       class="hidden"
       @change="handleFileChange"
     />
@@ -41,6 +40,7 @@
 import { ref } from "vue";
 import Button from "./Button.vue";
 import { useToastStore } from "../stores/toastStore";
+import { extractGlbFromZip } from "../scripts/hhUtils";
 
 const file = defineModel();
 
@@ -83,9 +83,23 @@ const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
 
 const handleFileChange = async (e: Event) => {
   const target = e.target as HTMLInputElement;
+  let targetFile: File;
 
   if (target.files && target.files[0]) {
-    const targetFile = target.files[0];
+    targetFile = target.files[0];
+
+    if (targetFile.name.toLowerCase().endsWith(".zip")) {
+      try {
+        targetFile = await extractGlbFromZip(targetFile);
+      } catch (error) {
+        console.error(error);
+        toastStore.showToast(
+          "error",
+          "Invalid file type. Please upload a .glb/.gltf file.",
+        );
+        return;
+      }
+    }
 
     const isValidFile = await validateGLTFFile(targetFile);
 

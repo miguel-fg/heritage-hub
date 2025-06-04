@@ -12,8 +12,8 @@
       <div v-if="cameraOpen" class="flex flex-col gap-2">
         <ValueSlider
           v-model="props.values.fov.value"
-          min="40"
-          max="120"
+          :min="40"
+          :max="120"
           label="Field of View"
         />
       </div>
@@ -29,8 +29,8 @@
           <BackgroundPicker v-model="props.values.bgColor.value" />
         </div>
         <ValueSlider
-          min="-100"
-          max="300"
+          :min="-100"
+          :max="300"
           v-model="props.values.light.value"
           label="Light Intensity"
         />
@@ -43,7 +43,7 @@
       </div>
       <div v-if="animationOpen" class="flex flex-col gap-2">
         <ValueSlider
-          max="200"
+          :max="200"
           v-model="props.values.speed.value"
           label="Rotation Speed"
         />
@@ -60,11 +60,11 @@ import ValueSlider from "../ValueSlider.vue";
 import BackgroundPicker from "./BackgroundPicker.vue";
 
 interface ThreeValues {
-  fov: Ref<string>;
+  fov: Ref<number>;
   bgColor: Ref<string>;
-  light: Ref<string>;
+  light: Ref<number>;
   rotation: Ref<boolean>;
-  speed: Ref<string>;
+  speed: Ref<number>;
 }
 
 const props = defineProps<{

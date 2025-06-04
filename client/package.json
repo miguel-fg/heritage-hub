@@ -13,6 +13,7 @@
     "@vueuse/core": "^13.0.0",
     "axios": "^1.7.9",
     "convert": "^5.10.0",
+    "fflate": "^0.8.2",
     "gsap": "^3.12.7",
     "pinia": "^2.3.1",
     "tailwindcss": "^4.0.2",
