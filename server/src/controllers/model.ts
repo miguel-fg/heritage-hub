@@ -6,6 +6,7 @@ import {
   deleteObjectFromR2,
 } from "../scripts/r2Storage";
 import { ModelRequestBody } from "../scripts/validators";
+import { withPrismaRetry } from "../scripts/prisma";
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
 
@@ -166,59 +167,38 @@ export const newModel = async (
     hotspots,
   } = req.body;
 
+  const createModel = prisma.model.create({
+    data: {
+      id,
+      name,
+      caption,
+      description,
+      accNum,
+      downloadable,
+      modelPath: `${id}/model.glb`,
+      thumbnailPath: `${id}/thumbnail.png`,
+      multimediaPath: [],
+      tags: {
+        connectOrCreate: tags,
+      },
+      materials: {
+        connectOrCreate: materials,
+      },
+    },
+  });
+
+  const createDimensions = prisma.dimension.createMany({
+    data: dimensions,
+  });
+
+  const createHotspots = prisma.hotspot.createMany({
+    data: hotspots,
+  });
+
   try {
-    await prisma.$transaction(async (tx) => {
-      // Create model
-      await tx.model.create({
-        data: {
-          id,
-          name,
-          caption,
-          description,
-          accNum,
-          downloadable,
-          modelPath: `${id}/model.glb`,
-          thumbnailPath: `${id}/thumbnail.png`,
-          multimediaPath: [],
-        },
-      });
-
-      // Handle tags
-      await tx.model.update({
-        where: { id },
-        data: {
-          tags: {
-            connectOrCreate: tags.map((tagName) => ({
-              where: { name: tagName },
-              create: { name: tagName },
-            })),
-          },
-        },
-      });
-
-      // Handle materials
-      await tx.model.update({
-        where: { id },
-        data: {
-          materials: {
-            connectOrCreate: materials.map((materialName) => ({
-              where: { name: materialName },
-              create: { name: materialName },
-            })),
-          },
-        },
-      });
-
-      // Create Dimensions
-      await tx.dimension.createMany({
-        data: dimensions,
-      });
-
-      // Create Hotspots
-      await tx.hotspot.createMany({
-        data: hotspots,
-      });
-    });
+    await withPrismaRetry(() =>
+      prisma.$transaction([createModel, createDimensions, createHotspots]),
+    );
 
     res
       .status(201)
@@ -248,78 +228,45 @@ export const updateModel = async (
     hotspots,
   } = req.body;
 
+  const updateBaseModel = prisma.model.update({
+    where: { id },
+    data: {
+      name,
+      caption,
+      description,
+      accNum,
+      downloadable,
+      tags: { set: [], connectOrCreate: tags },
+      materials: { set: [], connectOrCreate: materials },
+    },
+  });
+
+  const deleteOldDimensions = prisma.dimension.deleteMany({
+    where: { modelId: id },
+  });
+
+  const deleteOldHotspots = prisma.hotspot.deleteMany({
+    where: { modelId: id },
+  });
+
+  const addNewDimensions = prisma.dimension.createMany({
+    data: dimensions,
+  });
+
+  const addNewHotspots = prisma.hotspot.createMany({
+    data: hotspots,
+  });
+
   try {
-    await prisma.$transaction(async (tx) => {
-      // Model base fields
-      await tx.model.update({
-        where: { id },
-        data: {
-          name,
-          caption,
-          description,
-          accNum,
-          downloadable,
-        },
-      });
-
-      // Replace tags
-      await tx.model.update({
-        where: { id },
-        data: {
-          tags: { set: [] },
-        },
-      });
-
-      await tx.model.update({
-        where: { id },
-        data: {
-          tags: {
-            connectOrCreate: tags.map((tagName) => ({
-              where: { name: tagName },
-              create: { name: tagName },
-            })),
-          },
-        },
-      });
-
-      // Replace materials
-      await tx.model.update({
-        where: { id },
-        data: {
-          materials: { set: [] },
-        },
-      });
-
-      await tx.model.update({
-        where: { id },
-        data: {
-          materials: {
-            connectOrCreate: materials.map((materialName) => ({
-              where: { name: materialName },
-              create: { name: materialName },
-            })),
-          },
-        },
-      });
-
-      // Replace dimensions
-      await tx.dimension.deleteMany({
-        where: { modelId: id },
-      });
-
-      await tx.dimension.createMany({
-        data: dimensions,
-      });
-
-      // Replace hotspots
-      await tx.hotspot.deleteMany({
-        where: { modelId: id },
-      });
-
-      await tx.hotspot.createMany({
-        data: hotspots,
-      });
-    });
+    await withPrismaRetry(() =>
+      prisma.$transaction([
+        updateBaseModel,
+        deleteOldDimensions,
+        deleteOldHotspots,
+        addNewDimensions,
+        addNewHotspots,
+      ]),
+    );
 
     res
       .status(200)
