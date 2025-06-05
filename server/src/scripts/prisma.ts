@@ -85,3 +85,32 @@ export const buildModelSortConditions = (
       return { createdAt: "desc" };
   }
 };
+
+export const withPrismaRetry = async <T,>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delayMs = 200,
+): Promise<T> => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const retryableCodes = ["P2028", "P2034"];
+
+      if (
+        error?.code &&
+        retryableCodes.includes(error.code) &&
+        attempt < retries - 1
+      ) {
+        lastError = error;
+        await new Promise((res) => setTimeout(res, delayMs));
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError;
+};
