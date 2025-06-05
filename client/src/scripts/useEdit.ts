@@ -194,13 +194,13 @@ export const useEdit = () => {
 
   const sanitizeMultiselect = (
     selected: { name: string }[] | null,
-  ): string[] => {
+  ): { where: { name: string }; create: { name: string } }[] => {
     if (!selected) return [];
 
-    const result: string[] = [];
+    const result: { where: { name: string }; create: { name: string } }[] = [];
 
     for (const s of selected) {
-      result.push(s.name);
+      result.push({ where: { name: s.name }, create: { name: s.name } });
     }
 
     return result;

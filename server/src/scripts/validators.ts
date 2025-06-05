@@ -31,8 +31,18 @@ export const modelSchema = z.object({
   description: z.string().min(20).max(2000),
   accNum: z.string().nullable(),
   downloadable: z.boolean(),
-  tags: z.array(z.string().min(1)),
-  materials: z.array(z.string().min(1)),
+  tags: z.array(
+    z.object({
+      where: z.object({ name: z.string().min(1) }),
+      create: z.object({ name: z.string().min(1) }),
+    }),
+  ),
+  materials: z.array(
+    z.object({
+      where: z.object({ name: z.string().min(1) }),
+      create: z.object({ name: z.string().min(1) }),
+    }),
+  ),
   dimensions: z.array(
     z.object({
       modelId: z.string().uuid(),
