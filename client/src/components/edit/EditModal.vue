@@ -23,32 +23,12 @@
             :commit-unsaved="commitUnsaved"
             @unsaved-commited="hotspotCommited"
           />
-          <div class="w-full grid grid-cols-2 gap-3 mt-5 mb-5">
-            <Button
-              @click="hotspotStore.setHotspotMode(true)"
-              type="primary"
-              class="w-full justify-center"
-              :disabled="saving || hotspotStore.isHotspotMode"
-              >Add hotspot</Button
-            >
-            <Button
-              @click="setSnapCamera(true)"
-              type="outline"
-              class="w-full justify-center"
-              :disabled="saving || hotspotStore.isHotspotMode"
-              >New thumbnail</Button
-            >
-          </div>
-          <HotspotForm
-            v-if="hotspotStore.isHotspotMode"
-            @saved="setCommitUnsaved(true)"
-            @exit="exitHotspotMode"
-          />
         </div>
         <div class="w-full md:w-4/7">
-          <EditForm />
+          <EditForm :section="section" />
           <div class="grid grid-cols-2 gap-3 md:gap-30 lg:gap-50 mt-20">
             <Button
+              v-if="section === 1"
               @click="showConfirmation"
               type="secondary"
               class="w-full justify-center"
@@ -56,6 +36,23 @@
               >Cancel edit</Button
             >
             <Button
+              v-if="section !== 1"
+              @click="section--"
+              type="secondary"
+              class="w-full justify-center"
+            >
+              Back
+            </Button>
+            <Button
+              v-if="section !== 3"
+              @click="section++"
+              type="primary"
+              class="w-full justify-center"
+            >
+              Next
+            </Button>
+            <Button
+              v-if="section === 3"
               @click="handleValidate"
               class="w-full justify-center"
               type="success"
@@ -72,11 +69,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, provide } from "vue";
 import { useRouter } from "vue-router";
 import { useHotspotStore } from "../../stores/hotspotStore";
 import Button from "../Button.vue";
-import HotspotForm from "../upload/HotspotForm.vue";
 import Spinner from "../Spinner.vue";
 import EditForm from "./EditForm.vue";
 import ConfirmationModal from "../ConfirmationModal.vue";
@@ -87,6 +83,8 @@ import { useModelStore } from "../../stores/modelStore";
 
 const emit = defineEmits(["save", "cancel"]);
 const router = useRouter();
+
+const section = ref(1);
 
 const confirmationVisible = ref(false);
 
@@ -112,6 +110,8 @@ const setSnapCamera = (active: boolean) => {
   snapCamera.value = active;
 };
 
+provide("setSnapEdit", setSnapCamera);
+
 const cleanUnsaved = ref(false);
 
 const setCleanUnsaved = (active: boolean) => {
@@ -122,6 +122,8 @@ const commitUnsaved = ref(false);
 const setCommitUnsaved = (active: boolean) => {
   commitUnsaved.value = active;
 };
+
+provide("setCommitEdit", setCommitUnsaved);
 
 const toastStore = useToastStore();
 
@@ -166,6 +168,8 @@ const exitHotspotMode = () => {
   hotspotStore.setHotspotMode(false);
   setCleanUnsaved(true);
 };
+
+provide("exitHotspotModeEdit", exitHotspotMode);
 
 onMounted(() => {
   if (!toEdit.value) {

@@ -29,32 +29,12 @@
             @unsaved-commited="hotspotCommited"
             editing
           />
-          <div class="w-full grid grid-cols-2 gap-3 mt-5 mb-5">
-            <Button
-              @click="hotspotStore.setHotspotMode(true)"
-              type="primary"
-              class="w-full justify-center"
-              :disabled="publishing || hotspotStore.isHotspotMode"
-              >Add hotspot</Button
-            >
-            <Button
-              @click="setSnapCamera(true)"
-              type="outline"
-              class="w-full justify-center"
-              :disabled="publishing || hotspotStore.isHotspotMode"
-              >New thumbnail</Button
-            >
-          </div>
-          <HotspotForm
-            v-if="hotspotStore.isHotspotMode"
-            @saved="setCommitUnsaved(true)"
-            @exit="exitHotspotMode"
-          />
         </div>
         <div class="w-full md:w-4/7">
-          <ModelForm />
-          <div class="grid grid-cols-2 gap-3 md:gap-30 lg:gap-50 mt-20">
+          <ModelForm :section="section" />
+          <div class="grid grid-cols-2 gap-3 md:gap-30 lg:gap-50 mt-10">
             <Button
+              v-if="section === 1"
               @click="showConfirmation"
               type="secondary"
               class="w-full justify-center"
@@ -62,6 +42,21 @@
               >Cancel upload</Button
             >
             <Button
+              v-if="section !== 1"
+              @click="section--"
+              type="secondary"
+              class="w-full justify-center"
+              >Back</Button
+            >
+            <Button
+              v-if="section !== 3"
+              @click="section++"
+              type="primary"
+              class="w-full justify-center"
+              >Next</Button
+            >
+            <Button
+              v-if="section === 3"
               @click="handleValidate"
               type="success"
               class="w-full justify-center"
@@ -82,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { provide, ref } from "vue";
 import Dropzone from "../Dropzone.vue";
 import { useUpload } from "../../scripts/useUpload.ts";
 import { useToastStore } from "../../stores/toastStore.ts";
@@ -97,12 +92,13 @@ import { dataUrlToFile } from "../../scripts/hhUtils.ts";
 import { storeToRefs } from "pinia";
 import { useHotspotStore } from "../../stores/hotspotStore.ts";
 import { useDimensions } from "../../scripts/useDimensions.ts";
-import HotspotForm from "./HotspotForm.vue";
 import { useRouter } from "vue-router";
 
 const modelId = ref<string | null>(null);
 const publishing = ref(false);
 const confirmationVisible = ref(false);
+
+const section = ref(1);
 
 const modelStore = useModelStore();
 const toastStore = useToastStore();
@@ -211,6 +207,8 @@ const setSnapCamera = (active: boolean) => {
   snapCamera.value = active;
 };
 
+provide("setSnap", setSnapCamera);
+
 const cleanUnsaved = ref(false);
 
 const setCleanUnsaved = (active: boolean) => {
@@ -222,6 +220,8 @@ const setCommitUnsaved = (active: boolean) => {
   commitUnsaved.value = active;
 };
 
+provide("setCommit", setCommitUnsaved);
+
 const hotspotCommited = () => {
   setCommitUnsaved(false);
 };
@@ -230,4 +230,6 @@ const exitHotspotMode = () => {
   hotspotStore.setHotspotMode(false);
   setCleanUnsaved(true);
 };
+
+provide("exitHotspotMode", exitHotspotMode);
 </script>

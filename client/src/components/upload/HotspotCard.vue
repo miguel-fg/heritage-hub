@@ -61,6 +61,7 @@
         field-id="hotspot-content"
         label="Content"
         v-model="props.hotspot.content"
+        :rows="2"
       />
     </div>
     <div class="flex justify-between">

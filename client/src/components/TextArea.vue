@@ -6,9 +6,9 @@
     <textarea
       name="description"
       v-model="model"
-      rows="4"
+      :rows="`${props.rows}`"
       :id="props.fieldId"
-      class="px-2 py-1 bg-white rounded-xs body"
+      class="px-2 py-1 bg-white rounded-xs body resize-none"
       :class="
         props.error && displayError
           ? 'border-2 border-danger-300'
@@ -27,10 +27,17 @@ import { useUpload } from "../scripts/useUpload";
 
 const props = defineProps<{
   fieldId: string;
-  label: "Name" | "Caption" | "Description" | "Content" | "Label";
+  label:
+    | "Name"
+    | "Caption"
+    | "Description"
+    | "Content"
+    | "Label"
+    | "Provenance";
   mandatory?: boolean;
   error?: string | null;
   showError?: boolean;
+  rows: number;
 }>();
 
 const model = defineModel<string>();
