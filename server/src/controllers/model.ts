@@ -160,6 +160,7 @@ export const newModel = async (
     caption,
     description,
     accNum,
+    provenance,
     downloadable,
     tags,
     materials,
@@ -174,6 +175,7 @@ export const newModel = async (
       caption,
       description,
       accNum,
+      provenance,
       downloadable,
       modelPath: `${id}/model.glb`,
       thumbnailPath: `${id}/thumbnail.png`,
@@ -221,6 +223,7 @@ export const updateModel = async (
     caption,
     description,
     accNum,
+    provenance,
     downloadable,
     tags,
     materials,
@@ -235,6 +238,7 @@ export const updateModel = async (
       caption,
       description,
       accNum,
+      provenance,
       downloadable,
       tags: { set: [], connectOrCreate: tags },
       materials: { set: [], connectOrCreate: materials },
@@ -308,7 +312,8 @@ export const deleteModel = async (
 
     const filesToDelete = [
       `${modelId}/model.glb`,
-      // Add thumbnail and multimedia files here
+      `${modelId}/thumbnail.png`,
+      // Add multimedia files here
     ];
 
     for (const file of filesToDelete) {

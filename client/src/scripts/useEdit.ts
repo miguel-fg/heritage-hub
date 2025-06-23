@@ -183,6 +183,7 @@ export const useEdit = () => {
       description: toEdit.value.description,
       downloadable: downloadable.value,
       accNum: toEdit.value.accNum,
+      provenance: toEdit.value.provenance,
       materials: sanitizeMultiselect(toEdit.value.materials),
       tags: sanitizeMultiselect(toEdit.value.tags),
       dimensions: sanitizeDimensions(dimensions.value, toEdit.value.id),

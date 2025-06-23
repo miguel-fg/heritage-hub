@@ -34,7 +34,12 @@
           fieldId="accNum"
           label="Accession Number"
         />
-        <TextArea fieldId="provenance" label="Provenance" :rows="3" />
+        <TextArea
+          v-model="toEdit.provenance"
+          fieldId="provenance"
+          label="Provenance"
+          :rows="3"
+        />
       </div>
     </div>
     <div v-show="computedSection === 2">

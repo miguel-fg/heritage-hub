@@ -30,6 +30,7 @@ export const modelSchema = z.object({
   caption: z.string().min(10).max(250),
   description: z.string().min(20).max(2000),
   accNum: z.string().nullable(),
+  provenance: z.string().nullable(),
   downloadable: z.boolean(),
   tags: z.array(
     z.object({

@@ -57,6 +57,17 @@
             </Button>
           </div>
           <div class="pb-4 border-b-1 border-grayscale-300">
+            <h2 class="subtitle text-primary-500">Provenance</h2>
+            <div v-if="model.provenance">
+              <p class="body text-grayscale-900 whitespace-pre-line">
+                {{ model.provenance }}
+              </p>
+            </div>
+            <div v-else>
+              <p class="body text-grayscale-900">Unknown</p>
+            </div>
+          </div>
+          <div class="pb-4 border-b-1 border-grayscale-300">
             <h2 class="subtitle text-primary-500">Dimensions</h2>
             <div
               v-if="model.dimensions.length > 0"
