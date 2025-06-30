@@ -181,8 +181,6 @@ const uploadModel = async () => {
   file.value = null;
   modelId.value = null;
   toastStore.showToast("success", "Model published successfully!");
-
-  modelStore.fetchModels();
   router.replace("/");
 };
 
