@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import axiosInstance from "../scripts/axiosConfig";
-import { useSearchBar } from "../scripts/searchUtils";
+import axiosInstance from "../scripts/axiosConfig.ts";
 
 interface Tag {
   name: string;
@@ -32,7 +31,7 @@ interface PaginationState {
 export const useSearchStore = defineStore("search", () => {
   const models = ref<Array<Model> | null>(null);
   const loading = ref(false);
-  const error = ref<any>(null);
+  const error = ref();
 
   const pagination = ref<PaginationState>({
     page: 1,
@@ -72,11 +71,7 @@ export const useSearchStore = defineStore("search", () => {
 
       const { models: searchedModels, total } = response.data;
 
-      if (params.skip && params.skip > 0 && models.value) {
-        models.value = [...models.value, ...searchedModels];
-      } else {
-        models.value = searchedModels;
-      }
+      models.value = searchedModels;
 
       pagination.value = {
         page: params.skip
@@ -97,24 +92,7 @@ export const useSearchStore = defineStore("search", () => {
     }
   };
 
-  const searchMoreModels = async () => {
-    if (loading.value || !pagination.value.hasMore) return;
-
-    const { query, tags, materials, sort, others } = useSearchBar();
-    const nextSkip = models.value?.length || 0;
-
-    await searchModels({
-      query: query.value,
-      tags: tags.value,
-      materials: materials.value,
-      sort: sort.value,
-      others: others.value,
-      limit: pagination.value.limit,
-      skip: nextSkip,
-    });
-  };
-
-  const resetPagination = async () => {
+  const resetPagination = () => {
     pagination.value = {
       page: 1,
       limit: pagination.value.limit,
@@ -131,7 +109,6 @@ export const useSearchStore = defineStore("search", () => {
     pagination,
     isMounted,
     searchModels,
-    searchMoreModels,
     resetPagination,
   };
 });

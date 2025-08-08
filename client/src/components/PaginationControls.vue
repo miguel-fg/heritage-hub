@@ -3,10 +3,20 @@
     class="flex gap-3 sm:gap-5 md:gap-8 lg:gap-12 w-min px-4 mx-auto items-center"
   >
     <div class="flex gap-2">
-      <Button @click="goToPage(1)" type="outline" class="md:hidden size-10">
+      <Button
+        @click="goToPage(1)"
+        type="outline"
+        :disabled="store.pagination.page === 1"
+        class="md:hidden size-10"
+      >
         <GoToFirstIcon />
       </Button>
-      <Button @click="goToPrevious" type="outline" class="size-10 gap-2">
+      <Button
+        @click="goToPrevious"
+        type="outline"
+        :disabled="store.pagination.page === 1"
+        class="size-10 gap-2"
+      >
         <BackPageIcon />
         <span class="hidden md:block">Previous</span>
       </Button>
@@ -18,7 +28,7 @@
         @click="typeof item === 'number' && goToPage(item)"
         class="size-10 rounded-xs cursor-pointer"
         :class="[
-          item === dummyPagination.page
+          item === store.pagination.page
             ? 'bg-primary-100/50 font-bold underline hover:bg-primary-100'
             : 'hover:bg-grayscale-200 active:bg-grayscale-200',
           typeof item === 'number'
@@ -37,7 +47,7 @@
         @click="typeof item === 'number' && goToPage(item)"
         class="size-10 rounded-xs cursor-pointer"
         :class="[
-          item === dummyPagination.page
+          item === store.pagination.page
             ? 'bg-primary-100/50 font-bold underline hover:bg-primary-100'
             : 'hover:bg-grayscale-200 active:bg-grayscale-200',
           typeof item === 'number'
@@ -50,13 +60,19 @@
       </button>
     </div>
     <div class="flex gap-2">
-      <Button @click="goToNext" type="outline" class="size-10 gap-2">
+      <Button
+        @click="goToNext"
+        type="outline"
+        :disabled="store.pagination.page === totalPages"
+        class="size-10 gap-2"
+      >
         <span class="hidden md:block">Next</span>
         <NextPageIcon />
       </Button>
       <Button
         @click="goToPage(totalPages)"
         type="outline"
+        :disabled="store.pagination.page === totalPages"
         class="md:hidden size-10"
       >
         <GoToLastIcon />
@@ -66,26 +82,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { computed } from "vue";
+import { useModelStore } from "../stores/modelStore";
+import { useSearchStore } from "../stores/searchStore";
 import Button from "../components/Button.vue";
 import BackPageIcon from "../components/icons/BackPageIcon.vue";
 import NextPageIcon from "../components/icons/NextPageIcon.vue";
 import GoToFirstIcon from "./icons/GoToFirstIcon.vue";
 import GoToLastIcon from "./icons/GoToLastIcon.vue";
+import { useSearchBar } from "../scripts/searchUtils";
 
-const dummyPagination = ref({
-  page: 1,
-  limit: 18,
-  hasMore: true,
-  total: 200,
-});
+const props = defineProps<{
+  storeType: "model" | "search";
+}>();
+
+const modelStore = useModelStore();
+const searchStore = useSearchStore();
+
+const store = computed(() =>
+  props.storeType === "model" ? modelStore : searchStore,
+);
 
 const totalPages = computed(() =>
-  Math.ceil(dummyPagination.value.total / dummyPagination.value.limit),
+  Math.ceil(store.value.pagination.total / store.value.pagination.limit),
 );
 
 const pagesToShow = computed(() => {
-  const current = dummyPagination.value.page;
+  const current = store.value.pagination.page;
   const total = totalPages.value;
   const pages: (number | string)[] = [];
 
@@ -105,7 +128,7 @@ const pagesToShow = computed(() => {
 });
 
 const pagesToShowMobile = computed(() => {
-  const current = dummyPagination.value.page;
+  const current = store.value.pagination.page;
   const total = totalPages.value;
   const pages: (number | string)[] = [];
 
@@ -123,16 +146,34 @@ const pagesToShowMobile = computed(() => {
   return pages;
 });
 
-const goToPage = (page: number) => {
-  dummyPagination.value.page = page;
+const goToPage = async (page: number) => {
+  if (page < 1 || page > totalPages.value) return;
+
+  const skip = (page - 1) * store.value.pagination.limit;
+
+  if (props.storeType === "model") {
+    await modelStore.fetchModels(store.value.pagination.limit, skip);
+  } else {
+    const { query, tags, materials, sort, others } = useSearchBar();
+    await searchStore.searchModels({
+      query: query.value,
+      tags: tags.value,
+      materials: materials.value,
+      sort: sort.value,
+      others: others.value,
+      limit: store.value.pagination.limit,
+      skip,
+    });
+  }
 };
 
-const goToPrevious = () => {
-  if (dummyPagination.value.page > 1) dummyPagination.value.page--;
+const goToPrevious = async () => {
+  if (store.value.pagination.page > 1)
+    await goToPage(store.value.pagination.page - 1);
 };
 
-const goToNext = () => {
-  if (dummyPagination.value.page < totalPages.value)
-    dummyPagination.value.page++;
+const goToNext = async () => {
+  if (store.value.pagination.page < totalPages.value)
+    await goToPage(store.value.pagination.page + 1);
 };
 </script>

@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import axiosInstance from "../scripts/axiosConfig";
+import axiosInstance from "../scripts/axiosConfig.ts";
 import { unzipSync } from "fflate";
 
 interface Tag {
@@ -42,7 +42,7 @@ interface PaginationState {
 export const useModelStore = defineStore("models", () => {
   const models = ref<Array<Model> | null>(null);
   const loading = ref(false);
-  const error = ref<any>(null);
+  const error = ref();
 
   const presignedUrlCache = ref<Record<string, ModelUrls>>({});
 
@@ -67,11 +67,7 @@ export const useModelStore = defineStore("models", () => {
 
       const { models: fetchedModels, total } = response.data;
 
-      if (models.value) {
-        models.value = [...models.value, ...fetchedModels];
-      } else {
-        models.value = fetchedModels;
-      }
+      models.value = fetchedModels;
 
       pagination.value = {
         page: Math.floor(skip / limit) + 1,
@@ -79,20 +75,13 @@ export const useModelStore = defineStore("models", () => {
         total,
         hasMore: skip + limit < total,
       };
-    } catch (err: any) {
+    } catch (err) {
       console.error("[model store]: Failed to fetch models. ERR: ", err);
       error.value = err;
       models.value = null;
     } finally {
       loading.value = false;
     }
-  };
-
-  const loadMoreModels = async () => {
-    if (loading.value || !pagination.value.hasMore) return;
-
-    const nextSkip = models.value?.length || 0;
-    await fetchModels(pagination.value.limit, nextSkip);
   };
 
   const getThumbnailUrl = async (modelId: string) => {
@@ -128,7 +117,7 @@ export const useModelStore = defineStore("models", () => {
   };
 
   // Fake Thumbnail Url For Testing Only
-  const getFakeThumbnailUrl = async (modelId: string) => {
+  const getFakeThumbnailUrl = (modelId: string) => {
     return `https://picsum.photos/400/500?random=${modelId}`;
   };
 
@@ -232,7 +221,6 @@ export const useModelStore = defineStore("models", () => {
     pagination,
     resetPagination,
     fetchModels,
-    loadMoreModels,
     presignedUrlCache,
     getThumbnailUrl,
     getFakeThumbnailUrl,
