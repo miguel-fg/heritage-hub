@@ -13,6 +13,7 @@ model Model {
     name            String
     caption         String
     description     String
+    provenance      String?
     materials       Material[]
     tags            Tag[]
     modelPath       String

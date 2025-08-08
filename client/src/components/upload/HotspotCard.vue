@@ -14,13 +14,32 @@
       {{ props.hotspot.label }}
     </h1>
     <p
+      ref="hotspotText"
       class="body text-ellipsis whitespace-pre-line text-grayscale-700 overflow-hidden mb-2"
       :class="{ 'max-h-11': isTextClipped }"
     >
       {{ props.hotspot.content }}
     </p>
-    <Button @click="toggleTextClipped" type="ghost" class="text-xs">
+    <Button
+      v-if="textIsOverflowing"
+      @click="toggleTextClipped"
+      type="ghost"
+      class="tag underline-none mt-2"
+    >
       {{ isTextClipped ? "Read more" : "Read less" }}
+
+      <img
+        v-if="isTextClipped"
+        src="../../../assets/icons/chevron-down.svg"
+        alt="Read more icon"
+        class="w-5"
+      />
+      <img
+        v-else
+        src="../../../assets/icons/chevron-up.svg"
+        alt="Read less icon"
+        class="w-5"
+      />
     </Button>
     <!-- Options menu -->
     <div
@@ -61,6 +80,7 @@
         field-id="hotspot-content"
         label="Content"
         v-model="props.hotspot.content"
+        :rows="2"
       />
     </div>
     <div class="flex justify-between">
@@ -73,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
+import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import { useHotspotStore } from "../../stores/hotspotStore";
 import { storeToRefs } from "pinia";
@@ -101,6 +121,16 @@ const toggleMenu = () => {
 };
 
 const isTextClipped = ref(true);
+const textIsOverflowing = ref(false);
+const hotspotText = useTemplateRef("hotspotText");
+
+const checkIfTextOverflows = () => {
+  if (!hotspotText.value) return;
+
+  const el = hotspotText.value;
+
+  textIsOverflowing.value = el.scrollHeight > el.offsetHeight;
+};
 
 const toggleTextClipped = () => {
   isTextClipped.value = !isTextClipped.value;
@@ -129,8 +159,10 @@ const revertHotspotChanges = () => {
   setEditMode(false);
 };
 
-const saveHotspotChanges = () => {
+const saveHotspotChanges = async () => {
   setEditMode(false);
+  await nextTick();
+  checkIfTextOverflows();
 };
 
 const deleteCurrentHotspot = () => {
@@ -139,4 +171,8 @@ const deleteCurrentHotspot = () => {
 };
 
 onClickOutside(optionsMenu, () => (menuOpen.value = false));
+
+onMounted(() => {
+  checkIfTextOverflows();
+});
 </script>

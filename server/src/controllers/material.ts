@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prisma from "../services/prisma.ts";
+import prisma from "../services/prisma";
 
 export const getMaterials = async (
   req: Request,
@@ -9,6 +9,9 @@ export const getMaterials = async (
     const materials = await prisma.material.findMany({
       select: {
         name: true,
+      },
+      orderBy: {
+        name: "asc",
       },
     });
 

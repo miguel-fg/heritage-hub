@@ -3,11 +3,7 @@
     <ToastPlayer />
     <NavBar v-if="shouldShowNavBar" />
     <SearchBar v-else-if="shouldShowSearchBar" />
-    <div
-      class="h-full flex-1"
-      :class="shouldLoadMore ? 'overflow-y-auto px-0' : ''"
-      ref="app"
-    >
+    <div class="h-full flex-1" ref="app">
       <RouterView />
     </div>
   </div>
@@ -19,43 +15,14 @@ import SearchBar from "./components/search/SearchBar.vue";
 import ToastPlayer from "./components/ToastPlayer.vue";
 import { useRoute } from "vue-router";
 import { useTemplateRef, computed, watch, provide } from "vue";
-import { useInfiniteScroll } from "@vueuse/core";
-import { useModelStore } from "./stores/modelStore";
-import { useSearchStore } from "./stores/searchStore";
 
 const route = useRoute();
 const appRef = useTemplateRef<HTMLElement>("app");
-const modelStore = useModelStore();
-const searchStore = useSearchStore();
-
-const shouldLoadMore = computed(
-  () => route.name === "Gallery" || route.name === "Search",
-);
 
 const shouldShowNavBar = computed(
   () => route.name !== "Search" && route.name !== "Upload",
 );
 const shouldShowSearchBar = computed(() => route.name === "Search");
-
-const hasMore = computed(() => {
-  if (route.name === "Gallery") {
-    return modelStore.pagination.hasMore;
-  } else if (route.name === "Search") {
-    return searchStore.pagination.hasMore;
-  } else {
-    return false;
-  }
-});
-
-const loadMore = () => {
-  if (shouldLoadMore.value) {
-    if (route.name === "Gallery" && !modelStore.error) {
-      modelStore.loadMoreModels();
-    } else if (route.name === "Search" && !searchStore.error) {
-      searchStore.searchMoreModels();
-    }
-  }
-};
 
 watch(
   () => route.name,
@@ -65,10 +32,6 @@ watch(
     }
   },
 );
-
-useInfiniteScroll(appRef, loadMore, {
-  canLoadMore: () => shouldLoadMore.value && hasMore.value,
-});
 
 provide("appRef", appRef);
 </script>

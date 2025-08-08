@@ -22,6 +22,7 @@
         v-model="newContent"
         :error="contentError"
         :show-error="showValidation"
+        :rows="2"
       />
     </div>
     <div class="flex justify-between mt-3">

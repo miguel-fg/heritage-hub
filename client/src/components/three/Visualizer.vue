@@ -50,6 +50,8 @@
       class="flex w-full h-full"
       @click="handleModelClick"
       @mousemove="throttledMouseMove"
+      @touchstart.prevent="handleTouch"
+      @touchend.prevent="removeTouchHighlight"
       :class="
         !hotspotStore.isHotspotMode
           ? 'cursor-grab active:cursor-grabbing'
@@ -198,7 +200,9 @@ const {
   loadExistingHotspots,
   newHotspotOnClick,
   moveCameraToHotspot,
-  hightlightHotspotsOnHover,
+  highlightHotspotsOnHover,
+  highlightHotspotsOnTouch,
+  removeTouchHighlight,
   openHotspot,
   isHotspotOpen,
   selectedHotspotID,
@@ -279,7 +283,7 @@ watch(
 );
 
 // User interaction
-const handleModelClick = (event: MouseEvent) => {
+const handleModelClick = (event: MouseEvent | TouchEvent) => {
   if (!controls.value || !renderer.value) return;
 
   if (hoveredMarker.value) {
@@ -314,7 +318,18 @@ const handleMouseMove = (event: MouseEvent) => {
   if (!renderer.value || !camera || hotspotStore.sceneMarkers.length === 0)
     return;
 
-  hightlightHotspotsOnHover(event, renderer.value, camera);
+  highlightHotspotsOnHover(event, renderer.value, camera);
+};
+
+const handleTouch = (event: TouchEvent) => {
+  if (!renderer.value || !camera || hotspotStore.sceneMarkers.length === 0)
+    return;
+
+  hoveredMarker.value = null;
+
+  highlightHotspotsOnTouch(event, renderer.value, camera);
+
+  handleModelClick(event);
 };
 
 const debouncedResize = debounce(handleResize);

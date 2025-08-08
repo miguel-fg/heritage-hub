@@ -12,8 +12,13 @@
           </li>
         </ul>
 
-        <!-- Loading indicator at bottom for more items -->
-        <div v-if="loading && models && !error" class="mt-8 mb-12 text-center">
+        <!-- Pagination Controls -->
+        <div class="mt-20 mb-8">
+          <PaginationControls store-type="model" />
+        </div>
+
+        <!-- Loading indicator when changing pages -->
+        <div v-if="loading" class="mt-8 mb-12 text-center">
           <div role="status">
             <svg
               aria-hidden="true"
@@ -31,7 +36,7 @@
                 fill="currentFill"
               />
             </svg>
-            <span class="sr-only">Loading more models...</span>
+            <span class="sr-only">Loading models...</span>
           </div>
         </div>
       </div>
@@ -57,19 +62,25 @@
         <h1 class="title text-7xl mb-16">:(</h1>
         <span class="font-poppins text-xl">{{ error }}</span>
       </div>
+
+      <!-- Empty State -->
+      <div
+        v-else-if="!loading && models && models.length === 0"
+        class="flex flex-col text-grayscale-500"
+      >
+        <h1 class="title text-5xl text-wrap mb-8">No models found</h1>
+      </div>
     </div>
 
     <!-- End of list footer -->
-    <div
-      v-if="(!loading && models && !pagination.hasMore) || (!loading && error)"
-      class="w-full mt-40"
-    >
+    <div class="w-full mt-30">
       <Footer />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import PaginationControls from "../components/PaginationControls.vue";
 import ModelCard from "../components/ModelCard.vue";
 import Footer from "../components/Footer.vue";
 import Skeleton from "../components/Skeleton.vue";
@@ -79,7 +90,7 @@ import { storeToRefs } from "pinia";
 
 const modelStore = useModelStore();
 
-const { models, loading, error, pagination } = storeToRefs(modelStore);
+const { models, loading, error } = storeToRefs(modelStore);
 
 onMounted(() => {
   if (!modelStore.models) {

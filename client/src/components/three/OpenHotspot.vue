@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="hotspot"
-    class="absolute z-40 bottom-2 right-12 px-2 py-3 bg-grayscale-100/90 rounded-xs shadow-sm w-[200px] md:w-[300px] font-poppins"
+    class="absolute z-40 bottom-2 right-12 px-2 py-3 bg-grayscale-100/90 rounded-xs shadow-sm w-[200px] md:w-[300px] xl:w-[400px] font-poppins max-h-3/7 overflow-y-auto"
   >
     <div class="relative flex flex-col gap-4">
       <button
@@ -13,11 +13,13 @@
 
       <div class="flex flex-col gap-2">
         <h1
-          class="font-bold text-primary-500 w-full pb-1 border-b border-grayscale-300"
+          class="font-bold text-primary-500 w-full pb-1 pr-6 border-b border-grayscale-300"
         >
           {{ hotspot.label }}
         </h1>
-        <p class="font-garamond text-primary-900">{{ hotspot.content }}</p>
+        <p class="font-garamond text-primary-900 whitespace-pre-line">
+          {{ hotspot.content }}
+        </p>
       </div>
     </div>
   </div>

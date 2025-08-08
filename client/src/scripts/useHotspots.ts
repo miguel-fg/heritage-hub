@@ -141,7 +141,7 @@ export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
    * Handle new hotspot creation on click
    */
   const newHotspotOnClick = (
-    event: MouseEvent,
+    event: MouseEvent | TouchEvent,
     renderer: THREE.WebGLRenderer,
     camera: THREE.PerspectiveCamera,
     modelMeshes: THREE.Object3D[],
@@ -149,7 +149,18 @@ export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
   ) => {
     if (!isHotspotMode.value || !renderer || modelMeshes.length === 0) return;
 
-    normalizeMouse(mouse, event.clientX, event.clientY, renderer);
+    let clientX: number;
+    let clientY: number;
+
+    if (event instanceof MouseEvent) {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    } else {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    }
+
+    normalizeMouse(mouse, clientX, clientY, renderer);
 
     raycaster.layers.set(0);
     raycaster.near = camera.near;
@@ -217,7 +228,7 @@ export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
   /**
    * Change hovered hotspot color to signal interactivity
    */
-  const hightlightHotspotsOnHover = (
+  const highlightHotspotsOnHover = (
     event: MouseEvent,
     renderer: THREE.WebGLRenderer,
     camera: THREE.PerspectiveCamera,
@@ -250,6 +261,48 @@ export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
         hoveredMarker.value.marker.material = hotspotMaterial;
         hoveredMarker.value = null;
       }
+    }
+  };
+
+  const highlightHotspotsOnTouch = (
+    event: TouchEvent,
+    renderer: THREE.WebGLRenderer,
+    camera: THREE.PerspectiveCamera,
+  ) => {
+    normalizeMouse(
+      mouse,
+      event.touches[0].clientX,
+      event.touches[0].clientY,
+      renderer,
+    );
+
+    raycaster.layers.set(1);
+    raycaster.setFromCamera(mouse, camera);
+
+    const markerMeshes = hotspotStore.sceneMarkers.map((m) => m.marker);
+
+    const intersects = raycaster.intersectObjects(markerMeshes, true);
+
+    if (intersects.length > 0) {
+      const intersected = intersects[0].object;
+      const found = hotspotStore.sceneMarkers.find(
+        (m) => m.marker === intersected,
+      );
+
+      if (found && found.marker.material !== highlightMaterial) {
+        if (hoveredMarker.value && hoveredMarker.value !== found) {
+          hoveredMarker.value.marker.material = hotspotMaterial;
+        }
+
+        hoveredMarker.value = found;
+        found.marker.material = highlightMaterial;
+      }
+    }
+  };
+
+  const removeTouchHighlight = () => {
+    if (hoveredMarker.value) {
+      hoveredMarker.value.marker.material = hotspotMaterial;
     }
   };
 
@@ -421,7 +474,9 @@ export const useHotspots = (scene: THREE.Scene, modelScale: Ref<number>) => {
     closeHotspot,
     deleteHotspot,
     saveHotspotData,
-    hightlightHotspotsOnHover,
+    highlightHotspotsOnHover,
+    highlightHotspotsOnTouch,
+    removeTouchHighlight,
     hoveredMarker,
     deleteHotspot3DObject,
     textureCleanup,

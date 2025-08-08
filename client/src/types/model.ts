@@ -6,6 +6,7 @@ export type Model = {
   name: string;
   caption: string;
   description: string;
+  provenance: string;
   materials: Material[];
   tags: Tag[];
   dimensions: ModelDimension[];

@@ -35,7 +35,7 @@ const buttonClass = computed(() => {
     case "search":
       return "px-2 py-1 bg-transparent border border-grayscale-300 text-grayscale-500 grow-1";
     case "outline":
-      return "px-2 py-1 bg-transparent border border-primary-300 text-primary-500";
+      return "px-2 py-1 bg-transparent border border-primary-300 text-primary-500 hover:bg-grayscale-200 active:bg-primary-500 active:text-grayscale-100";
   }
 });
 

@@ -1,11 +1,14 @@
 import { Request, Response } from "express";
-import prisma from "../services/prisma.ts";
+import prisma from "../services/prisma";
 
 export const getTags = async (req: Request, res: Response): Promise<void> => {
   try {
     const tags = await prisma.tag.findMany({
       select: {
         name: true,
+      },
+      orderBy: {
+        name: "asc",
       },
     });
 

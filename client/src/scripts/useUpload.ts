@@ -19,6 +19,7 @@ const captionError = ref<string | null>(null);
 const mDescription = ref<string>("");
 const descriptionError = ref<string | null>(null);
 const mAccNum = ref<string>("");
+const mProvenance = ref<string>("");
 
 // Dimensions
 const selectedDimensions = ref<Record<DimensionKey, Dimension>>({
@@ -85,6 +86,7 @@ export const useUpload = () => {
       caption: mCaption.value,
       description: mDescription.value,
       accNum: mAccNum.value,
+      provenance: mProvenance.value,
       downloadable: downloadable.value,
       materials: sanitizeMultiselect(selectedMaterials.value),
       tags: sanitizeMultiselect(selectedTags.value),
@@ -298,6 +300,7 @@ export const useUpload = () => {
     mDescription.value = "";
     descriptionError.value = null;
     mAccNum.value = "";
+    mProvenance.value = "";
 
     // Reset dimensions
     selectedDimensions.value = {
@@ -365,6 +368,7 @@ export const useUpload = () => {
     mDescription,
     descriptionError,
     mAccNum,
+    mProvenance,
     thumbnail,
     downloadable,
     selectedTags,
