@@ -65,14 +65,23 @@
                 />
                 <span>Search</span>
               </Button>
-              <Button type="primary" class="px-3" @click="handleUpload">
-                <img
-                  src="../../assets/icons/upload.svg"
-                  alt="Upload icon"
-                  class="w-4"
-                />
-                <span class="hidden md:block">Upload</span>
-              </Button>
+              <div class="flex gap-4">
+                <Button type="primary" class="px-3" @click="handleUpload">
+                  <img
+                    src="../../assets/icons/upload.svg"
+                    alt="Upload icon"
+                    class="w-4"
+                  />
+                  <span class="hidden md:block">Upload</span>
+                </Button>
+                <Button
+                  type="outline"
+                  class="hidden lg:block px-3"
+                  @click="handleLogin"
+                >
+                  Login
+                </Button>
+              </div>
               <Button type="ghost" @click="toggleNav" class="lg:hidden">
                 <img
                   v-if="!isOpen"
@@ -92,40 +101,53 @@
       </div>
     </div>
 
-    <nav class="lg:hidden border-b border-grayscale-300" v-show="isOpen">
-      <ul class="flex flex-col gap-2 pt-2 bg-white font-poppins font-regular">
-        <li
-          class="py-2"
-          :class="
-            route.name === 'Home'
-              ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
-              : 'pl-4 border-none'
-          "
+    <div
+      class="lg:hidden border-b border-grayscale-300 bg-white"
+      v-show="isOpen"
+    >
+      <nav>
+        <ul class="flex flex-col gap-2 pt-2 font-poppins font-regular">
+          <li
+            class="py-2"
+            :class="
+              route.name === 'Home'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/home">Home</RouterLink>
+          </li>
+          <li
+            class="py-2"
+            :class="
+              route.name === 'About'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/about">About</RouterLink>
+          </li>
+          <li
+            class="py-2"
+            :class="
+              route.name === 'Gallery'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/">Explore</RouterLink>
+          </li>
+        </ul>
+      </nav>
+      <div class="py-4 px-3">
+        <Button
+          type="primary"
+          class="flex w-full justify-center"
+          @click="handleLogin"
+          >Login</Button
         >
-          <RouterLink to="/home">Home</RouterLink>
-        </li>
-        <li
-          class="py-2"
-          :class="
-            route.name === 'About'
-              ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
-              : 'pl-4 border-none'
-          "
-        >
-          <RouterLink to="/about">About</RouterLink>
-        </li>
-        <li
-          class="py-2"
-          :class="
-            route.name === 'Gallery'
-              ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
-              : 'pl-4 border-none'
-          "
-        >
-          <RouterLink to="/">Explore</RouterLink>
-        </li>
-      </ul>
-    </nav>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -152,5 +174,22 @@ const handleSearch = () => {
 const handleUpload = () => {
   hotspotStore.cleanHotspotState();
   router.push("/upload");
+};
+
+const handleLogin = async () => {
+  const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!;
+
+  const apiBaseUrl =
+    ENVIRONMENT === "prod"
+      ? import.meta.env.VITE_PROD_SERVER_URL
+      : import.meta.env.VITE_DEV_SERVER_URL;
+
+  if (!apiBaseUrl) {
+    console.error("API base URL not set");
+    return;
+  }
+
+  console.log(`Redirecting to ${apiBaseUrl}/auth/cas/login`);
+  window.location.href = `${apiBaseUrl}/auth/cas/login`;
 };
 </script>

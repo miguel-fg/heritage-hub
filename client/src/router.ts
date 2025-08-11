@@ -42,8 +42,7 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  //@ts-ignore
-  async scrollBehavior(to, from, savedPosition) {
+  async scrollBehavior(_to, _from, savedPosition) {
     await nextTick();
     if (savedPosition) {
       setTimeout(() => {
