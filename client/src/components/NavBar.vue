@@ -50,7 +50,7 @@
                     <RouterLink to="/">Explore</RouterLink>
                   </li>
                   <li
-                    v-if="isAdmin"
+                    v-if="userStore.isAdmin"
                     class="pointer-cursor"
                     :class="
                       route.name === 'Users'
@@ -78,7 +78,7 @@
               </Button>
               <div class="flex gap-4">
                 <Button
-                  v-if="userStore.user"
+                  v-if="userStore.canAccess"
                   type="primary"
                   class="px-3"
                   @click="handleUpload"
@@ -86,7 +86,7 @@
                   <img
                     src="../../assets/icons/upload.svg"
                     alt="Upload icon"
-                    class="w-4"
+                    class="w-3.5"
                   />
                   <span class="hidden md:block">Upload</span>
                 </Button>
@@ -101,10 +101,15 @@
                 <Button
                   v-else
                   type="secondary"
-                  class="hidden lg:block px-3"
-                  @click="handleLogout"
+                  class="hidden lg:flex px-3"
+                  @click="handleProfile"
                 >
-                  Logout
+                  <img
+                    src="../../assets/icons/profile.svg"
+                    alt="Profile icon"
+                    class="w-3"
+                  />
+                  <span>Profile</span>
                 </Button>
               </div>
               <Button type="ghost" @click="toggleNav" class="lg:hidden">
@@ -163,7 +168,7 @@
             <RouterLink to="/">Explore</RouterLink>
           </li>
           <li
-            v-if="isAdmin"
+            v-if="userStore.isAdmin"
             class="py-2"
             :class="
               route.name === 'Users'
@@ -187,9 +192,9 @@
           v-else
           type="secondary"
           class="flex w-full justify-center"
-          @click="handleLogout"
+          @click="handleProfile"
         >
-          Logout
+          Profile
         </Button>
       </div>
     </div>
@@ -197,12 +202,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import { useUserStore } from "../stores/userStore";
 import { useHotspotStore } from "../stores/hotspotStore";
 import Button from "./Button.vue";
-import axiosInstance from "../scripts/axiosConfig";
 
 const route = useRoute();
 const router = useRouter();
@@ -241,31 +245,7 @@ const handleLogin = async () => {
   window.location.href = `${apiBaseUrl}/cas/login`;
 };
 
-const handleLogout = async () => {
-  const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!;
-
-  const apiBaseUrl =
-    ENVIRONMENT === "prod"
-      ? import.meta.env.VITE_PROD_SERVER_URL
-      : import.meta.env.VITE_DEV_SERVER_URL;
-
-  if (!apiBaseUrl) {
-    console.error("API base URL not set");
-    return;
-  }
-
-  try {
-    const { status } = await axiosInstance.post("/user/logout");
-
-    if (status === 200) {
-      userStore.clearUser();
-    }
-  } catch (err) {
-    console.error("Failed to log out user ", err);
-  }
+const handleProfile = async () => {
+  router.push("/profile");
 };
-
-const isAdmin = computed(
-  () => userStore.user && userStore.user.permissions === "ADMIN",
-);
 </script>

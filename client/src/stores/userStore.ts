@@ -12,6 +12,8 @@ interface User {
 
 export const useUserStore = defineStore("user", () => {
   const user = ref<User | null>(null);
+  const canAccess = ref(false);
+  const isAdmin = ref(false);
   const loading = ref(true);
 
   const fetchUser = async () => {
@@ -20,9 +22,15 @@ export const useUserStore = defineStore("user", () => {
      try {
        const { data } = await axiosInstance.get("/user/me")
 
-       user.value = data.user;
+       if(data.user){
+         user.value = data.user;
+         canAccess.value = data.user.permissions !== "RESTRICTED"
+         isAdmin.value = data.user.permissions === "ADMIN"
+       }
      } catch (err) {
-       user.value = null
+       user.value = null;
+       canAccess.value = false;
+       isAdmin.value = false;
      } finally {
        loading.value = false
      }
@@ -30,8 +38,10 @@ export const useUserStore = defineStore("user", () => {
 
   const clearUser = () => {
     user.value = null;
+    canAccess.value = false;
+    isAdmin.value = false;
     loading.value = false;
   }
 
-  return { user, loading, fetchUser, clearUser }
+  return { user, canAccess, isAdmin, loading, fetchUser, clearUser }
 })

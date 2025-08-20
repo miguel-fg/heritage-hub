@@ -1,5 +1,6 @@
 import { createWebHistory, createRouter } from "vue-router";
-
+import { useUserStore } from "./stores/userStore";
+import { useToastStore } from "./stores/toastStore";
 import Home from "./pages/Home.vue";
 import About from "./pages/About.vue";
 import Gallery from "./pages/Gallery.vue";
@@ -8,6 +9,7 @@ import Search from "./pages/Search.vue";
 import Upload from "./pages/Upload.vue";
 import Edit from "./pages/Edit.vue";
 import Users from "./pages/Users.vue";
+import Profile from "./pages/Profile.vue";
 import AuthCallback from "./components/AuthCallback.vue";
 import { nextTick } from "vue";
 
@@ -32,15 +34,22 @@ const routes = [
     path: "/upload",
     name: "Upload",
     component: Upload,
+    meta: { requiresAuth: true }
   },
   {
     path: "/edit/:id",
     name: "Edit",
     component: Edit,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/profile",
+    name: "Profile",
+    component: Profile,
   },
   { path: "/search", name: "Search", component: Search },
-  { path: "/users", name: "Users", component: Users },
-  { path: "/auth/callback", name: "Auth Callback", component: AuthCallback}
+  { path: "/users", name: "Users", component: Users, meta: { requiresAdmin: true } },
+  { path: "/auth/callback", name: "Auth Callback", component: AuthCallback} // OTC exchange route to open a session
 ];
 
 const router = createRouter({
@@ -60,5 +69,26 @@ const router = createRouter({
     }
   },
 });
+
+router.beforeEach((to, from) => {
+  const userStore = useUserStore();
+  const toastStore = useToastStore();
+
+  if(to.meta.requiresAuth && !userStore.canAccess) {
+    toastStore.showToast("error", "You don't have access to the requested resource")
+
+    return {
+      path: from.path
+    }
+  }
+
+  if(to.meta.requiresAdmin && !userStore.isAdmin) {
+    toastStore.showToast("error", "You don't have access to the requested resource")
+
+    return {
+      path: from.path
+    }
+  }
+})
 
 export default router;
