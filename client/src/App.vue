@@ -14,10 +14,13 @@ import NavBar from "./components/NavBar.vue";
 import SearchBar from "./components/search/SearchBar.vue";
 import ToastPlayer from "./components/ToastPlayer.vue";
 import { useRoute } from "vue-router";
-import { useTemplateRef, computed, watch, provide } from "vue";
+import { useTemplateRef, computed, watch, provide, onMounted } from "vue";
+import { useUserStore } from "./stores/userStore";
 
 const route = useRoute();
 const appRef = useTemplateRef<HTMLElement>("app");
+
+const userStore = useUserStore();
 
 const shouldShowNavBar = computed(
   () => route.name !== "Search" && route.name !== "Upload",
@@ -34,4 +37,8 @@ watch(
 );
 
 provide("appRef", appRef);
+
+onMounted(async () => {
+  await userStore.fetchUser();
+});
 </script>

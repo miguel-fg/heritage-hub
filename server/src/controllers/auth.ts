@@ -1,12 +1,60 @@
 import { Request, Response } from "express";
+import { createOneTimeCode, getCASServiceURL, getFrontendURL } from "../scripts/auth";
+import axios from "axios";
+import prisma from "../services/prisma";
+import {v4 as uuidv4 } from "uuid"
+import { parseStringPromise } from "xml2js"
 
 export const redirectCAS = (_req: Request, res: Response) => {
-  res.redirect("https://example.com");
+  const serviceURL = getCASServiceURL();
+
+  if (!serviceURL) {
+    return res.status(500).json({
+      error: `[server]: CAS service URLs not configured.`,
+    });
+  }
+
+  const URL = `https://cas.sfu.ca/cas/login?service=${encodeURIComponent(serviceURL)}`;
+  res.redirect(URL);
 };
 
-export const validateCASTicket = (_req: Request, res: Response) => {
-  const ticket = "abc123fakeTicket";
-  const frontendURL = "http://localhost:5173";
+export const validateCASTicket = async (req: Request, res: Response) => {
+  const ticket = req.query.ticket as string;
+  const serviceURL = getCASServiceURL();
+  const frontendURL = getFrontendURL();
 
-  res.redirect(`${frontendURL}/?ticket=${ticket}`);
+  if (!ticket) return res.status(400).send("Missing CAS ticket");
+
+  if (!serviceURL || !frontendURL) {
+    return res.status(400).send("Server URLs not configured")
+  }
+
+  try {
+    const CAS_BASE = "https://cas.sfu.ca/cas"
+
+    const { data } = await axios.get(
+      `${CAS_BASE}/serviceValidate?service=${encodeURIComponent(serviceURL)}&ticket=${encodeURIComponent(ticket)}`
+    );
+
+    const parsed = await parseStringPromise(data, { explicitArray: false });
+    const success = parsed["cas:serviceResponse"]["cas:authenticationSuccess"];
+
+    if (!success) return res.status(401).send("CAS auth failed");
+
+    const casId = success["cas:user"];
+    const authType = success["cas:authtype"];
+
+    const user = await prisma.user.upsert({
+      where: { casId },
+      create: { id: uuidv4(), casId, authType },
+      update: { authType }
+    });
+
+    const otc = await createOneTimeCode(user.id);
+
+    res.redirect(`${frontendURL}/auth/callback?otc=${otc}`);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Internal error");
+  }
 };

@@ -2,6 +2,7 @@ import { type Mesh, type Vector3 } from "three";
 
 export type Model = {
   id: string;
+  ownerId: string;
   accNum: string;
   name: string;
   caption: string;

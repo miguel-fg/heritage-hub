@@ -110,7 +110,7 @@
                 {{ cleanDate(model.createdAt) }}
               </p>
             </div>
-            <div class="flex gap-4">
+            <div v-if="hasPermissions" class="flex gap-4">
               <Button @click="handleEdit(model)" type="secondary"
                 >Edit model</Button
               >
@@ -171,6 +171,7 @@ import Skeleton from "../components/Skeleton.vue";
 import Visualizer from "../components/three/Visualizer.vue";
 import { useDimensions } from "../scripts/useDimensions";
 import Footer from "../components/Footer.vue";
+import { useUserStore } from "../stores/userStore";
 import { useModelStore } from "../stores/modelStore";
 import { useHotspotStore } from "../stores/hotspotStore";
 import { useToastStore } from "../stores/toastStore";
@@ -190,6 +191,7 @@ const { formatDimension } = useDimensions();
 
 const { initEditState } = useEdit();
 
+const userStore = useUserStore();
 const modelStore = useModelStore();
 const hotspotStore = useHotspotStore();
 const toastStore = useToastStore();
@@ -281,6 +283,19 @@ const showReadMore = computed(() => {
   const description = model.value?.description;
 
   return description && description.length > 350;
+});
+
+const hasPermissions = computed(() => {
+  const user = userStore.user;
+
+  const isOwner =
+    user &&
+    user.id === model.value?.ownerId &&
+    user.permissions !== "RESTRICTED";
+  const isElevatedUser =
+    user && (user.permissions === "FULL" || user.permissions === "ADMIN");
+
+  return isOwner || isElevatedUser;
 });
 
 const handleEdit = async (model: Model) => {

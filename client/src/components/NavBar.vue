@@ -49,6 +49,17 @@
                   >
                     <RouterLink to="/">Explore</RouterLink>
                   </li>
+                  <li
+                    v-if="isAdmin"
+                    class="pointer-cursor"
+                    :class="
+                      route.name === 'Users'
+                        ? 'border-b-3 border-primary-500 text-primary-600 font-medium'
+                        : 'border-none hover:underline'
+                    "
+                  >
+                    <RouterLink to="/users">Users</RouterLink>
+                  </li>
                 </ul>
               </nav>
             </div>
@@ -66,7 +77,12 @@
                 <span>Search</span>
               </Button>
               <div class="flex gap-4">
-                <Button type="primary" class="px-3" @click="handleUpload">
+                <Button
+                  v-if="userStore.user"
+                  type="primary"
+                  class="px-3"
+                  @click="handleUpload"
+                >
                   <img
                     src="../../assets/icons/upload.svg"
                     alt="Upload icon"
@@ -75,11 +91,20 @@
                   <span class="hidden md:block">Upload</span>
                 </Button>
                 <Button
-                  type="outline"
+                  v-if="!userStore.user"
+                  type="primary"
                   class="hidden lg:block px-3"
                   @click="handleLogin"
                 >
                   Login
+                </Button>
+                <Button
+                  v-else
+                  type="secondary"
+                  class="hidden lg:block px-3"
+                  @click="handleLogout"
+                >
+                  Logout
                 </Button>
               </div>
               <Button type="ghost" @click="toggleNav" class="lg:hidden">
@@ -137,30 +162,53 @@
           >
             <RouterLink to="/">Explore</RouterLink>
           </li>
+          <li
+            v-if="isAdmin"
+            class="py-2"
+            :class="
+              route.name === 'Users'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/users">Users</RouterLink>
+          </li>
         </ul>
       </nav>
       <div class="py-4 px-3">
         <Button
+          v-if="!userStore.user"
           type="primary"
           class="flex w-full justify-center"
           @click="handleLogin"
           >Login</Button
         >
+        <Button
+          v-else
+          type="secondary"
+          class="flex w-full justify-center"
+          @click="handleLogout"
+        >
+          Logout
+        </Button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
+import { useUserStore } from "../stores/userStore";
 import { useHotspotStore } from "../stores/hotspotStore";
 import Button from "./Button.vue";
+import axiosInstance from "../scripts/axiosConfig";
 
 const route = useRoute();
 const router = useRouter();
 const isOpen = ref(false);
 
+const userStore = useUserStore();
 const hotspotStore = useHotspotStore();
 
 const toggleNav = () => {
@@ -189,7 +237,35 @@ const handleLogin = async () => {
     return;
   }
 
-  console.log(`Redirecting to ${apiBaseUrl}/auth/cas/login`);
-  window.location.href = `${apiBaseUrl}/auth/cas/login`;
+  console.log(`Redirecting to ${apiBaseUrl}/cas/login`);
+  window.location.href = `${apiBaseUrl}/cas/login`;
 };
+
+const handleLogout = async () => {
+  const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!;
+
+  const apiBaseUrl =
+    ENVIRONMENT === "prod"
+      ? import.meta.env.VITE_PROD_SERVER_URL
+      : import.meta.env.VITE_DEV_SERVER_URL;
+
+  if (!apiBaseUrl) {
+    console.error("API base URL not set");
+    return;
+  }
+
+  try {
+    const { status } = await axiosInstance.post("/user/logout");
+
+    if (status === 200) {
+      userStore.clearUser();
+    }
+  } catch (err) {
+    console.error("Failed to log out user ", err);
+  }
+};
+
+const isAdmin = computed(
+  () => userStore.user && userStore.user.permissions === "ADMIN",
+);
 </script>

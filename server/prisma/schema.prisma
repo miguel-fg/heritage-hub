@@ -81,12 +81,20 @@ model User {
     permissions   PermissionLevel   @default(STANDARD)
     sessions      Session[]
     models        Model[]
+    otcs          OneTimeCode[]
 }
 
 model Session {
     id          String      @id
     userId      String      @db.Uuid
     user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    expiresAt   DateTime
+}
+
+model OneTimeCode {
+    code        String  @id
+    userId      String  @db.Uuid
+    user        User    @relation(fields: [userId], references: [id])
     expiresAt   DateTime
 }
 

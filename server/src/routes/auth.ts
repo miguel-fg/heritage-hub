@@ -3,7 +3,7 @@ import { redirectCAS, validateCASTicket } from "../controllers/auth";
 
 const router = Router();
 
-router.get("/cas/login", redirectCAS);
-router.get("/cas/callback", validateCASTicket);
+router.get("/login", redirectCAS);
+router.get("/callback", validateCASTicket);
 
 export default router;
