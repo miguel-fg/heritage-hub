@@ -1,24 +1,35 @@
 import { Request, Response } from "express";
 import { createSession, deleteSessionTokenCookie, generateSessionToken, setSessionTokenCookie, validateSessionToken, oneTimeCodeTransaction, invalidateSession } from "../scripts/auth";
+import prisma from "../services/prisma";
 
 export const getCurrentUser = async (req:Request, res:Response) => {
-  const cookies = req.cookies;
-  const token = cookies?.session;
-
-  if (!token) {
-    return res.status(401).json({ user: null, message: "No session token" });
+  if (!req.user) {
+    return res.status(401).json({ user: null, message: "Not authenticated "});
   }
 
-  const { session, user } = await validateSessionToken(token);
+  return res.json({ user: req.user });
+}
 
-  if (!session) {
-    deleteSessionTokenCookie(res);
-    return res.status(401).json({ user: null, message: "Invalid session token" })
+export const patchUser = async (req: Request, res: Response) => {
+  const { displayName } = req.body;
+
+  if (!req.user) return res.status(401).send("Not authenticated");
+  if (!displayName || displayName === "") return res.status(400).send("Missing user display name");
+
+  try {
+    const result = await prisma.user.update({
+      where: {
+        id: req.user.id
+      },
+      data: {
+        displayName
+      }
+    });
+
+    return res.status(200).json({ displayName: result.displayName });
+  } catch (err) {
+    return res.status(500).send("Failed to update user");
   }
-
-  setSessionTokenCookie(res, token, session.expiresAt);
-
-  return res.json({ user });
 }
 
 export const exchangeOneTimeCode = async (req: Request, res:Response) => {

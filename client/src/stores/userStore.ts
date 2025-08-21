@@ -36,6 +36,24 @@ export const useUserStore = defineStore("user", () => {
      }
   }
 
+  const updateUser = async (displayName: string) => {
+    if (!user.value) return;
+
+    loading.value = true
+
+    try {
+      const { data } = await axiosInstance.patch("/user/me", { displayName });
+
+      if(data.displayName) {
+        user.value.displayName = data.displayName;
+      }
+    } catch (err) {
+      console.error("[userStore]: Failed to update user. ERR: ", err);
+    } finally {
+      loading.value = false
+    }
+  }
+
   const clearUser = () => {
     user.value = null;
     canAccess.value = false;
@@ -43,5 +61,5 @@ export const useUserStore = defineStore("user", () => {
     loading.value = false;
   }
 
-  return { user, canAccess, isAdmin, loading, fetchUser, clearUser }
+  return { user, canAccess, isAdmin, loading, fetchUser, updateUser, clearUser }
 })

@@ -5,26 +5,24 @@ import {
   setSessionTokenCookie,
 } from "../scripts/auth";
 
-export async function authGuard(
+export const authGuard = async (
   req: Request,
   res: Response,
   next: NextFunction,
-): Promise<void> {
+) => {
   try {
     const cookies = req.cookies;
     const token = cookies?.session;
 
     if (!token) {
-      res.status(401).json({ message: "Unauthorized: No session token" });
-      return;
+      return res.status(401).json({ message: "Unauthorized: No session token" });
     }
 
     const { session, user } = await validateSessionToken(token);
 
     if (!session) {
       deleteSessionTokenCookie(res);
-      res.status(401).json({ message: "Unauthorized: Invalid session token" });
-      return;
+      return res.status(401).json({ message: "Unauthorized: Invalid session token" });
     }
 
     setSessionTokenCookie(res, token, session.expiresAt);
