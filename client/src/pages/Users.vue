@@ -26,33 +26,37 @@
         </label>
         <Button type="primary">Search</Button>
       </div>
-      <div class="bg-white p-6 rounded overflow-y-visible">
-        <table
-          v-if="!loading && filteredUsers.length > 0"
-          class="table-fixed mx-auto border-separate border-spacing-2 w-full"
-        >
-          <thead class="subtitle text-primary-500">
-            <tr class="border-b border-grayscale-200">
-              <th class="text-start">Name</th>
-              <th class="text-start">casId</th>
-              <th class="text-center w-20">Models</th>
-              <th class="text-center w-70">Permissions</th>
-              <th class="w-30">&nbsp;</th>
-            </tr>
-          </thead>
-          <tbody class="font-poppins font-regular">
-            <UserRow v-for="user in filteredUsers" :user="user" />
-          </tbody>
-        </table>
-        <div
-          v-else-if="!loading && filteredUsers.length === 0"
-          class="flex items-center justify-center font-poppins font-medium text-grayscale-700"
-        >
-          No users match your search query
+      <div v-if="!loading && filteredUsers.length > 0">
+        <div v-if="showMobile" class="space-y-8 rounded overflow-y-visible">
+          <UserRowMobile v-for="user in filteredUsers" :user="user" />
         </div>
-        <div v-else-if="loading" class="flex items-center justify-center">
-          <Spinner :size="30" class="fill-primary-500" />
+        <div v-else class="bg-white p-6 rounded overflow-y-visible">
+          <table
+            class="table-fixed mx-auto border-separate border-spacing-2 w-full"
+          >
+            <thead class="subtitle text-primary-500">
+              <tr class="border-b border-grayscale-200">
+                <th class="text-start">Name</th>
+                <th class="text-start">CAS ID</th>
+                <th class="text-center w-20 lg:w-40">Models</th>
+                <th class="text-center w-40 lg:w-60">Permissions</th>
+                <th class="w-20 lg:w-30">&nbsp;</th>
+              </tr>
+            </thead>
+            <tbody class="font-poppins font-regular">
+              <UserRow v-for="user in filteredUsers" :user="user" />
+            </tbody>
+          </table>
         </div>
+      </div>
+      <div
+        v-else-if="!loading && filteredUsers.length === 0"
+        class="flex items-center justify-center font-poppins font-medium text-grayscale-700"
+      >
+        No users match your search query
+      </div>
+      <div v-else-if="loading" class="flex items-center justify-center">
+        <Spinner :size="30" class="fill-primary-500" />
       </div>
       <div v-show="editedUsers.size > 0" class="flex justify-end gap-2 mt-4">
         <Button @click="handleSaveChanges" type="success">
@@ -81,6 +85,8 @@ import UserRow from "../components/UserRow.vue";
 import Footer from "../components/Footer.vue";
 import Spinner from "../components/Spinner.vue";
 import Button from "../components/Button.vue";
+import { useTailwindBreakpoints } from "../scripts/useTailwindBreakpoints";
+import UserRowMobile from "../components/UserRowMobile.vue";
 
 const users = ref<UserWithCount[]>([]);
 const loading = ref(false);
@@ -133,6 +139,11 @@ const handleSaveChanges = async () => {
 const handleCancelAll = () => {
   resetEditedUsers();
 };
+
+const { current } = useTailwindBreakpoints();
+const showMobile = computed(
+  () => current.value === "xs" || current.value === "sm",
+);
 
 onMounted(async () => {
   if (!userStore.user || userStore.user.permissions !== "ADMIN") {

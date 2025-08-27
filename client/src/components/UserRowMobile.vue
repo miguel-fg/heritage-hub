@@ -1,40 +1,55 @@
 <template>
-  <tr :class="!editMode ? 'hover:bg-grayscale-100' : ''">
-    <td>
-      <p v-if="!editMode" class="text-nowrap w-full">
-        {{ props.user.displayName }}
-      </p>
+  <div class="space-y-3 bg-white rounded px-3 py-4 sm:px-6 sm:py-6">
+    <div class="flex justify-between items-center gap-5">
+      <span class="subtitle text-primary-500">Name</span>
+      <span
+        v-if="!editMode"
+        class="font-poppins font-medium text-grayscale-800"
+        >{{ props.user.displayName }}</span
+      >
       <input
         v-else
         type="text"
         v-model="nameInput"
-        class="w-3/4 px-2 py-1 rounded border border-grayscale-500 bg-grayscale-100"
+        class="w-full sm:w-1/2 px-2 py-1 rounded border border-grayscale-500 bg-grayscale-100 font-poppins"
       />
-    </td>
-    <td>{{ props.user.casId }}</td>
-    <td class="text-center">{{ props.user._count.models }}</td>
-    <td class="text-center">
-      <v-select
-        v-model="selectedPermission"
-        :options="permissionOptions"
-        :noDrop="!editMode"
-        :clearable="false"
-        class="permission-chooser"
-        :class="optionClass(selectedPermission)"
-      >
-      </v-select>
-    </td>
-    <td class="flex justify-center">
-      <Button
-        @click="toggleEditMode"
-        v-if="canEdit"
-        :type="editMode ? 'danger' : 'secondary'"
-        :disabled="!canEdit"
-      >
-        {{ editMode ? "Cancel" : "Edit" }}
-      </Button>
-    </td>
-  </tr>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="subtitle text-primary-500">CAS ID</span>
+      <span class="font-poppins font-medium text-grayscale-800">{{
+        props.user.casId
+      }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="subtitle text-primary-500">Models</span>
+      <span class="font-poppins font-medium text-grayscale-800">{{
+        props.user._count.models
+      }}</span>
+    </div>
+    <div class="flex justify-between items-center gap-5">
+      <span class="subtitle text-primary-500">Permissions</span>
+      <div class="w-full sm:w-1/2 min-w-35 sm:min-w-40">
+        <v-select
+          v-model="selectedPermission"
+          :options="permissionOptions"
+          :noDrop="!editMode"
+          :clearable="false"
+          class="permission-chooser"
+          :class="optionClass(selectedPermission)"
+        >
+        </v-select>
+      </div>
+    </div>
+    <Button
+      @click="toggleEditMode"
+      v-if="canEdit"
+      :type="editMode ? 'danger' : 'secondary'"
+      class="w-full justify-center"
+      :disabled="!canEdit"
+    >
+      {{ editMode ? "Cancel" : "Edit" }}
+    </Button>
+  </div>
 </template>
 
 <script setup lang="ts">
