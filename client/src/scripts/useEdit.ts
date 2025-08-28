@@ -158,7 +158,7 @@ export const useEdit = () => {
     console.log("[useEdit.ts]: Writing changes to database");
     try {
       const data = buildFormData();
-      await axiosInstance.post("/models/update", data);
+      await axiosInstance.put(`/models/${toEdit.value.id}`, data);
       console.log(`[useEdit.ts]: SUCCESS`);
       loading.value = false;
       return true;

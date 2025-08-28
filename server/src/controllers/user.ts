@@ -1,18 +1,20 @@
-import { Request, Response } from "express";
+import {RequestHandler, Request, Response } from "express";
 import { createSession, deleteSessionTokenCookie, generateSessionToken, setSessionTokenCookie, oneTimeCodeTransaction, invalidateSession } from "../scripts/auth";
 import prisma from "../services/prisma";
 
-export const getCurrentUser = async (req:Request, res:Response) => {
+export const getCurrentUser: RequestHandler = async (req:Request, res:Response) => {
   if (!req.user) {
-    return res.status(401).json({ user: null, message: "Not authenticated "});
+    res.status(401).json({ user: null, message: "Not authenticated "});
+    return;
   }
 
-  return res.json({ user: req.user });
+  res.json({ user: req.user });
 }
 
-export const getAllUsers = async (req: Request, res:Response) => {
+export const getAllUsers: RequestHandler = async (req: Request, res:Response) => {
   if (!req.user || req.user.permissions !== "ADMIN") {
-    return res.status(403).send("Not authorized to access the requested resource");
+    res.status(403).send("Not authorized to access the requested resource");
+    return;
   }
 
   try {
@@ -26,18 +28,24 @@ export const getAllUsers = async (req: Request, res:Response) => {
       }
     });
 
-    return res.status(200).json({ users });
+    res.status(200).json({ users });
   } catch (err) {
-    return res.status(500).send("Failed to retrieve user");
+    res.status(500).send("Failed to retrieve user");
   }
-
 }
 
-export const patchUser = async (req: Request, res: Response) => {
+export const patchUser: RequestHandler = async (req: Request, res: Response) => {
   const { displayName } = req.body;
 
-  if (!req.user) return res.status(401).send("Not authenticated");
-  if (!displayName || displayName === "") return res.status(400).send("Missing user display name");
+  if (!req.user) {
+    res.status(401).send("Not authenticated");
+    return;
+  }
+
+  if (!displayName || displayName === "") {
+    res.status(400).send("Missing user display name");
+    return;
+  }
 
   try {
     const result = await prisma.user.update({
@@ -49,19 +57,23 @@ export const patchUser = async (req: Request, res: Response) => {
       }
     });
 
-    return res.status(200).json({ displayName: result.displayName });
+    res.status(200).json({ displayName: result.displayName });
   } catch (err) {
-    return res.status(500).send("Failed to update user");
+    res.status(500).send("Failed to update user");
   }
 }
 
-export const patchUsers = async (req: Request, res: Response) => {
+export const patchUsers: RequestHandler = async (req: Request, res: Response) => {
   if (!req.user || req.user.permissions !== "ADMIN") {
-    return res.status(403).send("Not authorized to access the requested resource");
+    res.status(403).send("Not authorized to access the requested resource");
+    return;
   }
 
   const { changedUsers } = req.body;
-  if (!changedUsers || !Array.isArray(changedUsers)) return res.status(400).send("Missing or invalid updated users");
+  if (!changedUsers || !Array.isArray(changedUsers)) {
+    res.status(400).send("Missing or invalid updated users");
+    return;
+  }
 
   try {
     const updated = await prisma.$transaction(
@@ -79,18 +91,20 @@ export const patchUsers = async (req: Request, res: Response) => {
       }))
     );
 
-    return res.status(200).json({ updated });
+    res.status(200).json({ updated });
   } catch (err) {
     console.error("[patchUsers]: Failed to update users. ", err);
-    return res.status(500).send("Failed to update users");
+    res.status(500).send("Failed to update users");
   }
-
 }
 
-export const exchangeOneTimeCode = async (req: Request, res:Response) => {
+export const exchangeOneTimeCode: RequestHandler = async (req: Request, res:Response) => {
   const { otc } = req.body;
 
-  if (!otc) return res.status(400).send("Missing OTC");
+  if (!otc) {
+    res.status(400).send("Missing OTC");
+    return;
+  }
 
   try {
     const record = await oneTimeCodeTransaction(otc);
@@ -100,18 +114,19 @@ export const exchangeOneTimeCode = async (req: Request, res:Response) => {
 
     setSessionTokenCookie(res, sessionToken, session.expiresAt);
 
-    return res.json({ success: true });
+    res.json({ success: true });
   } catch (err){
-    return res.status(500).send(`Failed to exchange OTC to open session. ${err}`);
+    res.status(500).send(`Failed to exchange OTC to open session. ${err}`);
   }
 }
 
-export const deleteUserSession = async (req: Request, res: Response) => {
+export const deleteUserSession: RequestHandler = async (req: Request, res: Response) => {
   const cookies = req.cookies;
   const token = cookies?.session;
 
   if (!token) {
-    return res.status(401).json({ user: null, message: "No session token" });
+    res.status(401).json({ user: null, message: "No session token" });
+    return;
   }
 
   try {

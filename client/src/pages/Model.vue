@@ -105,7 +105,9 @@
           </div>
           <div class="flex justify-between items-end">
             <div>
-              <p class="tag text-grayscale-500 mb-1">User Name</p>
+              <p class="tag text-grayscale-500 mb-1">
+                {{ model.owner.displayName }}
+              </p>
               <p class="tag text-grayscale-500">
                 {{ cleanDate(model.createdAt) }}
               </p>

@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from "express";
+import { RequestHandler, Request, Response, NextFunction } from "express";
 import {
   validateSessionToken,
   deleteSessionTokenCookie,
   setSessionTokenCookie,
 } from "../scripts/auth";
 
-export const authGuard = async (
+export const authGuard: RequestHandler = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -15,14 +15,16 @@ export const authGuard = async (
     const token = cookies?.session;
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized: No session token" });
+      res.status(401).json({ message: "Unauthorized: No session token" });
+      return;
     }
 
     const { session, user } = await validateSessionToken(token);
 
     if (!session) {
       deleteSessionTokenCookie(res);
-      return res.status(401).json({ message: "Unauthorized: Invalid session token" });
+      res.status(401).json({ message: "Unauthorized: Invalid session token" });
+      return;
     }
 
     setSessionTokenCookie(res, token, session.expiresAt);
