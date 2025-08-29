@@ -49,6 +49,17 @@
                   >
                     <RouterLink to="/">Explore</RouterLink>
                   </li>
+                  <li
+                    v-if="userStore.isAdmin"
+                    class="pointer-cursor"
+                    :class="
+                      route.name === 'Users'
+                        ? 'border-b-3 border-primary-500 text-primary-600 font-medium'
+                        : 'border-none hover:underline'
+                    "
+                  >
+                    <RouterLink to="/users">Users</RouterLink>
+                  </li>
                 </ul>
               </nav>
             </div>
@@ -65,14 +76,42 @@
                 />
                 <span>Search</span>
               </Button>
-              <Button type="primary" class="px-3" @click="handleUpload">
-                <img
-                  src="../../assets/icons/upload.svg"
-                  alt="Upload icon"
-                  class="w-4"
-                />
-                <span class="hidden md:block">Upload</span>
-              </Button>
+              <div class="flex gap-4">
+                <Button
+                  v-if="userStore.canAccess"
+                  type="primary"
+                  class="px-3"
+                  @click="handleUpload"
+                >
+                  <img
+                    src="../../assets/icons/upload.svg"
+                    alt="Upload icon"
+                    class="w-3.5"
+                  />
+                  <span class="hidden md:block">Upload</span>
+                </Button>
+                <Button
+                  v-if="!userStore.user"
+                  type="primary"
+                  class="hidden lg:block px-3"
+                  @click="handleLogin"
+                >
+                  Login
+                </Button>
+                <Button
+                  v-else
+                  type="secondary"
+                  class="hidden lg:flex px-3"
+                  @click="handleProfile"
+                >
+                  <img
+                    src="../../assets/icons/profile.svg"
+                    alt="Profile icon"
+                    class="w-3"
+                  />
+                  <span>Profile</span>
+                </Button>
+              </div>
               <Button type="ghost" @click="toggleNav" class="lg:hidden">
                 <img
                   v-if="!isOpen"
@@ -92,46 +131,80 @@
       </div>
     </div>
 
-    <nav class="lg:hidden border-b border-grayscale-300" v-show="isOpen">
-      <ul class="flex flex-col gap-2 pt-2 bg-white font-poppins font-regular">
-        <li
-          class="py-2"
-          :class="
-            route.name === 'Home'
-              ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
-              : 'pl-4 border-none'
-          "
+    <div
+      class="lg:hidden border-b border-grayscale-300 bg-white"
+      v-show="isOpen"
+    >
+      <nav>
+        <ul class="flex flex-col gap-2 pt-2 font-poppins font-regular">
+          <li
+            class="py-2"
+            :class="
+              route.name === 'Home'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/home">Home</RouterLink>
+          </li>
+          <li
+            class="py-2"
+            :class="
+              route.name === 'About'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/about">About</RouterLink>
+          </li>
+          <li
+            class="py-2"
+            :class="
+              route.name === 'Gallery'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/">Explore</RouterLink>
+          </li>
+          <li
+            v-if="userStore.isAdmin"
+            class="py-2"
+            :class="
+              route.name === 'Users'
+                ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
+                : 'pl-4 border-none'
+            "
+          >
+            <RouterLink to="/users">Users</RouterLink>
+          </li>
+        </ul>
+      </nav>
+      <div class="py-4 px-3">
+        <Button
+          v-if="!userStore.user"
+          type="primary"
+          class="flex w-full justify-center"
+          @click="handleLogin"
+          >Login</Button
         >
-          <RouterLink to="/home">Home</RouterLink>
-        </li>
-        <li
-          class="py-2"
-          :class="
-            route.name === 'About'
-              ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
-              : 'pl-4 border-none'
-          "
+        <Button
+          v-else
+          type="secondary"
+          class="flex w-full justify-center"
+          @click="handleProfile"
         >
-          <RouterLink to="/about">About</RouterLink>
-        </li>
-        <li
-          class="py-2"
-          :class="
-            route.name === 'Gallery'
-              ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
-              : 'pl-4 border-none'
-          "
-        >
-          <RouterLink to="/">Explore</RouterLink>
-        </li>
-      </ul>
-    </nav>
+          Profile
+        </Button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
+import { useUserStore } from "../stores/userStore";
 import { useHotspotStore } from "../stores/hotspotStore";
 import Button from "./Button.vue";
 
@@ -139,6 +212,7 @@ const route = useRoute();
 const router = useRouter();
 const isOpen = ref(false);
 
+const userStore = useUserStore();
 const hotspotStore = useHotspotStore();
 
 const toggleNav = () => {
@@ -152,5 +226,26 @@ const handleSearch = () => {
 const handleUpload = () => {
   hotspotStore.cleanHotspotState();
   router.push("/upload");
+};
+
+const handleLogin = async () => {
+  const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!;
+
+  const apiBaseUrl =
+    ENVIRONMENT === "prod"
+      ? import.meta.env.VITE_PROD_SERVER_URL
+      : import.meta.env.VITE_DEV_SERVER_URL;
+
+  if (!apiBaseUrl) {
+    console.error("API base URL not set");
+    return;
+  }
+
+  console.log(`Redirecting to ${apiBaseUrl}/cas/login`);
+  window.location.href = `${apiBaseUrl}/cas/login`;
+};
+
+const handleProfile = async () => {
+  router.push("/profile");
 };
 </script>

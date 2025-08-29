@@ -63,6 +63,9 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
         id: modelId,
       },
       include: {
+        owner: {
+          select: { displayName: true }
+        },
         materials: {
           select: { name: true },
         },
@@ -154,6 +157,13 @@ export const newModel = async (
   req: Request<unknown, unknown, ModelRequestBody>,
   res: Response,
 ): Promise<void> => {
+  const user = req.user;
+
+  if(!user) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
+
   const {
     id,
     name,
@@ -171,6 +181,7 @@ export const newModel = async (
   const createModel = prisma.model.create({
     data: {
       id,
+      ownerId: user.id,
       name,
       caption,
       description,
@@ -214,11 +225,18 @@ export const newModel = async (
 };
 
 export const updateModel = async (
-  req: Request<unknown, unknown, ModelRequestBody>,
+  req: Request<{ id: string }, unknown, ModelRequestBody>,
   res: Response,
 ): Promise<void> => {
+  if(!req.user) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
+
+  const { id: paramId } = req.params;
+
   const {
-    id,
+    id: bodyId,
     name,
     caption,
     description,
@@ -231,8 +249,13 @@ export const updateModel = async (
     hotspots,
   } = req.body;
 
+  if (paramId !== bodyId) {
+    res.status(400).json({ error: "Model ID in URL does not match the ID in the request body"});
+    return;
+  }
+
   const updateBaseModel = prisma.model.update({
-    where: { id },
+    where: { id: bodyId },
     data: {
       name,
       caption,
@@ -246,11 +269,11 @@ export const updateModel = async (
   });
 
   const deleteOldDimensions = prisma.dimension.deleteMany({
-    where: { modelId: id },
+    where: { modelId: bodyId },
   });
 
   const deleteOldHotspots = prisma.hotspot.deleteMany({
-    where: { modelId: id },
+    where: { modelId: bodyId },
   });
 
   const addNewDimensions = prisma.dimension.createMany({
@@ -274,7 +297,7 @@ export const updateModel = async (
 
     res
       .status(200)
-      .json({ message: "Model updated successfully", modelId: id });
+      .json({ message: "Model updated successfully", modelId: bodyId });
   } catch (error) {
     console.error("[server]: Failed to update model. ERR: ", error);
     res.status(500).json({
@@ -287,6 +310,11 @@ export const deleteModel = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
+  if(!req.user) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
+
   const modelId = req.params.id;
 
   if (!modelId) {

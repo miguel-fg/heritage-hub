@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosRequestHeaders } from "axios";
 
 const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!;
 const apiBaseUrl =
@@ -8,6 +8,17 @@ const apiBaseUrl =
 
 const axiosInstance = axios.create({
   baseURL: apiBaseUrl,
+  withCredentials: true
 });
+
+// To allow proper API responses. Response gets text/html otherwise
+if (ENVIRONMENT === "ngrok") {
+  axiosInstance.interceptors.request.use((config) => {
+    const headers = (config.headers ?? {}) as AxiosRequestHeaders;
+    headers["ngrok-skip-browser-warning"] = "true";
+    config.headers = headers;
+    return config;
+  });
+}
 
 export default axiosInstance;

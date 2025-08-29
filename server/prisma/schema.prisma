@@ -8,7 +8,9 @@ generator client {
 }
 
 model Model {
-    id              String      @id @default(nanoid(16)) @db.Uuid 
+    id              String      @id @default(nanoid(16)) @db.Uuid
+    ownerId         String      @db.Uuid
+    owner           User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
     accNum          String?
     name            String
     caption         String
@@ -68,6 +70,39 @@ model Dimension {
     type      DimensionType
     value     Float
     unit      String
+}
+
+model User {
+    id            String            @id @default(nanoid(16)) @db.Uuid
+    casId         String            @unique
+    authType      String?
+    displayName   String?
+    email         String?
+    permissions   PermissionLevel   @default(STANDARD)
+    sessions      Session[]
+    models        Model[]
+    otcs          OneTimeCode[]
+}
+
+model Session {
+    id          String      @id
+    userId      String      @db.Uuid
+    user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    expiresAt   DateTime
+}
+
+model OneTimeCode {
+    code        String  @id
+    userId      String  @db.Uuid
+    user        User    @relation(fields: [userId], references: [id])
+    expiresAt   DateTime
+}
+
+enum PermissionLevel {
+    RESTRICTED
+    STANDARD
+    FULL
+    ADMIN
 }
 
 enum DimensionType {

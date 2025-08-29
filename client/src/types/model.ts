@@ -1,7 +1,10 @@
 import { type Mesh, type Vector3 } from "three";
+import type { User } from "./user";
 
 export type Model = {
   id: string;
+  ownerId: string;
+  owner: User;
   accNum: string;
   name: string;
   caption: string;
