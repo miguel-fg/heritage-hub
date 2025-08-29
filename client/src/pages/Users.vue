@@ -10,7 +10,7 @@
           class="flex pl-2 border border-grayscale-300 w-full rounded-xs"
         >
           <img
-            src="../../../assets/icons/search.svg"
+            src="../../assets/icons/search.svg"
             alt="Search bar"
             class="w-4"
           />
