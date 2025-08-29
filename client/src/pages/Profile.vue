@@ -75,6 +75,7 @@ const handleLogout = async () => {
 
     if (status === 200) {
       userStore.clearUser();
+      router.replace("/");
     }
   } catch (err) {
     console.error("Failed to log out user ", err);
