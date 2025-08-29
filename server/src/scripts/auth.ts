@@ -137,7 +137,7 @@ export const setSessionTokenCookie = (
   const cookieOptions = [
     `session=${token}`,
     `HttpOnly`,
-    `SameSite=Lax`,
+    `SameSite=${isProd ? 'None' : 'Lax'}`,
     `Expires=${expiresAt.toUTCString()}`,
     `Path=/`,
     isProd ? `Secure` : "",
@@ -154,7 +154,7 @@ export const deleteSessionTokenCookie = (res: Response) => {
   const cookieOptions = [
     `session=`,
     `HttpOnly`,
-    `SameSite=Lax`,
+    `SameSite=${isProd ? 'None' : 'Lax'}`,
     `Max-Age=0`, //Expire immediately
     `Path=/`,
     isProd ? `Secure` : "",

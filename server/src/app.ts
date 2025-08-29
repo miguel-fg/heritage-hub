@@ -8,6 +8,7 @@ import materialRoutes from "./routes/material";
 import searchRoutes from "./routes/search";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
+import { checkOrigin } from "./middleware/checkOrigin";
 
 const app: Express = express();
 
@@ -22,16 +23,19 @@ const devOrigins = [
   ...prodOrigins
 ]
 
+const allowedOrigins = isProd ? prodOrigins : devOrigins;
+
 const corsOptions = {
-  origin: isProd ? prodOrigins : devOrigins,
+  origin: allowedOrigins,
   credentials: true
 };
 
 // middleware
 app.use(cors(corsOptions));
-app.use(cookieParser());
-app.use(morgan("dev"));
 app.use(express.json());
+app.use(cookieParser());
+app.use(checkOrigin(allowedOrigins))
+app.use(morgan("dev"));
 
 // routes
 app.use("/api/models", modelRoutes);
