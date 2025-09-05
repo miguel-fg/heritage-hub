@@ -21,18 +21,31 @@
         :clearable="false"
         class="permission-chooser"
         :class="optionClass(selectedPermission)"
+        append-to-body
       >
       </v-select>
     </td>
-    <td class="flex justify-center">
-      <Button
+    <td>
+      <button
         @click="toggleEditMode"
         v-if="canEdit"
-        :type="editMode ? 'danger' : 'secondary'"
-        :disabled="!canEdit"
+        class="cursor-pointer flex items-center mx-auto"
+        :title="editMode ? 'Undo' : 'Edit'"
       >
-        {{ editMode ? "Cancel" : "Edit" }}
-      </Button>
+        <span class="sr-only">{{ editMode ? "Undo" : "Edit" }}</span>
+        <span
+          v-show="!editMode"
+          class="px-4 text-grayscale-600 hover:text-grayscale-900"
+        >
+          <Icon icon="bx:edit" width="24" />
+        </span>
+        <span
+          v-show="editMode"
+          class="px-4 text-danger-600 hover:text-danger-800"
+        >
+          <Icon icon="bx:undo" width="24" />
+        </span>
+      </button>
     </td>
   </tr>
 </template>
@@ -42,7 +55,7 @@ import { computed, nextTick, ref, watch } from "vue";
 import { useUserStore } from "../stores/userStore";
 import { useUsers } from "../scripts/useUsers";
 import type { PermissionLevel, UserWithCount } from "../types/user";
-import Button from "./Button.vue";
+import { Icon } from "@iconify/vue";
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
