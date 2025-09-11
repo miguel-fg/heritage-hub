@@ -1,7 +1,12 @@
 <template>
   <div
-    class="absolute top-0 left-0 z-30 w-full h-full flex justify-center text-grayscale-100 bg-grayscale-900/80"
+    class="absolute top-0 left-0 z-50 w-full h-full flex justify-center text-grayscale-100 bg-grayscale-900/80"
   >
+    <Icon
+      icon="bx:x"
+      class="absolute top-3 right-3 cursor-pointer"
+      width="35"
+    />
     <div class="flex flex-col items-center max-w-7/10">
       <div class="text-grayscale-100 w-full">
         <h1 class="title w-full text-center my-4">Help Menu</h1>
@@ -25,38 +30,38 @@
       </div>
       <div class="mb-2 w-full">
         <h2 class="subtitle mb-4">Toolbar Buttons</h2>
-        <div v-if="props.showDownload" class="flex gap-1 items-center mb-1">
-          <ToolbarIcon action="download" theme="light" />
+        <div v-if="props.showDownload" class="flex gap-2 items-center mb-1">
+          <Icon icon="bx:download" width="20" />
           <span class="font-poppins text-xs md:text-base"
             >Download the model to your device.</span
           >
         </div>
-        <div class="flex gap-1 items-center mb-1">
-          <div class="flex">
-            <ToolbarIcon action="play" theme="light" />
-            <ToolbarIcon action="pause" theme="light" />
+        <div class="flex gap-2 items-center mb-1">
+          <div class="flex gap-1">
+            <Icon icon="bx:play" width="20" />
+            <Icon icon="bx:pause" width="20" />
           </div>
           <span class="font-poppins text-xs md:text-base"
             >Turn automatic spinning on/off</span
           >
         </div>
-        <div class="flex gap-1 items-center mb-1">
-          <div class="flex">
-            <ToolbarIcon action="show" theme="light" />
-            <ToolbarIcon action="hide" theme="light" />
+        <div class="flex gap-2 items-center mb-1">
+          <div class="flex gap-1">
+            <Icon icon="bx:show" width="20" />
+            <Icon icon="bx:hide" width="20" />
           </div>
           <span class="font-poppins text-xs md:text-base"
             >Show or hide points of interest</span
           >
         </div>
-        <div class="flex gap-1 items-center mb-1">
-          <ToolbarIcon action="options" theme="light" />
+        <div class="flex gap-2 items-center mb-1">
+          <Icon icon="bx:cog" width="20" />
           <span class="font-poppins text-xs md:text-base"
             >Adjust visualizer settings.</span
           >
         </div>
-        <div class="flex gap-1 items-center">
-          <ToolbarIcon action="fullscreen" theme="light" />
+        <div class="flex gap-2 items-center">
+          <Icon icon="bx:fullscreen" width="20" />
           <span class="font-poppins text-xs md:text-base"
             >Toggle fullscreen mode.</span
           >
@@ -67,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import ToolbarIcon from "../icons/ToolbarIcon.vue";
+import { Icon } from "@iconify/vue";
 
 const props = defineProps<{
   showDownload: boolean;

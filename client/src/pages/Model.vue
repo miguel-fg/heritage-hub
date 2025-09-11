@@ -42,18 +42,8 @@
               @click="() => (isTruncated = !isTruncated)"
               class="tag underline-none mt-2"
               >{{ isTruncated ? "Read more" : "Read less" }}
-              <img
-                v-if="isTruncated"
-                src="../../assets/icons/chevron-down.svg"
-                alt="Read more icon"
-                class="w-5"
-              />
-              <img
-                v-else
-                src="../../assets/icons/chevron-up.svg"
-                alt="Read less icon"
-                class="w-5"
-              />
+              <Icon v-show="isTruncated" icon="bx:chevron-down" width="20" />
+              <Icon v-show="!isTruncated" icon="bx:chevron-up" width="20" />
             </Button>
           </div>
           <div class="pb-4 border-b-1 border-grayscale-300">
@@ -112,13 +102,19 @@
                 {{ cleanDate(model.createdAt) }}
               </p>
             </div>
-            <div v-if="hasPermissions" class="flex gap-4">
-              <Button @click="handleEdit(model)" type="secondary"
-                >Edit model</Button
+            <div v-if="hasPermissions" class="flex flex-col gap-2">
+              <Button
+                @click="handleEdit(model)"
+                type="secondary"
+                class="justify-center"
               >
-              <Button @click="() => (showConfirmModal = true)" type="danger"
-                >Delete model</Button
-              >
+                <Icon icon="bx:edit" width="20" />
+                Edit
+              </Button>
+              <Button @click="() => (showConfirmModal = true)" type="danger">
+                <Icon icon="bx:trash" width="20" />
+                Delete
+              </Button>
             </div>
           </div>
         </div>
@@ -178,6 +174,7 @@ import { useModelStore } from "../stores/modelStore";
 import { useHotspotStore } from "../stores/hotspotStore";
 import { useToastStore } from "../stores/toastStore";
 import ConfirmationModal from "../components/ConfirmationModal.vue";
+import { Icon } from "@iconify/vue";
 import { type Model } from "../types/model";
 import { useEdit } from "../scripts/useEdit";
 

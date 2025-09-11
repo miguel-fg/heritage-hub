@@ -9,11 +9,9 @@
           for="searchbar"
           class="flex pl-2 border border-grayscale-300 w-full rounded-xs"
         >
-          <img
-            src="../../assets/icons/search.svg"
-            alt="Search bar"
-            class="w-4"
-          />
+          <span class="text-grayscale-400 my-auto">
+            <Icon icon="bx:search" width="20" />
+          </span>
           <input
             id="searchbar"
             type="text"
