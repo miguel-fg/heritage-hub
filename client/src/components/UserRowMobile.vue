@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-3 bg-white rounded px-3 py-4 sm:px-6 sm:py-6">
+  <div class="space-y-3 bg-white rounded px-3 pt-6 pb-4 sm:px-6 sm:py-6">
     <div class="flex justify-between items-center gap-5">
       <span class="subtitle text-primary-500">Name</span>
       <span
@@ -28,7 +28,7 @@
     </div>
     <div class="flex justify-between items-center gap-5">
       <span class="subtitle text-primary-500">Permissions</span>
-      <div class="w-full sm:w-1/2 min-w-35 sm:min-w-40">
+      <div class="sm:w-1/2 min-w-35 sm:min-w-40">
         <v-select
           v-model="selectedPermission"
           :options="permissionOptions"
@@ -40,15 +40,18 @@
         </v-select>
       </div>
     </div>
-    <Button
-      @click="toggleEditMode"
-      v-if="canEdit"
-      :type="editMode ? 'danger' : 'secondary'"
-      class="w-full justify-center"
-      :disabled="!canEdit"
-    >
-      {{ editMode ? "Cancel" : "Edit" }}
-    </Button>
+    <div class="w-full flex justify-end">
+      <button
+        @click="toggleEditMode"
+        v-if="canEdit"
+        :disabled="!canEdit"
+        class="font-poppins font-medium flex items-center gap-2 cursor-pointer py-1 px-2 active:bg-grayscale-200"
+        :class="editMode ? 'text-danger-600' : 'text-grayscale-800'"
+      >
+        <Icon :icon="editMode ? 'bx:undo' : 'bx:edit'" width="20" />
+        {{ editMode ? "Cancel" : "Edit" }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -57,7 +60,7 @@ import { computed, nextTick, ref, watch } from "vue";
 import { useUserStore } from "../stores/userStore";
 import { useUsers } from "../scripts/useUsers";
 import type { PermissionLevel, UserWithCount } from "../types/user";
-import Button from "./Button.vue";
+import { Icon } from "@iconify/vue";
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 

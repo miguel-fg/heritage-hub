@@ -25,8 +25,15 @@
         <Button type="primary">Search</Button>
       </div>
       <div v-if="!loading && filteredUsers.length > 0" class="h-4/7">
-        <div v-if="showMobile" class="space-y-8 rounded overflow-y-visible">
-          <UserRowMobile v-for="user in filteredUsers" :user="user" />
+        <div
+          v-if="showMobile"
+          class="divide-y divide-grayscale-300 rounded overflow-y-auto h-full"
+        >
+          <UserRowMobile
+            v-for="user in filteredUsers"
+            :key="user.id"
+            :user="user"
+          />
         </div>
         <div v-else class="bg-white p-6 rounded overflow-y-auto h-full">
           <table

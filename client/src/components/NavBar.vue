@@ -238,4 +238,8 @@ const handleLogin = async () => {
 const handleProfile = async () => {
   router.push("/profile");
 };
+
+router.afterEach(() => {
+  isOpen.value = false;
+});
 </script>
