@@ -9,15 +9,15 @@
         :disabled="store.pagination.page === 1"
         class="md:hidden size-10"
       >
-        <GoToFirstIcon />
+        <Icon icon="bx:chevrons-left" width="24" />
       </Button>
       <Button
         @click="goToPrevious"
         type="outline"
         :disabled="store.pagination.page === 1"
-        class="size-10 gap-2"
+        class="size-10 gap-1 min-w-fit"
       >
-        <BackPageIcon />
+        <Icon icon="bx:chevron-left" width="24" />
         <span class="hidden md:block">Previous</span>
       </Button>
     </div>
@@ -64,10 +64,10 @@
         @click="goToNext"
         type="outline"
         :disabled="store.pagination.page === totalPages"
-        class="size-10 gap-2"
+        class="size-10 gap-1 min-w-fit"
       >
         <span class="hidden md:block">Next</span>
-        <NextPageIcon />
+        <Icon icon="bx:chevron-right" width="24" />
       </Button>
       <Button
         @click="goToPage(totalPages)"
@@ -75,7 +75,7 @@
         :disabled="store.pagination.page === totalPages"
         class="md:hidden size-10"
       >
-        <GoToLastIcon />
+        <Icon icon="bx:chevrons-right" width="24" />
       </Button>
     </div>
   </div>
@@ -86,11 +86,8 @@ import { computed } from "vue";
 import { useModelStore } from "../stores/modelStore";
 import { useSearchStore } from "../stores/searchStore";
 import Button from "../components/Button.vue";
-import BackPageIcon from "../components/icons/BackPageIcon.vue";
-import NextPageIcon from "../components/icons/NextPageIcon.vue";
-import GoToFirstIcon from "./icons/GoToFirstIcon.vue";
-import GoToLastIcon from "./icons/GoToLastIcon.vue";
 import { useSearchBar } from "../scripts/searchUtils";
+import { Icon } from "@iconify/vue";
 
 const props = defineProps<{
   storeType: "model" | "search";
