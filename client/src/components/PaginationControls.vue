@@ -87,6 +87,7 @@ import { useModelStore } from "../stores/modelStore";
 import { useSearchStore } from "../stores/searchStore";
 import Button from "../components/Button.vue";
 import { useSearchBar } from "../scripts/searchUtils";
+import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 
 const props = defineProps<{
@@ -99,6 +100,8 @@ const searchStore = useSearchStore();
 const store = computed(() =>
   props.storeType === "model" ? modelStore : searchStore,
 );
+
+const router = useRouter();
 
 const totalPages = computed(() =>
   Math.ceil(store.value.pagination.total / store.value.pagination.limit),
@@ -149,7 +152,7 @@ const goToPage = async (page: number) => {
   const skip = (page - 1) * store.value.pagination.limit;
 
   if (props.storeType === "model") {
-    await modelStore.fetchModels(store.value.pagination.limit, skip);
+    router.push({ path: "/", query: { page } });
   } else {
     const { query, tags, materials, sort, others } = useSearchBar();
     await searchStore.searchModels({

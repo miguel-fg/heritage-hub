@@ -14,7 +14,7 @@
           </ul>
 
           <!-- Pagination Controls -->
-          <div class="mt-20 mb-8">
+          <div v-if="totalPages > 1" class="mt-20 mb-8">
             <PaginationControls store-type="search" />
           </div>
 
@@ -74,7 +74,7 @@ import ModelCard from "../components/ModelCard.vue";
 import Footer from "../components/Footer.vue";
 import PaginationControls from "../components/PaginationControls.vue";
 import { useDebounceFn } from "@vueuse/core";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useSearchBar } from "../scripts/searchUtils";
 import { useSearchStore } from "../stores/searchStore";
 import { storeToRefs } from "pinia";
@@ -94,6 +94,10 @@ const debouncedSearch = useDebounceFn(() => {
     sort: sort.value,
   });
 }, 800);
+
+const totalPages = computed(() =>
+  Math.ceil(searchStore.pagination.total / searchStore.pagination.limit),
+);
 
 watch([query, tags, materials, others, sort], () => {
   shouldBlur.value = true;

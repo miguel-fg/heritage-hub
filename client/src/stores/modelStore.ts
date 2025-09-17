@@ -48,12 +48,12 @@ export const useModelStore = defineStore("models", () => {
 
   const pagination = ref<PaginationState>({
     page: 1,
-    limit: 6,
+    limit: 18,
     hasMore: true,
     total: 0,
   });
 
-  const fetchModels = async (limit = 6, skip = 0) => {
+  const fetchModels = async (limit = 18, skip = 0) => {
     error.value = null;
     loading.value = true;
 

@@ -13,7 +13,7 @@
         </ul>
 
         <!-- Pagination Controls -->
-        <div class="mt-20 mb-8">
+        <div v-if="totalPages > 1" class="mt-20 mb-8">
           <PaginationControls store-type="model" />
         </div>
 
@@ -84,17 +84,33 @@ import PaginationControls from "../components/PaginationControls.vue";
 import ModelCard from "../components/ModelCard.vue";
 import Footer from "../components/Footer.vue";
 import Skeleton from "../components/Skeleton.vue";
-import { onMounted } from "vue";
+import { onMounted, watch, computed } from "vue";
+import { useRoute } from "vue-router";
 import { useModelStore } from "../stores/modelStore";
 import { storeToRefs } from "pinia";
 
 const modelStore = useModelStore();
-
 const { models, loading, error } = storeToRefs(modelStore);
 
+const route = useRoute();
+
+const totalPages = computed(() =>
+  Math.ceil(modelStore.pagination.total / modelStore.pagination.limit),
+);
+
+const loadPage = async (page: number) => {
+  const skip = (page - 1) * modelStore.pagination.limit;
+  await modelStore.fetchModels(modelStore.pagination.limit, skip);
+};
+
 onMounted(() => {
-  if (!modelStore.models) {
-    modelStore.fetchModels();
-  }
+  loadPage(Number(route.query.page) || 1);
 });
+
+watch(
+  () => route.query.page,
+  (newPage) => {
+    loadPage(Number(newPage) || 1);
+  },
+);
 </script>
