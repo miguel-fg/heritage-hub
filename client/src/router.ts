@@ -75,9 +75,13 @@ const router = createRouter({
   },
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
   const userStore = useUserStore();
   const toastStore = useToastStore();
+
+  if(userStore.user === null) {
+    await userStore.fetchUser();
+  }
 
   if(to.meta.requiresAuth && !userStore.canAccess) {
     toastStore.showToast("error", "You don't have access to the requested resource")

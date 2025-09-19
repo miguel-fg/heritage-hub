@@ -15,9 +15,12 @@ export const useUserStore = defineStore("user", () => {
   const canAccess = ref(false);
   const isAdmin = ref(false);
   const loading = ref(true);
+  const resolved = ref(false);
 
   const fetchUser = async () => {
-     loading.value = true
+    if(resolved.value) return;
+
+    loading.value = true
 
      try {
        const { data } = await axiosInstance.get("/user/me")
@@ -32,7 +35,8 @@ export const useUserStore = defineStore("user", () => {
        canAccess.value = false;
        isAdmin.value = false;
      } finally {
-       loading.value = false
+       loading.value = false;
+       resolved.value = true;
      }
   }
 
@@ -59,6 +63,7 @@ export const useUserStore = defineStore("user", () => {
     canAccess.value = false;
     isAdmin.value = false;
     loading.value = false;
+    resolved.value = false;
   }
 
   return { user, canAccess, isAdmin, loading, fetchUser, updateUser, clearUser }

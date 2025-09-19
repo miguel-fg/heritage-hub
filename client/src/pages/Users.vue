@@ -139,9 +139,7 @@
 
 <script setup lang="ts">
 import axiosInstance from "../scripts/axiosConfig";
-import { useUserStore } from "../stores/userStore";
 import { useUsers } from "../scripts/useUsers";
-import { useRouter } from "vue-router";
 import { ref, onMounted, computed, watch } from "vue";
 import type { PermissionLevel, UserWithCount } from "../types/user";
 import UserRow from "../components/UserRow.vue";
@@ -155,9 +153,6 @@ import { Icon } from "@iconify/vue";
 
 const users = ref<UserWithCount[]>([]);
 const loading = ref(false);
-
-const userStore = useUserStore();
-const router = useRouter();
 
 const { editedUsers, saveEditedUsers, resetEditedUsers } = useUsers();
 
@@ -280,10 +275,6 @@ const showMobile = computed(
 );
 
 onMounted(async () => {
-  if (!userStore.user || userStore.user.permissions !== "ADMIN") {
-    router.replace("/");
-  } else {
-    await fetchUsers();
-  }
+  await fetchUsers();
 });
 </script>

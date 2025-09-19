@@ -39,6 +39,8 @@ watch(
 provide("appRef", appRef);
 
 onMounted(async () => {
-  await userStore.fetchUser();
+  if (userStore.user === null) {
+    await userStore.fetchUser();
+  }
 });
 </script>
