@@ -3,7 +3,7 @@
     <div
       class="w-full h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
     >
-      <h1 class="title text-grayscale-900 mb-8" las>Registered Users</h1>
+      <h1 class="title text-grayscale-900 mb-8">Registered Users</h1>
       <div class="rounded bg-white flex p-2 md:p-4 gap-4">
         <label
           for="searchbar"

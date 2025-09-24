@@ -164,6 +164,7 @@ const goToPage = async (page: number) => {
       limit: store.value.pagination.limit,
       skip,
     });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 };
 
