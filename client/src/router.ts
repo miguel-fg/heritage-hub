@@ -1,4 +1,4 @@
-import { createWebHistory, createRouter } from "vue-router";
+import { createWebHistory, createRouter, type RouteLocationNormalizedLoaded } from "vue-router";
 import { useUserStore } from "./stores/userStore";
 import { useToastStore } from "./stores/toastStore";
 import Home from "./pages/Home.vue";
@@ -24,7 +24,11 @@ const routes = [
     name: "About",
     component: About,
   },
-  { path: "/", name: "Gallery", component: Gallery },
+  { path: "/",
+    name: "Gallery",
+    component: Gallery,
+    props: (route: RouteLocationNormalizedLoaded) => ({ page: Number(route.query.page) || 1 }),
+  },
   {
     path: "/model/:id",
     name: "Model",
@@ -71,9 +75,13 @@ const router = createRouter({
   },
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
   const userStore = useUserStore();
   const toastStore = useToastStore();
+
+  if(userStore.user === null) {
+    await userStore.fetchUser();
+  }
 
   if(to.meta.requiresAuth && !userStore.canAccess) {
     toastStore.showToast("error", "You don't have access to the requested resource")

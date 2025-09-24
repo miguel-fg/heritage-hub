@@ -30,15 +30,25 @@
           <div class="max-w-32">
             <h1 class="subtitle">Actions</h1>
             <ul class="flex flex-col gap-2 mt-3">
-              <li class="cursor-pointer hover:underline">Upload</li>
-              <li class="cursor-pointer hover:underline">Search</li>
+              <li class="cursor-pointer hover:underline">
+                <RouterLink to="/upload">Upload</RouterLink>
+              </li>
+              <li class="cursor-pointer hover:underline">
+                <RouterLink to="/search">Search</RouterLink>
+              </li>
             </ul>
           </div>
           <div class="max-w-32">
             <h1 class="subtitle">Resources</h1>
             <ul class="flex flex-col gap-2 mt-3">
               <li class="cursor-pointer hover:underline text-pretty">
-                Museum of Archaeology & Ethnology
+                <a
+                  href="https://www.sfu.ca/archaeology/museum.html"
+                  target="_blank"
+                  referrerpolicy="no-referrer"
+                >
+                  Museum of Archaeology & Ethnology
+                </a>
               </li>
             </ul>
           </div>

@@ -3,8 +3,7 @@
     class="flex px-3 py-2 rounded-xs border gap-2 font-poppins text-xs items-center"
     :class="containerStyle"
   >
-    <InfoIcon v-if="props.type === 'info'" :width="19" :height="24" />
-    <WarningIcon v-else-if="props.type === 'warning'" :size="30" />
+    <Icon :icon="msgIcon" height="24" :class="iconStyle" class="icon" />
     <div class="flex flex-col gap-1">
       <p class="font-medium" :class="titleStyle"><slot name="title" /></p>
       <p :class="contentStyle"><slot name="content" /></p>
@@ -15,8 +14,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { type MessageType } from "../types/ui";
-import WarningIcon from "./icons/WarningIcon.vue";
-import InfoIcon from "./icons/InfoIcon.vue";
+import { Icon } from "@iconify/vue";
 
 const props = defineProps<{
   type: MessageType;
@@ -32,6 +30,28 @@ const containerStyle = computed(() => {
 
     case "danger":
       return "bg-danger-100 border-danger-600";
+  }
+});
+
+const msgIcon = computed(() => {
+  switch (props.type) {
+    case "info":
+      return "bx:bulb";
+    case "warning":
+      return "bx:error";
+    case "danger":
+      return "bx:error-alt";
+  }
+});
+
+const iconStyle = computed(() => {
+  switch (props.type) {
+    case "info":
+      return "text-info-600";
+    case "warning":
+      return "text-warning-600";
+    case "danger":
+      return "text-danger-600";
   }
 });
 

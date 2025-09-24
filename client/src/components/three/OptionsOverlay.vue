@@ -1,6 +1,6 @@
 <template>
   <div
-    class="absolute z-40 bottom-2 right-12 pt-1 pb-2 px-2 bg-grayscale-100/90 rounded-xs shadow-xs w-[200px] text-xs font-poppins"
+    class="absolute z-40 bottom-2 right-12 pt-1 pb-2 px-2 bg-grayscale-100/90 rounded-xs shadow-xs w-[200px] text-xs font-poppins select-none"
   >
     <div v-if="props.state === 'visiting'" class="flex flex-col gap-4">
       <div

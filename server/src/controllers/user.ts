@@ -25,6 +25,9 @@ export const getAllUsers: RequestHandler = async (req: Request, res:Response) =>
             models: true
           }
         }
+      },
+      orderBy: {
+        displayName: "asc"
       }
     });
 

@@ -1,6 +1,6 @@
 <template>
   <button
-    class="flex grow-0 shrink-0 w-fit items-center gap-1 font-medium font-poppins cursor-pointer rounded-xs"
+    class="flex grow-0 shrink-0 items-center gap-1 font-medium font-poppins cursor-pointer rounded-xs"
     :class="[buttonClass, props.class, disabledClass]"
     :disabled="props.disabled"
   >

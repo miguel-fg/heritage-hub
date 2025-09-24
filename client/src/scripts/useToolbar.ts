@@ -7,8 +7,15 @@ import {
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useToastStore } from "../stores/toastStore";
 import { isIOS } from "@vueuse/core";
+import { onUnmounted, ref } from "vue";
+
+const whiteBg = new Color(0xffffff);
+const grayBg = new Color(0x817e7f);
+const blackBg =  new Color(0x0d0d0d);
+const selectedBgColor = ref<"white" | "gray" | "black">("white");
 
 export const useToolbar = () => {
+
   // Fullscreen
   const toggleFullscreen = (container: HTMLElement | null) => {
     const toastStore = useToastStore();
@@ -74,16 +81,21 @@ export const useToolbar = () => {
   const setBackgroundColor = (scene: Scene, color: string) => {
     switch (color) {
       case "white":
-        scene.background = new Color(0xffffff);
+        scene.background = whiteBg;
+        selectedBgColor.value = color;
         break;
       case "gray":
-        scene.background = new Color(0x817e7f);
+        scene.background = grayBg;
+        selectedBgColor.value = color;
         break;
       case "black":
-        scene.background = new Color(0x0d0d0d);
+        scene.background = blackBg;
+        selectedBgColor.value = color;
         break;
     }
   };
+
+  onUnmounted(() => selectedBgColor.value = "white");
 
   return {
     toggleFullscreen,
@@ -92,6 +104,7 @@ export const useToolbar = () => {
     setRotate,
     setRotationSpeed,
     setAmbientLight,
+    selectedBgColor,
     setBackgroundColor,
   };
 };

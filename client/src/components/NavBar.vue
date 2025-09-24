@@ -10,11 +10,9 @@
             <div class="flex gap-4 lg:gap-12 grow-1 items-center">
               <img class="w-10" src="/HH_red.svg" alt="Heritage Hub logo" />
               <Button class="lg:hidden" type="search" @click="handleSearch">
-                <img
-                  src="../../assets/icons/search.svg"
-                  alt="Search icon"
-                  class="w-4"
-                />
+                <span class="text-grayscale-400 my-auto">
+                  <Icon icon="bx:search" width="20" />
+                </span>
                 <span>Search</span>
               </Button>
               <nav class="hidden lg:block">
@@ -63,17 +61,15 @@
                 </ul>
               </nav>
             </div>
-            <div class="flex gap-4 lg:gap-12">
+            <div class="flex gap-4 lg:gap-8 xl:gap-12">
               <Button
-                class="hidden lg:inline-flex w-xs"
+                class="hidden lg:inline-flex w-3xs xl:w-xs"
                 type="search"
                 @click="handleSearch"
               >
-                <img
-                  src="../../assets/icons/search.svg"
-                  alt="Search icon"
-                  class="w-4"
-                />
+                <span class="text-grayscale-400 my-auto">
+                  <Icon icon="bx:search" width="20" />
+                </span>
                 <span>Search</span>
               </Button>
               <div class="flex gap-4">
@@ -83,11 +79,7 @@
                   class="px-3"
                   @click="handleUpload"
                 >
-                  <img
-                    src="../../assets/icons/upload.svg"
-                    alt="Upload icon"
-                    class="w-3.5"
-                  />
+                  <Icon icon="bx:upload" width="20" />
                   <span class="hidden md:block">Upload</span>
                 </Button>
                 <Button
@@ -104,11 +96,7 @@
                   class="hidden lg:flex px-3"
                   @click="handleProfile"
                 >
-                  <img
-                    src="../../assets/icons/profile.svg"
-                    alt="Profile icon"
-                    class="w-3"
-                  />
+                  <Icon icon="bx:user" width="20" />
                   <span>Profile</span>
                 </Button>
               </div>
@@ -194,6 +182,7 @@
           class="flex w-full justify-center"
           @click="handleProfile"
         >
+          <Icon icon="bx:user" width="20" />
           Profile
         </Button>
       </div>
@@ -207,6 +196,7 @@ import { useRoute, useRouter, RouterLink } from "vue-router";
 import { useUserStore } from "../stores/userStore";
 import { useHotspotStore } from "../stores/hotspotStore";
 import Button from "./Button.vue";
+import { Icon } from "@iconify/vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -248,4 +238,8 @@ const handleLogin = async () => {
 const handleProfile = async () => {
   router.push("/profile");
 };
+
+router.afterEach(() => {
+  isOpen.value = false;
+});
 </script>
