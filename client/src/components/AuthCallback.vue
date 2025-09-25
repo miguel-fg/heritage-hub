@@ -35,7 +35,7 @@ onMounted(async () => {
   try {
     await axiosInstance.post("/user/otc", { otc });
 
-    await userStore.fetchUser();
+    await userStore.fetchUser(true);
 
     router.replace({ name: "Gallery" });
   } catch (err) {
