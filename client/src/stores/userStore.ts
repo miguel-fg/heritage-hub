@@ -17,8 +17,8 @@ export const useUserStore = defineStore("user", () => {
   const loading = ref(true);
   const resolved = ref(false);
 
-  const fetchUser = async () => {
-    if(resolved.value) return;
+  const fetchUser = async (force = false) => {
+    if(resolved.value && !force) return;
 
     loading.value = true
 
