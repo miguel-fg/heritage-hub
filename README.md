@@ -1,3 +1,10 @@
+<p align="center">
+<img src="./client/public/HH_white.png" width="200" height="200" alt="Intelliquiz logo"/>
+</p>
+<h1 align="center">
+Heritage Hub
+</h1>
+
 A 3D museum artifact platform for exploring, managing, and preserving cultural heritage through interactive web-based visualizations.
 
 ## Overview
