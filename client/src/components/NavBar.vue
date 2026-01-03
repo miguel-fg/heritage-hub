@@ -18,7 +18,7 @@
               <nav class="hidden lg:block">
                 <ul class="flex gap-8 bg-white font-poppins font-regular">
                   <li
-                    class="pointer-cursor"
+                    class="pointer-cursor hidden"
                     :class="
                       route.name === 'Home'
                         ? 'border-b-3 border-primary-500 text-primary-600 font-medium'
@@ -126,7 +126,7 @@
       <nav>
         <ul class="flex flex-col gap-2 pt-2 font-poppins font-regular">
           <li
-            class="py-2"
+            class="py-2 hidden"
             :class="
               route.name === 'Home'
                 ? 'bg-primary-100/50 pl-3 border-l-4 border-primary-500 text-primary-600 font-medium'
@@ -191,55 +191,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRoute, useRouter, RouterLink } from "vue-router";
-import { useUserStore } from "../stores/userStore";
-import { useHotspotStore } from "../stores/hotspotStore";
-import Button from "./Button.vue";
-import { Icon } from "@iconify/vue";
+import { ref } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { useUserStore } from '../stores/userStore'
+import { useHotspotStore } from '../stores/hotspotStore'
+import Button from './Button.vue'
+import { Icon } from '@iconify/vue'
 
-const route = useRoute();
-const router = useRouter();
-const isOpen = ref(false);
+const route = useRoute()
+const router = useRouter()
+const isOpen = ref(false)
 
-const userStore = useUserStore();
-const hotspotStore = useHotspotStore();
+const userStore = useUserStore()
+const hotspotStore = useHotspotStore()
 
 const toggleNav = () => {
-  isOpen.value = !isOpen.value;
-};
+  isOpen.value = !isOpen.value
+}
 
 const handleSearch = () => {
-  router.push("/search");
-};
+  router.push('/search')
+}
 
 const handleUpload = () => {
-  hotspotStore.cleanHotspotState();
-  router.push("/upload");
-};
+  hotspotStore.cleanHotspotState()
+  router.push('/upload')
+}
 
 const handleLogin = async () => {
-  const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!;
+  const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!
 
   const apiBaseUrl =
-    ENVIRONMENT === "prod"
+    ENVIRONMENT === 'prod'
       ? import.meta.env.VITE_PROD_SERVER_URL
-      : import.meta.env.VITE_DEV_SERVER_URL;
+      : import.meta.env.VITE_DEV_SERVER_URL
 
   if (!apiBaseUrl) {
-    console.error("API base URL not set");
-    return;
+    console.error('API base URL not set')
+    return
   }
 
-  console.log(`Redirecting to ${apiBaseUrl}/cas/login`);
-  window.location.href = `${apiBaseUrl}/cas/login`;
-};
+  console.log(`Redirecting to ${apiBaseUrl}/cas/login`)
+  window.location.href = `${apiBaseUrl}/cas/login`
+}
 
 const handleProfile = async () => {
-  router.push("/profile");
-};
+  router.push('/profile')
+}
 
 router.afterEach(() => {
-  isOpen.value = false;
-});
+  isOpen.value = false
+})
 </script>
