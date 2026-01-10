@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import prisma from "../services/prisma";
+import { Request, Response } from 'express'
+import prisma from '../services/prisma'
 
 export const getMaterials = async (
-  req: Request,
+  _req: Request,
   res: Response,
 ): Promise<void> => {
   try {
@@ -11,18 +11,18 @@ export const getMaterials = async (
         name: true,
       },
       orderBy: {
-        name: "asc",
+        name: 'asc',
       },
-    });
+    })
 
-    res.status(200).json({ materials });
+    res.status(200).json({ materials })
   } catch (error) {
     console.error(
-      "[server]: Failed to fetch materials from database. ERR: ",
+      '[server]: Failed to fetch materials from database. ERR: ',
       error,
-    );
+    )
     res.status(500).json({
       error: `[server]: Failed to fetch materials from database. ERR: ${error}`,
-    });
+    })
   }
-};
+}
