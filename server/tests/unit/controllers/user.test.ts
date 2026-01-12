@@ -38,7 +38,6 @@ import {
   exchangeOneTimeCode,
   deleteUserSession,
 } from '../../../src/controllers/user'
-import { permission } from 'process'
 
 describe('User Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>
