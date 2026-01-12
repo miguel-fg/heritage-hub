@@ -11,8 +11,8 @@ export default defineConfig({
       'tests/e2e/**/*.test.ts',
     ],
     setupFiles: ['./tests/setup.ts'],
-    onConsoleLog: (log, type) => {
-      if (type === 'stderr' && log.includes('[server]')) {
+    onConsoleLog: (_log, type) => {
+      if (type === 'stderr') {
         return false
       }
     },
