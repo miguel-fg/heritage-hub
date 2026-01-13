@@ -5,20 +5,23 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts --env-file=.env --tsconfig ./tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@faker-js/faker": "^10.2.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.13.1",
     "@types/xml2js": "^0.4.14",
-    "prisma": "^6.3.1"
+    "prisma": "^6.3.1",
+    "vitest": "^4.0.16"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
