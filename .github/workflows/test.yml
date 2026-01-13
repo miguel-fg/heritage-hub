@@ -1,0 +1,41 @@
+name: PR Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        workspace:
+          - server
+          - client
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.workspace }}
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        if: hashFiles(format('{0}/package.json', matrix.workspace)) != ''
+
+      - name: Run tests
+        run: npm run test
+        if: hashFiles(format('{0}/package.json', matrix.workspace)) != ''
