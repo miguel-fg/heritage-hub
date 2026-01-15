@@ -26,4 +26,8 @@ jobs:
         run: bun install
 
       - name: Run tests
-        run: bun run test
+        run: bun run test:all
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CAS_DEV: ${{ secrets.CAS_DEV }}
+          HH_DEV: ${{ secrets.HH_DEV }}
