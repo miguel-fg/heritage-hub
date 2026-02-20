@@ -1,33 +1,33 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 const DIMENSION_TYPES = [
-  "WIDTH",
-  "HEIGHT",
-  "DEPTH",
-  "WEIGHT",
-  "VOLUME",
-] as const;
+  'WIDTH',
+  'HEIGHT',
+  'DEPTH',
+  'WEIGHT',
+  'VOLUME',
+] as const
 
 const DIMENSION_UNITS = [
-  "mm",
-  "cm",
-  "m",
-  "in",
-  "ft",
-  "g",
-  "kg",
-  "oz",
-  "lb",
-  "ml",
-  "l",
-  "fl oz",
-  "gal",
-] as const;
+  'mm',
+  'cm',
+  'm',
+  'in',
+  'ft',
+  'g',
+  'kg',
+  'oz',
+  'lb',
+  'ml',
+  'l',
+  'fl oz',
+  'gal',
+] as const
 
 export const modelSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(3).max(75),
-  caption: z.string().min(10).max(250),
+  caption: z.string().min(1).max(250),
   description: z.string().min(20).max(2000),
   accNum: z.string().nullable(),
   provenance: z.string().nullable(),
@@ -69,6 +69,6 @@ export const modelSchema = z.object({
       quatW: z.number(),
     }),
   ),
-});
+})
 
-export type ModelRequestBody = z.infer<typeof modelSchema>;
+export type ModelRequestBody = z.infer<typeof modelSchema>

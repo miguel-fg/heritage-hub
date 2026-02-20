@@ -53,11 +53,19 @@
               @click="section++"
               type="primary"
               class="w-full justify-center"
+              :disabled="
+                nameError !== null ||
+                captionError !== null ||
+                descriptionError !== null ||
+                mName === '' ||
+                mCaption === '' ||
+                mDescription === ''
+              "
               >Next</Button
             >
             <Button
               v-if="section === 3"
-              @click="handleValidate"
+              @click="handlePublish"
               type="success"
               class="w-full justify-center"
               :disabled="publishing || hotspotStore.isHotspotMode"
@@ -77,34 +85,34 @@
 </template>
 
 <script setup lang="ts">
-import { provide, ref } from "vue";
-import Dropzone from "../Dropzone.vue";
-import { useUpload } from "../../scripts/useUpload.ts";
-import { useToastStore } from "../../stores/toastStore.ts";
-import { v4 as uuidv4 } from "uuid";
-import ConfirmationModal from "../ConfirmationModal.vue";
-import Visualizer from "../three/Visualizer.vue";
-import ModelForm from "../ModelForm.vue";
-import Button from "../Button.vue";
-import Spinner from "../Spinner.vue";
-import { useModelStore } from "../../stores/modelStore.ts";
-import { dataUrlToFile } from "../../scripts/hhUtils.ts";
-import { storeToRefs } from "pinia";
-import { useHotspotStore } from "../../stores/hotspotStore.ts";
-import { useDimensions } from "../../scripts/useDimensions.ts";
-import { useRouter } from "vue-router";
+import { provide, ref } from 'vue'
+import Dropzone from '../Dropzone.vue'
+import { useUpload } from '../../scripts/useUpload.ts'
+import { useToastStore } from '../../stores/toastStore.ts'
+import { v4 as uuidv4 } from 'uuid'
+import ConfirmationModal from '../ConfirmationModal.vue'
+import Visualizer from '../three/Visualizer.vue'
+import ModelForm from '../ModelForm.vue'
+import Button from '../Button.vue'
+import Spinner from '../Spinner.vue'
+import { useModelStore } from '../../stores/modelStore.ts'
+import { dataUrlToFile } from '../../scripts/hhUtils.ts'
+import { storeToRefs } from 'pinia'
+import { useHotspotStore } from '../../stores/hotspotStore.ts'
+import { useDimensions } from '../../scripts/useDimensions.ts'
+import { useRouter } from 'vue-router'
 
-const modelId = ref<string | null>(null);
-const publishing = ref(false);
-const confirmationVisible = ref(false);
+const modelId = ref<string | null>(null)
+const publishing = ref(false)
+const confirmationVisible = ref(false)
 
-const section = ref(1);
+const section = ref(1)
 
-const modelStore = useModelStore();
-const toastStore = useToastStore();
-const hotspotStore = useHotspotStore();
+const modelStore = useModelStore()
+const toastStore = useToastStore()
+const hotspotStore = useHotspotStore()
 
-const router = useRouter();
+const router = useRouter()
 
 const {
   file,
@@ -113,121 +121,127 @@ const {
   selectedHotspots,
   uploadAttempted,
   validateForm,
+  mName,
+  nameError,
+  mCaption,
+  captionError,
+  mDescription,
+  descriptionError,
   isValid,
   getObjectUploadUrl,
   uploadModeltoR2,
   publishModel,
-} = useUpload();
+} = useUpload()
 
-const { dimensions } = useDimensions();
+const { dimensions } = useDimensions()
 
-const { hotspots } = storeToRefs(hotspotStore);
+const { hotspots } = storeToRefs(hotspotStore)
 
 const handleFileUpdate = () => {
-  if (!file.value) return;
+  if (!file.value) return
 
-  modelId.value = uuidv4();
-};
+  modelId.value = uuidv4()
+}
 
-const handleValidate = () => {
-  uploadAttempted.value = true;
-  validateForm();
+const handlePublish = () => {
+  uploadAttempted.value = true
+  validateForm()
   if (!isValid.value) {
-    toastStore.showToast("error", "Please check the fields and try again.");
-    return;
+    toastStore.showToast('error', 'Please check the fields and try again.')
+    return
   }
-  uploadModel();
-};
+  uploadModel()
+}
 
 const uploadModel = async () => {
-  if (!modelId.value || !file.value || !thumbnail.value) return;
-  publishing.value = true;
+  if (!modelId.value || !file.value || !thumbnail.value) return
+  publishing.value = true
 
   // 3D File Upload
-  console.log("Uploading model to Cloudflare...");
-  const { modelUrl, thumbnailUrl } = await getObjectUploadUrl(modelId.value);
-  const modelUploaded = await uploadModeltoR2(file.value, modelUrl);
+  console.log('Uploading model to Cloudflare...')
+  const { modelUrl, thumbnailUrl } = await getObjectUploadUrl(modelId.value)
+  const modelUploaded = await uploadModeltoR2(file.value, modelUrl)
   const thumbnailUploaded = await uploadModeltoR2(
     dataUrlToFile(thumbnail.value),
     thumbnailUrl,
-  );
+  )
 
   if (!modelUploaded || !thumbnailUploaded) {
-    toastStore.showToast("error", "Failed to publish model");
-    publishing.value = false;
-    return;
+    toastStore.showToast('error', 'Failed to publish model')
+    publishing.value = false
+    return
   }
-  console.log("SUCCESS");
+  console.log('SUCCESS')
 
   // Database write
-  console.log("Writing model info to database...");
-  selectedDimensions.value = dimensions.value;
-  selectedHotspots.value = hotspots.value;
+  console.log('Writing model info to database...')
+  selectedDimensions.value = dimensions.value
+  selectedHotspots.value = hotspots.value
 
-  const success = await publishModel(modelId.value);
+  const success = await publishModel(modelId.value)
 
   if (!success) {
-    toastStore.showToast("error", "Failed to publish model");
-    publishing.value = false;
-    return;
+    toastStore.showToast('error', 'Failed to publish model')
+    publishing.value = false
+    return
   }
-  console.log("SUCCESS");
+  console.log('SUCCESS')
 
-  modelStore.resetPagination();
-  modelStore.removeCachedUrls(modelId.value);
+  modelStore.resetPagination()
+  modelStore.removeCachedUrls(modelId.value)
 
-  publishing.value = false;
+  publishing.value = false
 
-  file.value = null;
-  modelId.value = null;
-  toastStore.showToast("success", "Model published successfully!");
-  router.replace("/");
-};
+  file.value = null
+  modelId.value = null
+  toastStore.showToast('success', 'Model published successfully!')
+  router.replace('/')
+}
 
 const showConfirmation = () => {
-  confirmationVisible.value = true;
-};
+  confirmationVisible.value = true
+}
 
 const hideConfirmation = () => {
-  confirmationVisible.value = false;
-};
+  confirmationVisible.value = false
+}
 
 const handleCancel = () => {
-  file.value = null;
-  modelId.value = null;
+  file.value = null
+  modelId.value = null
 
-  router.back();
-};
+  router.back()
+}
 
-const snapCamera = ref(false);
+const snapCamera = ref(false)
 
 const setSnapCamera = (active: boolean) => {
-  snapCamera.value = active;
-};
+  snapCamera.value = active
+}
 
-provide("setSnap", setSnapCamera);
+provide('setSnap', setSnapCamera)
 
-const cleanUnsaved = ref(false);
+const cleanUnsaved = ref(false)
 
 const setCleanUnsaved = (active: boolean) => {
-  cleanUnsaved.value = active;
-};
+  cleanUnsaved.value = active
+}
 
-const commitUnsaved = ref(false);
+const commitUnsaved = ref(false)
 const setCommitUnsaved = (active: boolean) => {
-  commitUnsaved.value = active;
-};
+  commitUnsaved.value = active
+}
 
-provide("setCommit", setCommitUnsaved);
+provide('setCommit', setCommitUnsaved)
 
 const hotspotCommited = () => {
-  setCommitUnsaved(false);
-};
+  setCommitUnsaved(false)
+}
 
 const exitHotspotMode = () => {
-  hotspotStore.setHotspotMode(false);
-  setCleanUnsaved(true);
-};
+  hotspotStore.setHotspotMode(false)
+  setCleanUnsaved(true)
+}
 
-provide("exitHotspotMode", exitHotspotMode);
+provide('exitHotspotMode', exitHotspotMode)
 </script>
