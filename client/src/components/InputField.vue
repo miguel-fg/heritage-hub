@@ -22,25 +22,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useUpload } from "../scripts/useUpload";
+import { computed } from 'vue'
+import { useUpload } from '../scripts/useUpload'
 const props = defineProps<{
-  fieldId: string;
-  label:
-    | "Name"
-    | "Caption"
-    | "Description"
-    | "Accession Number"
-    | "Label"
-    | "Content";
-  error?: string | null;
-  mandatory?: boolean;
-  showError?: boolean;
-}>();
+  fieldId: string
+  label: string
+  error?: string | null
+  mandatory?: boolean
+  showError?: boolean
+}>()
 
-const model = defineModel();
-const { uploadAttempted } = useUpload();
+const model = defineModel()
+const { uploadAttempted } = useUpload()
 
-const mandatory = computed(() => (props.mandatory ? "*" : ""));
-const displayError = computed(() => uploadAttempted || props.showError);
+const mandatory = computed(() => (props.mandatory ? '*' : ''))
+const displayError = computed(() => uploadAttempted || props.showError)
 </script>
