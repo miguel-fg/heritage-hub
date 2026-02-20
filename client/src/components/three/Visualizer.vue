@@ -63,20 +63,20 @@
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef, onMounted, ref, watch, onBeforeUnmount } from "vue";
-import { useHotspotStore } from "../../stores/hotspotStore";
-import { useToolbar } from "../../scripts/useToolbar";
-import Toolbar from "./Toolbar.vue";
-import HelpOverlay from "./HelpOverlay.vue";
-import OptionsOverlay from "./OptionsOverlay.vue";
-import OpenHotspot from "./OpenHotspot.vue";
-import { storeToRefs } from "pinia";
-import { useUpload } from "../../scripts/useUpload";
-import { debounce } from "../../scripts/hhUtils";
-import { useThrottleFn } from "@vueuse/core";
-import { useModelViewer } from "../../scripts/useModelViewer";
-import { useHotspots } from "../../scripts/useHotspots";
-import { useThumbnail } from "../../scripts/useThumbnail";
+import { useTemplateRef, onMounted, ref, watch, onBeforeUnmount } from 'vue'
+import { useHotspotStore } from '../../stores/hotspotStore'
+import { useToolbar } from '../../scripts/useToolbar'
+import Toolbar from './Toolbar.vue'
+import HelpOverlay from './HelpOverlay.vue'
+import OptionsOverlay from './OptionsOverlay.vue'
+import OpenHotspot from './OpenHotspot.vue'
+import { storeToRefs } from 'pinia'
+import { useUpload } from '../../scripts/useUpload'
+import { debounce } from '../../scripts/hhUtils'
+import { useThrottleFn } from '@vueuse/core'
+import { useModelViewer } from '../../scripts/useModelViewer'
+import { useHotspots } from '../../scripts/useHotspots'
+import { useThumbnail } from '../../scripts/useThumbnail'
 
 const props = defineProps({
   modelId: { type: String, required: true },
@@ -86,20 +86,20 @@ const props = defineProps({
   captureRequest: { type: Boolean, default: false },
   deleteUnsaved: { type: Boolean, default: false },
   commitUnsaved: { type: Boolean, default: false },
-});
+})
 
 const emit = defineEmits([
-  "capture-complete",
-  "unsaved-deleted",
-  "unsaved-commited",
-]);
+  'capture-complete',
+  'unsaved-deleted',
+  'unsaved-commited',
+])
 
 // Visualizer configuration
-const fov = ref(75);
-const bgColor = ref<string>("white");
-const light = ref(50);
-const rotation = ref(true);
-const speed = ref(50);
+const fov = ref(75)
+const bgColor = ref<string>('white')
+const light = ref(150)
+const rotation = ref(true)
+const speed = ref(50)
 
 const values = {
   fov,
@@ -107,9 +107,9 @@ const values = {
   light,
   rotation,
   speed,
-};
+}
 
-const container = useTemplateRef("container");
+const container = useTemplateRef('container')
 
 const {
   scene,
@@ -126,13 +126,13 @@ const {
   handleResize,
   cleanup,
   modelScale,
-} = useModelViewer(container);
+} = useModelViewer(container)
 
-const areHSVisible = ref(true);
+const areHSVisible = ref(true)
 
 const handleToolbarHSToggle = () => {
-  areHSVisible.value = toggleHotspotMarkers(camera);
-};
+  areHSVisible.value = toggleHotspotMarkers(camera)
+}
 
 // Toolbar config
 const {
@@ -143,57 +143,57 @@ const {
   setRotationSpeed,
   setAmbientLight,
   setBackgroundColor,
-} = useToolbar();
-const fsContainer = useTemplateRef("fsContainer");
-const downloadLink = useTemplateRef("downloadLink");
-const isHelpOpen = ref(false);
-const isOptionsOpen = ref(false);
+} = useToolbar()
+const fsContainer = useTemplateRef('fsContainer')
+const downloadLink = useTemplateRef('downloadLink')
+const isHelpOpen = ref(false)
+const isOptionsOpen = ref(false)
 
 watch(fov, (val) => {
-  updateFOV(camera, val);
-});
+  updateFOV(camera, val)
+})
 
 watch(rotation, (val) => {
-  setRotate(controls.value, val);
-});
+  setRotate(controls.value, val)
+})
 
 watch(speed, (val) => {
-  setRotationSpeed(controls.value, val);
-});
+  setRotationSpeed(controls.value, val)
+})
 
 watch(light, (val) => {
-  setAmbientLight(ambientLight.value, val);
-});
+  setAmbientLight(ambientLight.value, val)
+})
 
 watch(bgColor, (val) => {
-  setBackgroundColor(scene, val);
-});
+  setBackgroundColor(scene, val)
+})
 
 const toggleRotate = () => {
-  rotation.value = !rotation.value;
-};
+  rotation.value = !rotation.value
+}
 
 // Visualizer overlays
 const toggleHelpOverlay = () => {
   if (!isHelpOpen.value) {
-    closeHotspot();
-    isOptionsOpen.value = false;
+    closeHotspot()
+    isOptionsOpen.value = false
   }
-  isHelpOpen.value = !isHelpOpen.value;
-};
+  isHelpOpen.value = !isHelpOpen.value
+}
 
 const toggleOptionsMenu = () => {
   if (!isOptionsOpen.value) {
-    closeHotspot();
-    isHelpOpen.value = false;
+    closeHotspot()
+    isHelpOpen.value = false
   }
-  isOptionsOpen.value = !isOptionsOpen.value;
-};
+  isOptionsOpen.value = !isOptionsOpen.value
+}
 
 // Hotspots
-const hotspotStore = useHotspotStore();
+const hotspotStore = useHotspotStore()
 const { isHotspotMode, requestedEdit, requestedDelete } =
-  storeToRefs(hotspotStore);
+  storeToRefs(hotspotStore)
 
 const {
   hoveredMarker,
@@ -215,90 +215,90 @@ const {
   deleteHotspot3DObject,
   saveHotspotData,
   unsavedMarker,
-} = useHotspots(scene, modelScale);
+} = useHotspots(scene, modelScale)
 
 watch(isHotspotMode, (newVal) => {
   if (newVal) {
-    rotation.value = false;
+    rotation.value = false
   }
-});
+})
 
 watch(requestedEdit, (newVal) => {
   if (newVal) {
-    selectedHotspotID.value = newVal;
-    editHotspot();
-    requestedEdit.value = null;
+    selectedHotspotID.value = newVal
+    editHotspot()
+    requestedEdit.value = null
   }
-});
+})
 
 watch(requestedDelete, (newVal) => {
   if (newVal) {
-    selectedHotspotID.value = newVal;
-    deleteHotspot();
-    renderer.value?.render(scene, camera);
-    requestedDelete.value = null;
+    selectedHotspotID.value = newVal
+    deleteHotspot()
+    renderer.value?.render(scene, camera)
+    requestedDelete.value = null
   }
-});
+})
 
 // Thumbnail
-const { thumbnail } = useUpload();
+const { thumbnail } = useUpload()
 const { showFlash, handleThumbnailCapture, setInitialThumbnail } = useThumbnail(
   renderer,
   camera,
   scene,
   thumbnail,
-);
+)
 
 // Editor interactions
 watch(
   () => props.captureRequest,
   (newVal) => {
     if (newVal) {
-      handleThumbnailCapture();
-      emit("capture-complete");
+      handleThumbnailCapture()
+      emit('capture-complete')
     }
   },
-);
+)
 
 watch(
   () => props.deleteUnsaved,
   (newVal) => {
     if (newVal && unsavedMarker.value) {
-      deleteHotspot3DObject(unsavedMarker.value);
-      unsavedMarker.value = null;
-      isEditingHotspot.value = false;
-      emit("unsaved-deleted");
+      deleteHotspot3DObject(unsavedMarker.value)
+      unsavedMarker.value = null
+      isEditingHotspot.value = false
+      emit('unsaved-deleted')
     }
   },
-);
+)
 
 watch(
   () => props.commitUnsaved,
   (newVal) => {
     if (newVal && unsavedMarker.value) {
-      saveHotspotData();
-      emit("unsaved-commited");
+      saveHotspotData()
+      emit('unsaved-commited')
     }
   },
-);
+)
 
 // User interaction
 const handleModelClick = (event: MouseEvent | TouchEvent) => {
-  if (!controls.value || !renderer.value) return;
+  if (!controls.value || !renderer.value) return
 
   if (hoveredMarker.value) {
-    rotation.value = false;
+    rotation.value = false
     moveCameraToHotspot(
       hoveredMarker.value.position,
       hoveredMarker.value.normal,
       camera,
       controls.value,
-    );
-    isEditingHotspot.value = false;
-    isHelpOpen.value = false;
-    isOptionsOpen.value = false;
-    openHotspot(hoveredMarker.value.id);
-    return;
+    )
+    isEditingHotspot.value = false
+    isHelpOpen.value = false
+    isOptionsOpen.value = false
+    openHotspot(hoveredMarker.value.id)
+    return
   }
 
   newHotspotOnClick(
@@ -307,56 +307,56 @@ const handleModelClick = (event: MouseEvent | TouchEvent) => {
     camera,
     modelMeshes.value,
     controls.value,
-  );
+  )
 
   if (hotspotStore.isHotspotMode) {
-    isEditingHotspot.value = true;
+    isEditingHotspot.value = true
   }
-};
+}
 
 const handleMouseMove = (event: MouseEvent) => {
   if (!renderer.value || !camera || hotspotStore.sceneMarkers.length === 0)
-    return;
+    return
 
-  highlightHotspotsOnHover(event, renderer.value, camera);
-};
+  highlightHotspotsOnHover(event, renderer.value, camera)
+}
 
 const handleTouch = (event: TouchEvent) => {
   if (!renderer.value || !camera || hotspotStore.sceneMarkers.length === 0)
-    return;
+    return
 
-  hoveredMarker.value = null;
+  hoveredMarker.value = null
 
-  highlightHotspotsOnTouch(event, renderer.value, camera);
+  highlightHotspotsOnTouch(event, renderer.value, camera)
 
-  handleModelClick(event);
-};
+  handleModelClick(event)
+}
 
-const debouncedResize = debounce(handleResize);
-const throttledMouseMove = useThrottleFn(handleMouseMove, 20);
+const debouncedResize = debounce(handleResize)
+const throttledMouseMove = useThrottleFn(handleMouseMove, 20)
 
 onMounted(async () => {
-  const initialized = init();
-  if (!initialized) return;
+  const initialized = init()
+  if (!initialized) return
 
-  await fetchAndLoadModel(props.modelId, props.editing, props.fileRef);
+  await fetchAndLoadModel(props.modelId, props.editing, props.fileRef)
 
-  loadExistingHotspots();
+  loadExistingHotspots()
 
   if (props.editing) {
-    await setInitialThumbnail();
+    await setInitialThumbnail()
   } else {
-    await setInitialThumbnail(props.modelId);
+    await setInitialThumbnail(props.modelId)
   }
 
-  window.addEventListener("resize", debouncedResize);
-});
+  window.addEventListener('resize', debouncedResize)
+})
 
 onBeforeUnmount(() => {
-  hotspotStore.cleanHotspotState();
-  hotspotStore.cleanMarkers(scene, modelScale);
-  textureCleanup();
-  cleanup();
-  window.removeEventListener("resize", debouncedResize);
-});
+  hotspotStore.cleanHotspotState()
+  hotspotStore.cleanMarkers(scene, modelScale)
+  textureCleanup()
+  cleanup()
+  window.removeEventListener('resize', debouncedResize)
+})
 </script>
