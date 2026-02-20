@@ -23,7 +23,7 @@
         <TextArea
           v-model="mDescription"
           fieldId="description"
-          label="Description"
+          label="Description (at least 20 characters long)"
           mandatory
           :error="descriptionError"
           :rows="5"
@@ -66,19 +66,19 @@
 </template>
 
 <script setup lang="ts">
-import InputField from "./InputField.vue";
-import TextArea from "./TextArea.vue";
-import DimensionsField from "./DimensionsField.vue";
-import Multiselect from "./Multiselect.vue";
-import { useUpload } from "../scripts/useUpload";
-import { watch, computed } from "vue";
-import ModelSettings from "./upload/ModelSettings.vue";
+import InputField from './InputField.vue'
+import TextArea from './TextArea.vue'
+import DimensionsField from './DimensionsField.vue'
+import Multiselect from './Multiselect.vue'
+import { useUpload } from '../scripts/useUpload'
+import { watch, computed } from 'vue'
+import ModelSettings from './upload/ModelSettings.vue'
 
 const props = defineProps<{
-  section: number;
-}>();
+  section: number
+}>()
 
-const computedSection = computed(() => props.section);
+const computedSection = computed(() => props.section)
 
 const {
   mName,
@@ -92,17 +92,17 @@ const {
   selectedTags,
   selectedMaterials,
   validateField,
-} = useUpload();
+} = useUpload()
 
 watch(mName, () => {
-  validateField("Name");
-});
+  validateField('Name')
+})
 
 watch(mCaption, () => {
-  validateField("Caption");
-});
+  validateField('Caption')
+})
 
 watch(mDescription, () => {
-  validateField("Description");
-});
+  validateField('Description')
+})
 </script>

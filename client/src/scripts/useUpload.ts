@@ -1,84 +1,80 @@
-import { ref } from "vue";
-import axiosInstance from "./axiosConfig";
-import {
-  type DimensionKey,
-  type Dimension,
-  type Hotspot,
-} from "../types/model";
-import axios from "axios";
-import { useDimensions } from "./useDimensions";
+import { ref } from 'vue'
+import axiosInstance from './axiosConfig'
+import { type DimensionKey, type Dimension, type Hotspot } from '../types/model'
+import axios from 'axios'
+import { useDimensions } from './useDimensions'
 
 // GLB File
-const file = ref<File | null>(null);
+const file = ref<File | null>(null)
 
 // ModelForm fields
-const mName = ref<string>("");
-const nameError = ref<string | null>(null);
-const mCaption = ref<string>("");
-const captionError = ref<string | null>(null);
-const mDescription = ref<string>("");
-const descriptionError = ref<string | null>(null);
-const mAccNum = ref<string>("");
-const mProvenance = ref<string>("");
+const mName = ref<string>('')
+const nameError = ref<string | null>(null)
+const mCaption = ref<string>('')
+const captionError = ref<string | null>(null)
+const mDescription = ref<string>('')
+const descriptionError = ref<string | null>(null)
+const mAccNum = ref<string>('')
+const mProvenance = ref<string>('')
 
 // Dimensions
 const selectedDimensions = ref<Record<DimensionKey, Dimension>>({
   width: {
-    name: "Width",
+    name: 'Width',
     value: null,
     unit: null,
-    units: ["mm", "cm", "m", "in", "ft"],
+    units: ['mm', 'cm', 'm', 'in', 'ft'],
   },
   height: {
-    name: "Height",
+    name: 'Height',
     value: null,
     unit: null,
-    units: ["mm", "cm", "m", "in", "ft"],
+    units: ['mm', 'cm', 'm', 'in', 'ft'],
   },
   depth: {
-    name: "Depth",
+    name: 'Depth',
     value: null,
     unit: null,
-    units: ["mm", "cm", "m", "in", "ft"],
+    units: ['mm', 'cm', 'm', 'in', 'ft'],
   },
   weight: {
-    name: "Weight",
+    name: 'Weight',
     value: null,
     unit: null,
-    units: ["g", "kg", "oz", "lb"],
+    units: ['g', 'kg', 'oz', 'lb'],
   },
   volume: {
-    name: "Volume",
+    name: 'Volume',
     value: null,
     unit: null,
-    units: ["ml", "l", "fl oz", "gal"],
+    units: ['ml', 'l', 'fl oz', 'gal'],
   },
-});
+})
 
 // Tags
-const selectedTags = ref<{ name: string }[] | null>(null);
+const selectedTags = ref<{ name: string }[] | null>(null)
 
 // Materials
-const selectedMaterials = ref<{ name: string }[] | null>(null);
+const selectedMaterials = ref<{ name: string }[] | null>(null)
 
 // Hotspots
-const selectedHotspots = ref<Record<number, Hotspot>>({});
+const selectedHotspots = ref<Record<number, Hotspot>>({})
 
 // Thumbnail
-const thumbnail = ref<string | null>(null);
+const thumbnail = ref<string | null>(null)
 
 // Download
-const downloadable = ref(false);
+const downloadable = ref(false)
 
-const isValid = ref(false);
-const uploadAttempted = ref(false);
+const isValid = ref(false)
+const uploadAttempted = ref(false)
 
 export const useUpload = () => {
-  const loading = ref(false);
-  const error = ref<any>(null);
+  const loading = ref(false)
+  const error = ref<any>(null)
 
   const publishModel = async (modelId: string): Promise<boolean> => {
-    loading.value = true;
+    loading.value = true
 
     const formData = {
       id: modelId,
@@ -92,149 +88,149 @@ export const useUpload = () => {
       tags: sanitizeMultiselect(selectedTags.value),
       dimensions: sanitizeDimensions(selectedDimensions.value, modelId),
       hotspots: sanitizeHotspots(selectedHotspots.value, modelId),
-    };
+    }
 
-    let uploadSuccess = false;
+    let uploadSuccess = false
 
     try {
-      await axiosInstance.post("/models", formData);
-      uploadSuccess = true;
+      await axiosInstance.post('/models', formData)
+      uploadSuccess = true
     } catch (err) {
-      console.error(`[useUpload] Failed to publish model. ERR: ${err}`);
-      error.value = err;
-      uploadSuccess = false;
+      console.error(`[useUpload] Failed to publish model. ERR: ${err}`)
+      error.value = err
+      uploadSuccess = false
     } finally {
-      loading.value = false;
-      return uploadSuccess;
+      loading.value = false
+      return uploadSuccess
     }
-  };
+  }
 
-  const validateField = (field: "Name" | "Caption" | "Description") => {
-    let value: string;
+  const validateField = (field: 'Name' | 'Caption' | 'Description') => {
+    let value: string
 
-    let MIN_LENGTH: number;
-    let MAX_LENGTH: number;
+    let MIN_LENGTH: number
+    let MAX_LENGTH: number
 
     switch (field) {
-      case "Name":
-        value = mName.value;
-        MIN_LENGTH = 3;
-        MAX_LENGTH = 75;
+      case 'Name':
+        value = mName.value
+        MIN_LENGTH = 3
+        MAX_LENGTH = 75
 
-        if (!value || value.trim() === "") {
-          nameError.value = "Name is required.";
+        if (!value || value.trim() === '') {
+          nameError.value = 'Name is required.'
         } else if (value.length < MIN_LENGTH) {
-          nameError.value = `Name must be at least ${MIN_LENGTH} characters.`;
+          nameError.value = `Name must be at least ${MIN_LENGTH} characters.`
         } else if (value.length > MAX_LENGTH) {
-          nameError.value = `Name must be no more than ${MAX_LENGTH} characters.`;
+          nameError.value = `Name must be no more than ${MAX_LENGTH} characters.`
         } else {
-          nameError.value = null;
+          nameError.value = null
         }
-        break;
-      case "Caption":
-        value = mCaption.value;
-        MIN_LENGTH = 10;
-        MAX_LENGTH = 250;
+        break
+      case 'Caption':
+        value = mCaption.value
+        MIN_LENGTH = 1
+        MAX_LENGTH = 250
 
-        if (!value || value.trim() === "") {
-          captionError.value = "Caption is required.";
+        if (!value || value.trim() === '') {
+          captionError.value = 'Caption is required.'
         } else if (value.length < MIN_LENGTH) {
-          captionError.value = `Caption must be at least ${MIN_LENGTH} characters.`;
+          captionError.value = `Caption must be at least ${MIN_LENGTH} characters.`
         } else if (value.length > MAX_LENGTH) {
-          captionError.value = `Caption must be no more than ${MAX_LENGTH} characters.`;
+          captionError.value = `Caption must be no more than ${MAX_LENGTH} characters.`
         } else {
-          captionError.value = null;
+          captionError.value = null
         }
-        break;
-      case "Description":
-        value = mDescription.value;
-        MIN_LENGTH = 20;
-        MAX_LENGTH = 2000;
+        break
+      case 'Description':
+        value = mDescription.value
+        MIN_LENGTH = 20
+        MAX_LENGTH = 2000
 
-        if (!value || value.trim() === "") {
-          descriptionError.value = "Description is required.";
+        if (!value || value.trim() === '') {
+          descriptionError.value = 'Description is required.'
         } else if (value.length < MIN_LENGTH) {
-          descriptionError.value = `Description must be at least ${MIN_LENGTH} characters.`;
+          descriptionError.value = `Description must be at least ${MIN_LENGTH} characters.`
         } else if (value.length > MAX_LENGTH) {
-          descriptionError.value = `Description must be no more than ${MAX_LENGTH} characters.`;
+          descriptionError.value = `Description must be no more than ${MAX_LENGTH} characters.`
         } else {
-          descriptionError.value = null;
+          descriptionError.value = null
         }
-        break;
+        break
     }
-  };
+  }
 
   const validateForm = () => {
-    validateField("Name");
-    validateField("Caption");
-    validateField("Description");
+    validateField('Name')
+    validateField('Caption')
+    validateField('Description')
 
     isValid.value =
-      !nameError.value && !captionError.value && !descriptionError.value;
-  };
+      !nameError.value && !captionError.value && !descriptionError.value
+  }
 
   const sanitizeMultiselect = (
     selected: { name: string }[] | null,
   ): { where: { name: string }; create: { name: string } }[] => {
-    if (!selected) return [];
+    if (!selected) return []
 
-    const result: { where: { name: string }; create: { name: string } }[] = [];
+    const result: { where: { name: string }; create: { name: string } }[] = []
 
     for (const s of selected) {
-      result.push({ where: { name: s.name }, create: { name: s.name } });
+      result.push({ where: { name: s.name }, create: { name: s.name } })
     }
 
-    return result;
-  };
+    return result
+  }
 
   const sanitizeDimensions = (
     dimensions: Record<DimensionKey, Dimension>,
     modelId: string,
   ): {
-    modelId: string;
-    type: string;
-    value: number;
-    unit: string;
+    modelId: string
+    type: string
+    value: number
+    unit: string
   }[] => {
-    if (!dimensions) return [];
+    if (!dimensions) return []
 
     const result: {
-      modelId: string;
-      type: string;
-      value: number;
-      unit: string;
-    }[] = [];
+      modelId: string
+      type: string
+      value: number
+      unit: string
+    }[] = []
 
     for (const key of Object.keys(dimensions)) {
-      const { name, value, unit } = dimensions[key as keyof typeof dimensions];
+      const { name, value, unit } = dimensions[key as keyof typeof dimensions]
 
-      if (!value || !unit) continue;
+      if (!value || !unit) continue
 
-      result.push({ modelId, type: name.toUpperCase(), value, unit });
+      result.push({ modelId, type: name.toUpperCase(), value, unit })
     }
 
-    return result;
-  };
+    return result
+  }
 
   const sanitizeHotspots = (
     hotspots: Record<number, Hotspot>,
     modelId: string,
   ) => {
     const result: {
-      modelId: string;
-      label: string;
-      content: string;
-      posX: number;
-      posY: number;
-      posZ: number;
-      norX: number;
-      norY: number;
-      norZ: number;
-      quatX: number;
-      quatY: number;
-      quatZ: number;
-      quatW: number;
-    }[] = [];
+      modelId: string
+      label: string
+      content: string
+      posX: number
+      posY: number
+      posZ: number
+      norX: number
+      norY: number
+      norZ: number
+      quatX: number
+      quatY: number
+      quatZ: number
+      quatW: number
+    }[] = []
 
     for (const h of Object.values(hotspots)) {
       result.push({
@@ -251,113 +247,113 @@ export const useUpload = () => {
         quatY: h.quaternion.y,
         quatZ: h.quaternion.z,
         quatW: h.quaternion.w,
-      });
+      })
     }
 
-    return result;
-  };
+    return result
+  }
 
   const getObjectUploadUrl = async (modelId: string) => {
     try {
       const response = await axiosInstance.post(`/models/upload-url`, {
         modelId,
-      });
+      })
 
-      const urls = response.data;
+      const urls = response.data
 
-      return urls;
+      return urls
     } catch (error) {
-      console.error("Failed to fetch upload presigned URL. ERR: ", error);
-      return null;
+      console.error('Failed to fetch upload presigned URL. ERR: ', error)
+      return null
     }
-  };
+  }
 
   const uploadModeltoR2 = async (file: File, presignedUrl: string) => {
     try {
-      const response = await axios.put(presignedUrl, file);
+      const response = await axios.put(presignedUrl, file)
 
       if (response.status >= 200 && response.status < 300) {
-        return true;
+        return true
       } else {
-        throw new Error(`Upload failed with status: ${response.status}`);
+        throw new Error(`Upload failed with status: ${response.status}`)
       }
     } catch (error) {
-      console.error("Error uploading file to Cloudflare R2. ERR: ", error);
-      return false;
+      console.error('Error uploading file to Cloudflare R2. ERR: ', error)
+      return false
     }
-  };
+  }
 
   const resetUploadState = () => {
-    const { resetDimensions } = useDimensions();
+    const { resetDimensions } = useDimensions()
     // Reset file
-    file.value = null;
+    file.value = null
 
     // Reset form fields
-    mName.value = "";
-    nameError.value = null;
-    mCaption.value = "";
-    captionError.value = null;
-    mDescription.value = "";
-    descriptionError.value = null;
-    mAccNum.value = "";
-    mProvenance.value = "";
+    mName.value = ''
+    nameError.value = null
+    mCaption.value = ''
+    captionError.value = null
+    mDescription.value = ''
+    descriptionError.value = null
+    mAccNum.value = ''
+    mProvenance.value = ''
 
     // Reset dimensions
     selectedDimensions.value = {
       width: {
-        name: "Width",
+        name: 'Width',
         value: null,
         unit: null,
-        units: ["mm", "cm", "m", "in", "ft"],
+        units: ['mm', 'cm', 'm', 'in', 'ft'],
       },
       height: {
-        name: "Height",
+        name: 'Height',
         value: null,
         unit: null,
-        units: ["mm", "cm", "m", "in", "ft"],
+        units: ['mm', 'cm', 'm', 'in', 'ft'],
       },
       depth: {
-        name: "Depth",
+        name: 'Depth',
         value: null,
         unit: null,
-        units: ["mm", "cm", "m", "in", "ft"],
+        units: ['mm', 'cm', 'm', 'in', 'ft'],
       },
       weight: {
-        name: "Weight",
+        name: 'Weight',
         value: null,
         unit: null,
-        units: ["g", "kg", "oz", "lb"],
+        units: ['g', 'kg', 'oz', 'lb'],
       },
       volume: {
-        name: "Volume",
+        name: 'Volume',
         value: null,
         unit: null,
-        units: ["ml", "l", "fl oz", "gal"],
+        units: ['ml', 'l', 'fl oz', 'gal'],
       },
-    };
-    resetDimensions();
+    }
+    resetDimensions()
 
     // Reset tags and materials
-    selectedTags.value = null;
-    selectedMaterials.value = null;
+    selectedTags.value = null
+    selectedMaterials.value = null
 
     // Reset hotspots
-    selectedHotspots.value = {};
+    selectedHotspots.value = {}
 
     // Reset thumbnail
-    thumbnail.value = null;
+    thumbnail.value = null
 
     // Reset download option
-    downloadable.value = false;
+    downloadable.value = false
 
     // Reset validation states
-    isValid.value = false;
-    uploadAttempted.value = false;
+    isValid.value = false
+    uploadAttempted.value = false
 
     // Reset loading and error states
-    loading.value = false;
-    error.value = null;
-  };
+    loading.value = false
+    error.value = null
+  }
 
   return {
     file,
@@ -384,5 +380,5 @@ export const useUpload = () => {
     getObjectUploadUrl,
     uploadModeltoR2,
     resetUploadState,
-  };
-};
+  }
+}
