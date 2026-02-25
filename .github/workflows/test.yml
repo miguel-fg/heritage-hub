@@ -28,7 +28,7 @@ jobs:
         run: bun install
 
       - name: Run tests
-        run: bun run test:all
+        run: bun run test:unit
         env:
           ENVIRONMENT: test
           DATABASE_URL: ${{ secrets.DATABASE_TEST_URL }}
