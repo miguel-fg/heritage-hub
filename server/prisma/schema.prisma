@@ -26,6 +26,7 @@ model Model {
 
     dimensions      Dimension[]
     hotspots        Hotspot[]
+    images          ModelImage[]
 }
 
 model Hotspot {
@@ -72,6 +73,20 @@ model Dimension {
     unit      String
 }
 
+/* ----------- MULTIMEDIA TABLES ------------ */
+
+model ModelImage {
+    id            String     @id @default(nanoid(16)) @db.Uuid
+    model         Model      @relation(fields: [modelId], references: [id], onDelete: Cascade)
+    modelId       String     @db.Uuid
+
+    order         Int
+    alt           String?
+    createdAt     DateTime   @default(now())
+}
+
+/* ----------- USER TABLES ------------ */
+
 model User {
     id            String            @id @default(nanoid(16)) @db.Uuid
     casId         String            @unique
@@ -97,6 +112,8 @@ model OneTimeCode {
     user        User    @relation(fields: [userId], references: [id])
     expiresAt   DateTime
 }
+
+/* ----------- UTILITY ENUMS ------------ */
 
 enum PermissionLevel {
     RESTRICTED
