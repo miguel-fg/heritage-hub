@@ -214,7 +214,7 @@ describe('Validate Middleware - Unit Tests', () => {
       mockRequest.user = adminUser
       mockRequest.params = { id: modelId }
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -229,7 +229,7 @@ describe('Validate Middleware - Unit Tests', () => {
       mockRequest.user = adminUser
       mockRequest.params = { id: modelId }
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -249,7 +249,7 @@ describe('Validate Middleware - Unit Tests', () => {
         ownerId: standardUser.id,
       })
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -272,7 +272,7 @@ describe('Validate Middleware - Unit Tests', () => {
         ownerId: 'different-user-id',
       })
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -292,7 +292,7 @@ describe('Validate Middleware - Unit Tests', () => {
 
       prismaMock.model.findUnique.mockResolvedValue(null)
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -308,7 +308,7 @@ describe('Validate Middleware - Unit Tests', () => {
       mockRequest.user = restrictedUser
       mockRequest.params = { id: modelId }
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -324,7 +324,7 @@ describe('Validate Middleware - Unit Tests', () => {
       mockRequest.user = undefined
       mockRequest.params = { id: modelId }
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
@@ -343,7 +343,7 @@ describe('Validate Middleware - Unit Tests', () => {
       const error = new Error('Database connection failed')
       prismaMock.model.findUnique.mockRejectedValue(error)
 
-      await validateModifyPermissions(
+      await validateModifyPermissions((req) => req.params.id)(
         mockRequest as Request,
         mockResponse as Response,
         mockNext,
