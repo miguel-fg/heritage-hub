@@ -1,1 +1,1 @@
-process.env.NODE_ENV = 'dev'
+process.env.ENVIRONMENT = 'test'
