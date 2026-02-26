@@ -5,7 +5,7 @@
       Back
     </Button>
     <Button
-      v-if="hasPermissions && modelLoaded"
+      v-if="props.hasPermissions && props.modelLoaded"
       @click="toggleOptionsOpen"
       type="ghost"
       class="sm:hidden"
@@ -20,7 +20,7 @@
       <Icon v-if="isOptionsOpen" icon="bx:chevron-up" width="20" height="20" />
     </Button>
     <div
-      v-if="hasPermissions && modelLoaded"
+      v-if="props.hasPermissions && props.modelLoaded"
       class="hidden sm:flex gap-8 items-center"
     >
       <Button type="ghost" @click="emit('edit')">
