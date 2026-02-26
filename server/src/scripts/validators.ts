@@ -72,3 +72,18 @@ export const modelSchema = z.object({
 })
 
 export type ModelRequestBody = z.infer<typeof modelSchema>
+
+export const modelImagesSchema = z.object({
+  modelId: z.string().uuid(),
+  images: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        order: z.number().int().nonnegative(),
+        alt: z.string().optional(),
+      }),
+    )
+    .min(1),
+})
+
+export type ModelImageRequestBody = z.infer<typeof modelImagesSchema>

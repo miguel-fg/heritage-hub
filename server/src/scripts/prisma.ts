@@ -1,27 +1,28 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client'
+import prisma from '../services/prisma'
 
 type SearchParams = {
-  query?: string;
-  tags?: string[];
-  materials?: string[];
-  others?: string[];
-};
+  query?: string
+  tags?: string[]
+  materials?: string[]
+  others?: string[]
+}
 
 // Builds WHERE conditions for model search
 export const buildModelSearchConditions = (
   params: SearchParams,
 ): Prisma.ModelWhereInput => {
-  const baseConditions: Prisma.ModelWhereInput[] = [];
-  const otherConditions: Record<string, boolean> = {};
+  const baseConditions: Prisma.ModelWhereInput[] = []
+  const otherConditions: Record<string, boolean> = {}
 
   // Text search (name or caption)
   if (params.query) {
     baseConditions.push({
       OR: [
-        { name: { contains: params.query, mode: "insensitive" } },
-        { caption: { contains: params.query, mode: "insensitive" } },
+        { name: { contains: params.query, mode: 'insensitive' } },
+        { caption: { contains: params.query, mode: 'insensitive' } },
       ],
-    });
+    })
   }
 
   // Tags filter
@@ -32,7 +33,7 @@ export const buildModelSearchConditions = (
           name: { in: params.tags },
         },
       },
-    });
+    })
   }
 
   // Materials filter
@@ -43,74 +44,90 @@ export const buildModelSearchConditions = (
           name: { in: params.materials },
         },
       },
-    });
+    })
   }
 
   // Other filters
   if (params.others && params.others.length > 0) {
     params.others.forEach((attr) => {
-      otherConditions[attr] = true;
-    });
+      otherConditions[attr] = true
+    })
   }
 
   if (baseConditions.length > 0 || Object.keys(otherConditions).length > 0) {
-    const where: Prisma.ModelWhereInput = {};
+    const where: Prisma.ModelWhereInput = {}
 
     if (baseConditions.length > 0) {
-      where.AND = baseConditions;
+      where.AND = baseConditions
     }
 
     if (Object.keys(otherConditions).length > 0) {
-      Object.assign(where, otherConditions);
+      Object.assign(where, otherConditions)
     }
 
-    return where;
+    return where
   }
 
-  return {};
-};
+  return {}
+}
 
 export const buildModelSortConditions = (
   sort: string,
 ): Prisma.ModelOrderByWithRelationInput => {
   switch (sort) {
-    case "oldest":
-      return { createdAt: "asc" };
-    case "a-z":
-      return { name: "asc" };
-    case "z-a":
-      return { name: "desc" };
-    case "newest":
+    case 'oldest':
+      return { createdAt: 'asc' }
+    case 'a-z':
+      return { name: 'asc' }
+    case 'z-a':
+      return { name: 'desc' }
+    case 'newest':
     default:
-      return { createdAt: "desc" };
+      return { createdAt: 'desc' }
   }
-};
+}
 
-export const withPrismaRetry = async <T,>(
+export const withPrismaRetry = async <T>(
   fn: () => Promise<T>,
   retries = 3,
   delayMs = 200,
 ): Promise<T> => {
-  let lastError: unknown;
+  let lastError: unknown
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      return await fn();
+      return await fn()
     } catch (error: any) {
-      const retryableCodes = ["P2028", "P2034"];
+      const retryableCodes = ['P2028', 'P2034']
 
       if (
         error?.code &&
         retryableCodes.includes(error.code) &&
         attempt < retries - 1
       ) {
-        lastError = error;
-        await new Promise((res) => setTimeout(res, delayMs));
-        continue;
+        lastError = error
+        await new Promise((res) => setTimeout(res, delayMs))
+        continue
       }
-      throw error;
+      throw error
     }
   }
 
-  throw lastError;
-};
+  throw lastError
+}
+
+export class ModelNotFoundError extends Error {}
+
+export const checkModelOwnership = async (
+  modelId: string,
+  userId: string,
+): Promise<boolean> => {
+  const model = await prisma.model.findUnique({
+    where: { id: modelId },
+    select: { ownerId: true },
+  })
+
+  if (!model) throw new ModelNotFoundError()
+
+  return model.ownerId === userId
+}

@@ -8,6 +8,7 @@ import materialRoutes from './routes/material'
 import searchRoutes from './routes/search'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
+import imageRoutes from './routes/image'
 import { checkOrigin } from './middleware/checkOrigin'
 
 const app: Express = express()
@@ -42,5 +43,6 @@ app.use('/api/materials', materialRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/cas', authRoutes)
 app.use('/api/user', userRoutes)
+app.use('/images', imageRoutes)
 
 export default app

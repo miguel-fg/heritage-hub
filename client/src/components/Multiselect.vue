@@ -9,6 +9,7 @@
       multiple
       taggable
       :options="options"
+      :create-option="(label: string) => ({ name: label })"
       label="name"
       :components="{ OpenIndicator, Deselect: DeselectMultiselect }"
       v-model="model"
@@ -63,30 +64,30 @@
 </template>
 
 <script setup lang="ts">
-import vSelect from "vue-select";
-import OpenIndicator from "./upload/OpenIndicator.vue";
-import DeselectMultiselect from "./upload/DeselectMultiselect.vue";
-import "vue-select/dist/vue-select.css";
-import { onMounted, ref } from "vue";
-import { useMultiselect } from "../scripts/useMultiselect";
-import { type Material, type Tag } from "../types/model";
+import vSelect from 'vue-select'
+import OpenIndicator from './upload/OpenIndicator.vue'
+import DeselectMultiselect from './upload/DeselectMultiselect.vue'
+import 'vue-select/dist/vue-select.css'
+import { onMounted, ref } from 'vue'
+import { useMultiselect } from '../scripts/useMultiselect'
+import { type Material, type Tag } from '../types/model'
 
 const props = defineProps<{
-  label: "Tags" | "Materials";
-  fieldId: string;
-  editing?: boolean;
-}>();
+  label: 'Tags' | 'Materials'
+  fieldId: string
+  editing?: boolean
+}>()
 
-const { options, fetchOptions } = useMultiselect();
+const { options, fetchOptions } = useMultiselect()
 
-const loading = ref(false);
-const error = ref<any>(null);
+const loading = ref(false)
+const error = ref<any>(null)
 
-const model = defineModel<Material[] | Tag[] | null>();
+const model = defineModel<Material[] | Tag[] | null>()
 
 onMounted(async () => {
-  options.value = await fetchOptions(props.label);
-});
+  options.value = await fetchOptions(props.label)
+})
 </script>
 
 <style>

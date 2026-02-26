@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router } from 'express'
 import {
   getModels,
   getModel,
@@ -8,22 +8,48 @@ import {
   getModelObjectUrl,
   getModelUploadUrl,
   deleteModel,
-} from "../controllers/model";
-import { validateBody, validateUploadPermissions, validateModifyPermissions } from "../middleware/validate";
-import { authGuard } from "../middleware/authGuard";
-import { modelSchema } from "../scripts/validators";
+} from '../controllers/model'
+import {
+  validateBody,
+  validateUploadPermissions,
+  validateModifyPermissions,
+} from '../middleware/validate'
+import { authGuard } from '../middleware/authGuard'
+import { modelSchema } from '../scripts/validators'
 
-const router = Router();
+const router = Router()
 
-router.get("/", getModels);
-router.get("/:id", getModel);
-router.get("/:id/thumbnail-url", getModelThumbnailUrl);
-router.get("/:id/object", getModelObjectUrl);
+router.get('/', getModels)
+router.get('/:id', getModel)
+router.get('/:id/thumbnail-url', getModelThumbnailUrl)
+router.get('/:id/object', getModelObjectUrl)
 
-router.post("/", authGuard, validateUploadPermissions, validateBody(modelSchema), newModel);
-router.post("/upload-url", authGuard, validateUploadPermissions, getModelUploadUrl);
+router.post(
+  '/',
+  authGuard,
+  validateUploadPermissions,
+  validateBody(modelSchema),
+  newModel,
+)
+router.post(
+  '/upload-url',
+  authGuard,
+  validateUploadPermissions,
+  getModelUploadUrl,
+)
 
-router.put("/:id", authGuard, validateModifyPermissions, validateBody(modelSchema), updateModel);
-router.delete("/:id", authGuard, validateModifyPermissions, deleteModel);
+router.put(
+  '/:id',
+  authGuard,
+  validateModifyPermissions((req) => req.params.id),
+  validateBody(modelSchema),
+  updateModel,
+)
+router.delete(
+  '/:id',
+  authGuard,
+  validateModifyPermissions((req) => req.params.id),
+  deleteModel,
+)
 
-export default router;
+export default router
