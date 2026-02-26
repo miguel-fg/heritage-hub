@@ -145,6 +145,8 @@ const handleFileUpdate = () => {
 
 const handlePublish = () => {
   uploadAttempted.value = true
+  selectedDimensions.value = dimensions.value
+  selectedHotspots.value = hotspots.value
   validateForm()
   if (!isValid.value) {
     toastStore.showToast('error', 'Please check the fields and try again.')
@@ -175,9 +177,6 @@ const uploadModel = async () => {
 
   // Database write
   console.log('Writing model info to database...')
-  selectedDimensions.value = dimensions.value
-  selectedHotspots.value = hotspots.value
-
   const success = await publishModel(modelId.value)
 
   if (!success) {
