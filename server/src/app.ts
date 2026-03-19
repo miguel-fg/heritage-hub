@@ -43,6 +43,6 @@ app.use('/api/materials', materialRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/cas', authRoutes)
 app.use('/api/user', userRoutes)
-app.use('/images', imageRoutes)
+app.use('/api/images', imageRoutes)
 
 export default app

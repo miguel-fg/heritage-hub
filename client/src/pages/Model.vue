@@ -12,7 +12,7 @@
             if (model) handleEdit(model)
           }
         "
-        @attach=""
+        @attach="() => (showMediaUploadModal = true)"
         @delete="() => (showConfirmModal = true)"
       />
       <div v-if="loading" class="flex flex-col gap-4 lg:flex-row">
@@ -146,6 +146,13 @@
     <template #confirm>Delete</template>
     <template #cancel>Cancel</template>
   </ConfirmationModal>
+  <MediaUploadModal
+    v-if="model"
+    :visible="showMediaUploadModal"
+    :model-id="model.id"
+    @done="handleMediaUploaded"
+    @cancel="() => (showMediaUploadModal = false)"
+  />
 </template>
 
 <script setup lang="ts">
@@ -163,6 +170,7 @@ import { useModelStore } from '../stores/modelStore'
 import { useHotspotStore } from '../stores/hotspotStore'
 import { useToastStore } from '../stores/toastStore'
 import ConfirmationModal from '../components/ConfirmationModal.vue'
+import MediaUploadModal from '../components/MediaUploadModal.vue'
 import ModelPageToolbar from '../components/ModelPageToolbar.vue'
 import { Icon } from '@iconify/vue'
 import { type Model } from '../types/model'
@@ -187,6 +195,7 @@ const hotspotStore = useHotspotStore()
 const toastStore = useToastStore()
 
 const showConfirmModal = ref(false)
+const showMediaUploadModal = ref(false)
 
 const cleanDate = (rawDate: string): string => {
   const date = new Date(rawDate)
@@ -296,6 +305,11 @@ const handleEdit = async (model: Model) => {
   } else {
     console.error('Failed to initialize edit state')
   }
+}
+
+const handleMediaUploaded = () => {
+  showMediaUploadModal.value = false
+  toastStore.showToast('success', 'Files saved successfully')
 }
 
 onMounted(() => {
