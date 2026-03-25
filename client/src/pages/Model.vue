@@ -28,9 +28,27 @@
         class="flex flex-col gap-4 lg:flex-row mt-5"
       >
         <div
-          class="flex h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center"
+          ref="visArea"
+          class="flex h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center relative group"
         >
           <Visualizer :modelId="model.id" :downloadable="model.downloadable" />
+          <Transition name="fase">
+            <div
+              v-if="visualizerStore.selectedIndex > 0 && currentImage"
+              class="absolute inset-0 flex items-center justify-center bg-white"
+            >
+              <img
+                :src="`${r2BaseURL}/${model.id}/images/${currentImage.id}/full.webp`"
+                :alt="currentImage.alt ?? ''"
+                class="max-h-full max-w-full object-contain"
+              />
+            </div>
+          </Transition>
+          <ImageDrawer
+            :modelId="model.id"
+            :images="model.images"
+            class="opacity-0 group-hover:opacity-100 transition-all duration-300"
+          />
         </div>
         <div class="flex flex-col gap-4 lg:w-4/9">
           <div>
@@ -156,13 +174,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axiosInstance from '../scripts/axiosConfig'
 import Button from '../components/Button.vue'
 import Tag from '../components/Tag.vue'
 import Skeleton from '../components/Skeleton.vue'
 import Visualizer from '../components/three/Visualizer.vue'
+import ImageDrawer from '../components/ImageDrawer.vue'
 import { useDimensions } from '../scripts/useDimensions'
 import Footer from '../components/Footer.vue'
 import { useUserStore } from '../stores/userStore'
@@ -175,7 +194,8 @@ import ModelPageToolbar from '../components/ModelPageToolbar.vue'
 import { Icon } from '@iconify/vue'
 import { type Model } from '../types/model'
 import { useEdit } from '../scripts/useEdit'
-import { isDefined } from '@vueuse/core'
+import { isDefined, useEventListener } from '@vueuse/core'
+import { useVisualizerStore } from '../stores/visualizerStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -196,6 +216,12 @@ const toastStore = useToastStore()
 
 const showConfirmModal = ref(false)
 const showMediaUploadModal = ref(false)
+
+const environment = import.meta.env.VITE_ENVIRONMENT!
+const r2BaseURL =
+  environment === 'ngrok' || environment === 'dev'
+    ? import.meta.env.VITE_R2_DEV_URL!
+    : import.meta.env.VITE_R2_PROD_URL!
 
 const cleanDate = (rawDate: string): string => {
   const date = new Date(rawDate)
@@ -312,6 +338,19 @@ const handleMediaUploaded = () => {
   toastStore.showToast('success', 'Files saved successfully')
 }
 
+const visualizerStore = useVisualizerStore()
+const visArea = useTemplateRef('visArea')
+
+useEventListener(visArea, 'mouseleave', () => {
+  visualizerStore.closeImageDrawer()
+})
+
+const currentImage = computed(() =>
+  visualizerStore.selectedIndex > 0
+    ? model.value?.images[visualizerStore.selectedIndex - 1]
+    : null,
+)
+
 onMounted(() => {
   fetchModelData()
 })
@@ -321,5 +360,7 @@ onUnmounted(() => {
   loading.value = false
   error.value = null
   hotspotStore.cleanHotspotState()
+  visualizerStore.setSelectedIndex(0)
+  visualizerStore.closeImageDrawer()
 })
 </script>

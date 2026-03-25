@@ -22,6 +22,10 @@
       :class="{ 'opacity-90': showFlash }"
     ></div>
     <Toolbar
+      v-show="
+        !visualizerStore.isImageDrawerOpen &&
+        visualizerStore.selectedIndex === 0
+      "
       :editing="props.editing"
       :rotation="rotation"
       :hotspots-visible="areHSVisible"
@@ -77,6 +81,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { useModelViewer } from '../../scripts/useModelViewer'
 import { useHotspots } from '../../scripts/useHotspots'
 import { useThumbnail } from '../../scripts/useThumbnail'
+import { useVisualizerStore } from '../../stores/visualizerStore'
 
 const props = defineProps({
   modelId: { type: String, required: true },
@@ -334,6 +339,9 @@ const handleTouch = (event: TouchEvent) => {
 
 const debouncedResize = debounce(handleResize)
 const throttledMouseMove = useThrottleFn(handleMouseMove, 20)
+
+// Media drawer
+const visualizerStore = useVisualizerStore()
 
 onMounted(async () => {
   const initialized = init()
