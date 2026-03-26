@@ -87,3 +87,17 @@ export const modelImagesSchema = z.object({
 })
 
 export type ModelImageRequestBody = z.infer<typeof modelImagesSchema>
+
+export const modelPdfsSchema = z.object({
+  modelId: z.string().uuid(),
+  pdfs: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        title: z.string().optional(),
+      }),
+    )
+    .min(1),
+})
+
+export type ModelPdfRequestBody = z.infer<typeof modelPdfsSchema>

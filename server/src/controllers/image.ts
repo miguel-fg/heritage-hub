@@ -126,6 +126,8 @@ export const cancelImages = async (
         Delete: { Objects: objects },
       }),
     )
+
+    res.status(200).json({ message: 'Images cleaned up successfully' })
   } catch (error) {
     console.error('[server] Failed to clean up images. ERR: ', error)
     res

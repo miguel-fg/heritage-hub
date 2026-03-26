@@ -9,6 +9,7 @@ import searchRoutes from './routes/search'
 import authRoutes from './routes/auth'
 import userRoutes from './routes/user'
 import imageRoutes from './routes/image'
+import pdfRoutes from './routes/pdf'
 import { checkOrigin } from './middleware/checkOrigin'
 
 const app: Express = express()
@@ -44,5 +45,6 @@ app.use('/api/search', searchRoutes)
 app.use('/api/cas', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/images', imageRoutes)
+app.use('/api/pdfs', pdfRoutes)
 
 export default app

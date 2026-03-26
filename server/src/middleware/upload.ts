@@ -1,6 +1,12 @@
 import multer from 'multer'
 
-const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const ACCEPTED_MIME = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+]
 
 export const upload = multer({
   storage: multer.memoryStorage(),
