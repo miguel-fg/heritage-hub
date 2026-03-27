@@ -96,6 +96,7 @@ import axiosInstance from '../scripts/axiosConfig'
 const props = defineProps<{
   visible?: boolean
   modelId: string
+  imageCount: number
 }>()
 const emit = defineEmits(['cancel', 'done'])
 const uploadType = ref<'attach' | 'embed'>('attach')
@@ -103,9 +104,11 @@ const uploadType = ref<'attach' | 'embed'>('attach')
 interface ProcessedFile {
   id: string
   file: File
+  type: 'image' | 'pdf'
   progress: number
   error: boolean
   alt?: string
+  title?: string
 }
 
 const fileList = ref<ProcessedFile[]>([])
@@ -122,7 +125,12 @@ const uploadFile = (entry: ProcessedFile): Promise<void> => {
 
     formData.append('file', entry.file)
     formData.append('modelId', props.modelId)
-    formData.append('imageId', entry.id)
+
+    if (entry.type === 'image') {
+      formData.append('imageId', entry.id)
+    } else {
+      formData.append('pdfId', entry.id)
+    }
 
     const xhr = new XMLHttpRequest()
 
@@ -162,7 +170,9 @@ const uploadFile = (entry: ProcessedFile): Promise<void> => {
       reject(new Error('Network error'))
     }
 
-    xhr.open('POST', `${apiBaseUrl}/images/process`)
+    const endpoint = entry.type === 'image' ? 'images' : 'pdfs'
+
+    xhr.open('POST', `${apiBaseUrl}/${endpoint}/process`)
     xhr.withCredentials = true
     xhr.send(formData)
   })
@@ -172,6 +182,7 @@ const processFiles = async (files: File[]) => {
   const entries: ProcessedFile[] = files.map((f) => ({
     id: uuid(),
     file: f,
+    type: f.type === 'application/pdf' ? 'pdf' : 'image',
     progress: 0,
     error: false,
   }))
@@ -191,25 +202,55 @@ const allReady = computed(
 )
 
 const handleConfirm = async () => {
-  const images = fileList.value
-    .filter((f) => f.progress === 100)
-    .map((f, index) => ({ id: f.id, order: index, alt: f.alt }))
+  const successful = fileList.value.filter((f) => f.progress === 100)
 
-  await axiosInstance.post('/images', { modelId: props.modelId, images })
+  const images = successful
+    .filter((f) => f.type === 'image')
+    .map((f, index) => ({
+      id: f.id,
+      order: props.imageCount + index,
+      alt: f.alt,
+    }))
 
+  const pdfs = successful
+    .filter((f) => f.type === 'pdf')
+    .map((f) => ({ id: f.id, title: f.file.name }))
+
+  await Promise.all([
+    ...(images.length > 0
+      ? [axiosInstance.post('/images', { modelId: props.modelId, images })]
+      : []),
+    ...(pdfs.length > 0
+      ? [axiosInstance.post('/pdfs', { modelId: props.modelId, pdfs })]
+      : []),
+  ])
+
+  fileList.value = []
   emit('done')
 }
 
 const handleCancel = async () => {
-  const uploadedIds = fileList.value
-    .filter((f) => f.progress === 100)
-    .map((f) => f.id)
+  const successful = fileList.value.filter((f) => f.progress === 100)
 
-  if (uploadedIds.length > 0) {
-    await axiosInstance.delete('/images/process', {
-      data: { modelId: props.modelId, imageIds: uploadedIds },
-    })
-  }
+  const imageIds = successful.filter((f) => f.type === 'image').map((f) => f.id)
+  const pdfIds = successful.filter((f) => f.type === 'pdf').map((f) => f.id)
+
+  await Promise.all([
+    ...(imageIds.length > 0
+      ? [
+          axiosInstance.delete('/images/process', {
+            data: { modelId: props.modelId, imageIds },
+          }),
+        ]
+      : []),
+    ...(pdfIds.length > 0
+      ? [
+          axiosInstance.delete('/pdfs/process', {
+            data: { modelId: props.modelId, pdfIds },
+          }),
+        ]
+      : []),
+  ])
 
   fileList.value = []
   emit('cancel')

@@ -15,6 +15,7 @@ export type Model = {
   dimensions: ModelDimension[]
   hotspots: ModelHotspot[]
   images: ModelImage[]
+  pdfs: ModelPdf[]
   modelPath: string
   thumbnailPath: string
   downloadable: boolean
@@ -86,4 +87,9 @@ export type ModelImage = {
   order: number
   alt?: string
   createdAt: string
+}
+
+export type ModelPdf = {
+  id: string
+  title?: string
 }

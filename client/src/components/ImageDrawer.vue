@@ -39,11 +39,11 @@
       >
         <button
           @click="visualizerStore.setSelectedIndex(0)"
-          class="shrink-0 size-20 rounded-xs overflow-hidden border-2 transition-all duration-200"
+          class="shrink-0 rounded-xs overflow-hidden border-2 transition-all duration-200"
           :class="
             visualizerStore.selectedIndex === 0
-              ? 'border-primary-400'
-              : 'border-transparent hover:border-grayscale-100 hover:size-22 cursor-pointer'
+              ? 'border-primary-400 size-18'
+              : 'border-transparent hover:border-grayscale-100 hover:size-22 cursor-pointer size-20'
           "
         >
           <img
@@ -55,11 +55,11 @@
         <button
           v-for="(image, i) in props.images"
           @click="visualizerStore.setSelectedIndex(i + 1)"
-          class="shrink-0 size-20 rounded-xs overflow-hidden border-2 transition-all duration-200"
+          class="shrink-0 rounded-xs overflow-hidden border-2 transition-all duration-200"
           :class="
             visualizerStore.selectedIndex === i + 1
-              ? 'border-primary-500'
-              : 'border-transparent hover:border-grayscale-200 hover:size-22 cursor-pointer'
+              ? 'border-primary-500 size-18'
+              : 'border-transparent hover:border-grayscale-200 size-20 hover:size-22 cursor-pointer'
           "
         >
           <img

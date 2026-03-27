@@ -77,6 +77,9 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
         },
         hotspots: true,
         images: { orderBy: { order: 'asc' } },
+        pdfs: {
+          select: { id: true, title: true },
+        },
       },
     })
 

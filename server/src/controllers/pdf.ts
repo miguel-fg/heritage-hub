@@ -59,7 +59,9 @@ export const processPdf = async (
     await s3Client.send(
       new PutObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: `${modelId}/pdfs/${pdfId}/file.pdf`,
+        Key: `${modelId}/pdfs/${pdfId}.pdf`,
+        Body: req.file!.buffer,
+        ContentType: 'application/pdf',
       }),
     )
 
@@ -92,7 +94,7 @@ export const cancelPdfs = async (
 
   try {
     const objects: { Key: string }[] = pdfIds.map((pdfId: string) => ({
-      Key: `${modelId}/pdfs/${pdfId}/file.pdf`,
+      Key: `${modelId}/pdfs/${pdfId}.pdf`,
     }))
 
     await s3Client.send(

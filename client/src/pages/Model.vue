@@ -93,9 +93,9 @@
               model.dimensions.length > 0 ||
               model.materials.length > 0
             "
-            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4 md:gap-0 md:flex-row md:justify-between"
+            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4 md:flex-row md:justify-between"
           >
-            <div v-if="model.dimensions.length > 0">
+            <div v-if="model.dimensions.length > 0" class="shrink-0">
               <h2 class="subtitle text-primary-500">Dimensions</h2>
               <ul class="body text-grayscale-900">
                 <li v-for="dim in model.dimensions">
@@ -123,6 +123,36 @@
                 {{ model.provenance }}
               </p>
             </div>
+          </div>
+          <div class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4">
+            <h2 class="subtitle text-primary-500">Further Reading</h2>
+            <ul class="body text-info-600 underline">
+              <li
+                v-for="file in model.pdfs"
+                class="mb-4 flex gap-4 items-center group"
+              >
+                <a
+                  :href="`${r2BaseURL}/${model.id}/pdfs/${file.id}.pdf`"
+                  :download="`${file.title ?? 'article'}`"
+                  target="_blank"
+                  referrer="noreferrer"
+                  class="flex gap-2 items-center hover:text-info-700 w-min transition-colors duration-300"
+                >
+                  <Icon
+                    icon="vscode-icons:file-type-pdf2"
+                    width="40"
+                    height="40"
+                  />
+                  {{ file.title ?? 'article.pdf' }}
+                </a>
+                <button
+                  v-if="hasPermissions"
+                  class="p-2 cursor-pointer text-danger-500 hover:text-danger-700 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                >
+                  <Icon icon="bx:trash" width="24" height="24" />
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -168,6 +198,7 @@
     v-if="model"
     :visible="showMediaUploadModal"
     :model-id="model.id"
+    :image-count="model.images.length"
     @done="handleMediaUploaded"
     @cancel="() => (showMediaUploadModal = false)"
   />
