@@ -3,6 +3,8 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
 } from '@aws-sdk/client-s3'
 import s3Client from '../services/s3Client'
 
@@ -46,4 +48,29 @@ export const deleteObjectFromR2 = async (
     console.error(`[R2 Error] Error deleting object ${objectKey}: ERR: `, error)
     throw error
   }
+}
+
+export const deleteAllFromR2 = async (bucketName: string, prefix: string) => {
+  const listed = await s3Client.send(
+    new ListObjectsV2Command({
+      Bucket: bucketName,
+      Prefix: prefix,
+    }),
+  )
+
+  if (!listed.Contents?.length) return
+
+  const objects = listed.Contents.filter((obj) => obj.Key).map((obj) => ({
+    Key: obj.Key!,
+  }))
+
+  await s3Client.send(
+    new DeleteObjectsCommand({
+      Bucket: bucketName,
+      Delete: {
+        Objects: objects,
+        Quiet: true,
+      },
+    }),
+  )
 }

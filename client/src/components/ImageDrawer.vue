@@ -5,7 +5,7 @@
   >
     <button
       @click="visualizerStore.toggleImageDrawer"
-      class="w-[150px] flex justify-center cursor-pointer bg-grayscale-900/60 rounded-t-md hover:bg-grayscale-900/90 transition-all duration-300"
+      class="w-[150px] flex justify-center cursor-pointer bg-grayscale-900/60 rounded-t-sm hover:bg-grayscale-900/90 transition-all duration-300"
       aria-label="Open image drawer"
     >
       <Icon
@@ -20,7 +20,7 @@
       />
     </button>
     <div
-      class="w-full rounded-t-md bg-grayscale-900/60 flex items-center transition-all duration-300 gap-5 overflow-hidden"
+      class="w-full rounded-sm bg-grayscale-900/60 flex items-center transition-all duration-300 gap-5 overflow-hidden"
       :class="visualizerStore.isImageDrawerOpen ? 'h-30' : 'h-0'"
     >
       <button
@@ -62,12 +62,21 @@
               : 'border-transparent hover:border-grayscale-200 size-20 hover:size-22 cursor-pointer'
           "
         >
-          <img
-            :src="`${r2BaseURL}/${props.modelId}/images/${image.id}/thumb.webp`"
-            :alt="image.alt ?? ''"
-            class="size-full object-cover rounded-xs"
-            loading="lazy"
-          />
+          <div class="relative size-full group/delete">
+            <img
+              :src="`${r2BaseURL}/${props.modelId}/images/${image.id}/thumb.webp`"
+              :alt="image.alt ?? ''"
+              class="size-full object-cover rounded-xs"
+              loading="lazy"
+            />
+            <button
+              v-if="props.hasPermissions"
+              @click.stop="emit('delete-image', image.id)"
+              class="absolute right-1 top-1 p-1 bg-grayscale-900/60 hover:bg-grayscale-900/90 opacity-0 group-hover/delete:opacity-100 text-danger-300 hover:text-danger-400 transition-all duration-200 cursor-pointer rounded-xs"
+            >
+              <Icon icon="bx:trash" width="20" height="20" />
+            </button>
+          </div>
         </button>
       </div>
       <button
@@ -93,8 +102,11 @@ import { type ModelImage } from '../types/model'
 const props = defineProps<{
   modelId: string
   images: ModelImage[]
+  hasPermissions: boolean
   class?: string
 }>()
+
+const emit = defineEmits(['delete-image'])
 
 const visualizerStore = useVisualizerStore()
 

@@ -98,7 +98,23 @@ const props = defineProps<{
   modelId: string
   imageCount: number
 }>()
-const emit = defineEmits(['cancel', 'done'])
+
+interface UploadedImage {
+  id: string
+  order: number
+  alt?: string
+}
+
+interface UploadedPDF {
+  id: string
+  title: string
+}
+
+const emit = defineEmits<{
+  cancel: []
+  done: [images: UploadedImage[], pdfs: UploadedPDF[]]
+}>()
+
 const uploadType = ref<'attach' | 'embed'>('attach')
 
 interface ProcessedFile {
@@ -226,7 +242,7 @@ const handleConfirm = async () => {
   ])
 
   fileList.value = []
-  emit('done')
+  emit('done', images, pdfs)
 }
 
 const handleCancel = async () => {

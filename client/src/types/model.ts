@@ -86,10 +86,11 @@ export type ModelImage = {
   modelId: string
   order: number
   alt?: string
-  createdAt: string
+  createdAt?: string
 }
 
 export type ModelPdf = {
   id: string
   title?: string
+  createdAt?: string
 }

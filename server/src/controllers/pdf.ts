@@ -1,5 +1,9 @@
 import { Request, Response } from 'express'
-import { PutObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
+import {
+  PutObjectCommand,
+  DeleteObjectsCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3'
 import s3Client from '../services/s3Client'
 import prisma from '../services/prisma'
 import { type ModelPdfRequestBody } from '../scripts/validators'
@@ -30,6 +34,56 @@ export const createPdfs = async (
     res.status(500).json({
       error: `[server]: Failed to create PDFs. ERR: ${error}`,
     })
+  }
+}
+
+export const deletePdf = async (req: Request, res: Response): Promise<void> => {
+  const user = req.user
+
+  if (!user) {
+    res.status(401).send('Unauthorized')
+    return
+  }
+
+  const { modelId, pdfId } = req.body
+
+  if (!modelId || !pdfId) {
+    res.status(400).json({ error: 'modelId and pdfId are required' })
+    return
+  }
+
+  try {
+    const pdf = await prisma.modelPdfs.findUnique({
+      where: { id: pdfId },
+      select: { id: true, modelId: true },
+    })
+
+    if (!pdf) {
+      res.status(404).json({ error: 'PDF file not found' })
+      return
+    }
+
+    if (pdf.modelId !== modelId) {
+      res.status(403).json({ error: 'Mismatching model IDs' })
+      return
+    }
+
+    await Promise.all([
+      prisma.modelPdfs.delete({ where: { id: pdf.id } }),
+      s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: `${modelId}/pdfs/${pdf.id}.pdf`,
+        }),
+      ),
+    ])
+
+    res.status(200).json({ message: 'PDF file deleted successfully' })
+  } catch (error) {
+    console.error('[server]: Failed to delete PDF file. ERR: ', error)
+    res
+      .status(500)
+      .json({ error: `[server]: Failed to delete PDF file. ERR: ${error}` })
   }
 }
 

@@ -34,6 +34,64 @@ export const createImages = async (
   }
 }
 
+export const deleteImage = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const user = req.user
+
+  if (!user) {
+    res.status(401).send('Unauthorized')
+    return
+  }
+
+  const { modelId, imageId } = req.body
+
+  if (!modelId || !imageId) {
+    res.status(400).json({ error: 'modelId and imageId are required' })
+    return
+  }
+
+  try {
+    const image = await prisma.modelImage.findUnique({
+      where: { id: imageId },
+      select: { id: true, modelId: true },
+    })
+
+    if (!image) {
+      res.status(404).json({ error: 'Image not found' })
+      return
+    }
+
+    if (image.modelId !== modelId) {
+      res.status(403).json({ error: 'Mismatching model IDs' })
+      return
+    }
+
+    await Promise.all([
+      prisma.modelImage.delete({ where: { id: image.id } }),
+      s3Client.send(
+        new DeleteObjectsCommand({
+          Bucket: BUCKET_NAME,
+          Delete: {
+            Objects: [
+              { Key: `${image.modelId}/images/${image.id}/thumb.webp` },
+              { Key: `${image.modelId}/images/${image.id}/full.webp` },
+            ],
+          },
+        }),
+      ),
+    ])
+
+    res.status(200).json({ message: 'Image deleted sucessfully' })
+  } catch (error) {
+    console.error('[server]: Failed to delete image. ERR: ', error)
+    res
+      .status(500)
+      .json({ error: `[server]: Failed to delete image. ERR: ${error}` })
+  }
+}
+
 export const processImage = async (
   req: Request,
   res: Response,

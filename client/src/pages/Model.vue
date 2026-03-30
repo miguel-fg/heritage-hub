@@ -47,6 +47,8 @@
           <ImageDrawer
             :modelId="model.id"
             :images="model.images"
+            :has-permissions="hasPermissions"
+            @delete-image="handleDeleteImg"
             class="opacity-0 group-hover:opacity-100 transition-all duration-300"
           />
         </div>
@@ -147,6 +149,7 @@
                 </a>
                 <button
                   v-if="hasPermissions"
+                  @click="() => handleDeletePdf(file.id)"
                   class="p-2 cursor-pointer text-danger-500 hover:text-danger-700 transition-all duration-300 opacity-0 group-hover:opacity-100"
                 >
                   <Icon icon="bx:trash" width="24" height="24" />
@@ -194,12 +197,36 @@
     <template #confirm>Delete</template>
     <template #cancel>Cancel</template>
   </ConfirmationModal>
+  <ConfirmationModal
+    :visible="showDeleteImgModal && imgToDelete !== null"
+    @confirm="confirmImgDelete"
+    @cancel="cancelImgDelete"
+  >
+    <template #title>Confirm deletion</template>
+    <template #subtitle
+      >Are you sure you want to permanently delete this image?</template
+    >
+    <template #confirm>Delete</template>
+    <template #cancel>Cancel</template>
+  </ConfirmationModal>
+  <ConfirmationModal
+    :visible="showDeletePDFModal && pdfToDelete !== null"
+    @confirm="confirmPdfDelete"
+    @cancel="cancelPdfDelete"
+  >
+    <template #title>Confirm deletion</template>
+    <template #subtitle
+      >Are you sure you want to permanently delete this file?</template
+    >
+    <template #confirm>Delete</template>
+    <template #cancel>Cancel</template>
+  </ConfirmationModal>
   <MediaUploadModal
     v-if="model"
     :visible="showMediaUploadModal"
     :model-id="model.id"
     :image-count="model.images.length"
-    @done="handleMediaUploaded"
+    @done="(images, pdfs) => handleMediaUploaded(images, pdfs)"
     @cancel="() => (showMediaUploadModal = false)"
   />
 </template>
@@ -227,6 +254,7 @@ import { type Model } from '../types/model'
 import { useEdit } from '../scripts/useEdit'
 import { isDefined, useEventListener } from '@vueuse/core'
 import { useVisualizerStore } from '../stores/visualizerStore'
+import { useMedia } from '../scripts/useMedia'
 
 const route = useRoute()
 const router = useRouter()
@@ -246,7 +274,6 @@ const hotspotStore = useHotspotStore()
 const toastStore = useToastStore()
 
 const showConfirmModal = ref(false)
-const showMediaUploadModal = ref(false)
 
 const environment = import.meta.env.VITE_ENVIRONMENT!
 const r2BaseURL =
@@ -364,11 +391,6 @@ const handleEdit = async (model: Model) => {
   }
 }
 
-const handleMediaUploaded = () => {
-  showMediaUploadModal.value = false
-  toastStore.showToast('success', 'Files saved successfully')
-}
-
 const visualizerStore = useVisualizerStore()
 const visArea = useTemplateRef('visArea')
 
@@ -381,6 +403,21 @@ const currentImage = computed(() =>
     ? model.value?.images[visualizerStore.selectedIndex - 1]
     : null,
 )
+
+const {
+  showMediaUploadModal,
+  showDeleteImgModal,
+  showDeletePDFModal,
+  imgToDelete,
+  pdfToDelete,
+  handleMediaUploaded,
+  handleDeleteImg,
+  cancelImgDelete,
+  confirmImgDelete,
+  handleDeletePdf,
+  cancelPdfDelete,
+  confirmPdfDelete,
+} = useMedia(model, hasPermissions)
 
 onMounted(() => {
   fetchModelData()

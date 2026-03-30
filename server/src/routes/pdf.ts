@@ -1,7 +1,12 @@
 import { Router } from 'express'
 import { authGuard } from '../middleware/authGuard'
 import { validateBody, validateModifyPermissions } from '../middleware/validate'
-import { createPdfs, processPdf, cancelPdfs } from '../controllers/pdf'
+import {
+  createPdfs,
+  deletePdf,
+  processPdf,
+  cancelPdfs,
+} from '../controllers/pdf'
 import { upload } from '../middleware/upload'
 import { modelPdfsSchema } from '../scripts/validators'
 
@@ -13,6 +18,13 @@ router.post(
   validateModifyPermissions((req) => req.body.modelId),
   validateBody(modelPdfsSchema),
   createPdfs,
+)
+
+router.delete(
+  '/',
+  authGuard,
+  validateModifyPermissions((req) => req.body.modelId),
+  deletePdf,
 )
 
 router.post(

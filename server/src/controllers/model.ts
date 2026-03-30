@@ -4,6 +4,7 @@ import {
   generatePresignedUrl,
   generatePresignedUploadUrl,
   deleteObjectFromR2,
+  deleteAllFromR2,
 } from '../scripts/r2Storage'
 import { ModelRequestBody } from '../scripts/validators'
 import { withPrismaRetry } from '../scripts/prisma'
@@ -336,21 +337,10 @@ export const deleteModel = async (
       return
     }
 
-    await prisma.model.delete({
-      where: {
-        id: modelId,
-      },
-    })
-
-    const filesToDelete = [
-      `${modelId}/model.glb`,
-      `${modelId}/thumbnail.png`,
-      // Add multimedia files here
-    ]
-
-    for (const file of filesToDelete) {
-      await deleteObjectFromR2(BUCKET_NAME, file)
-    }
+    await Promise.all([
+      prisma.model.delete({ where: { id: modelId } }),
+      deleteAllFromR2(BUCKET_NAME, `${modelId}/`),
+    ])
 
     res.status(200).json({ message: `Model ${modelId} deleted successfully!` })
   } catch (error) {
