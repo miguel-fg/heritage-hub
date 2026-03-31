@@ -204,7 +204,7 @@ const processFiles = async (files: File[]) => {
   const entries: ProcessedFile[] = files.map((f) => ({
     id: uuid(),
     file: f,
-    type: f.type === 'application/pdf' ? 'pdf' : 'image',
+    type: f.type.includes('pdf') ? 'pdf' : 'image',
     progress: 0,
     error: false,
   }))

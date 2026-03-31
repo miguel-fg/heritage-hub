@@ -39,36 +39,58 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
+import { useToastStore } from '../stores/toastStore'
+import { validateFileType } from '../scripts/fileValidator'
 
 const emit = defineEmits<{ files: [files: File[]] }>()
 
-const ACCEPTED = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'application/pdf',
-]
+const toastStore = useToastStore()
 
 const zoneActive = ref(false)
 const toggleActive = () => {
   zoneActive.value = !zoneActive.value
 }
 
-const processFiles = (raw: FileList) => {
-  const valid = Array.from(raw).filter((f) => ACCEPTED.includes(f.type))
-  if (valid.length) emit('files', valid)
+const processFiles = async (raw: FileList) => {
+  const filesArray = Array.from(raw)
+
+  const validFiles: File[] = []
+  let rejectedCount = 0
+
+  for (const file of filesArray) {
+    const isValid = await validateFileType(file)
+    if (isValid) {
+      validFiles.push(file)
+    } else {
+      rejectedCount++
+    }
+  }
+
+  if (rejectedCount > 0) {
+    toastStore.showToast(
+      'error',
+      `${rejectedCount} file(s) rejected: Invalid or corrupted format.`,
+    )
+  }
+
+  if (validFiles.length) {
+    emit('files', validFiles)
+  }
 }
 
 const handleFileChange = (e: Event) => {
   const input = e.target as HTMLInputElement
 
   if (input.files) processFiles(input.files)
+
+  input.value = ''
 }
 
 const handleDrop = async (e: DragEvent) => {
-  toggleActive()
+  zoneActive.value = false
 
-  if (e.dataTransfer?.files.length) processFiles(e.dataTransfer.files)
+  if (e.dataTransfer?.files.length) {
+    await processFiles(e.dataTransfer.files)
+  }
 }
 </script>
