@@ -159,7 +159,12 @@
                 <button
                   v-if="hasPermissions"
                   @click="() => handleDeletePdf(file.id)"
-                  class="p-2 cursor-pointer text-danger-500 hover:text-danger-700 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                  class="p-2 cursor-pointer text-danger-500 hover:text-danger-700 transition-all duration-300"
+                  :class="
+                    isMobileDevice
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  "
                 >
                   <Icon icon="bx:trash" width="24" height="24" />
                 </button>
