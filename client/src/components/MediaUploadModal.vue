@@ -33,7 +33,7 @@
           </label>
           <label
             for="embed"
-            class="flex flex-col items-center w-full cursor-pointer gap-1 pb-2"
+            class="flex flex-col items-center w-full gap-1 pb-2"
             :class="
               uploadType === 'embed'
                 ? 'font-semibold text-primary-500 border-b-2 border-primary-500'
@@ -49,10 +49,16 @@
               name="media-type"
               value="embed"
               class="hidden"
+              disabled
             />
           </label>
         </div>
-        <MediaDropzone @files="processFiles" />
+        <div class="mb-5">
+          <MediaDropzone @files="processFiles" />
+          <p class="text-xs md:text-sm mt-2 text-grayscale-600">
+            Supported Formats: JPG, PNG, WEBP, PDF
+          </p>
+        </div>
         <div
           v-if="fileList.length"
           class="flex flex-col max-h-62 overflow-y-auto mb-5 gap-3"

@@ -1,7 +1,7 @@
 <template>
   <div class="w-full @container">
     <div
-      class="w-full min-h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
+      class="w-full min-h-screen mx-auto mt-10 md:mt-15 lg:mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
     >
       <ModelPageToolbar
         :has-permissions="hasPermissions"
@@ -25,11 +25,11 @@
       </div>
       <div
         v-else-if="!loading && model"
-        class="flex flex-col gap-4 lg:flex-row mt-5"
+        class="flex flex-col gap-4 lg:flex-row mt-2 md:mt-5"
       >
         <div
           ref="visArea"
-          class="flex h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center relative group"
+          class="flex h-90 md:h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center relative group"
         >
           <Visualizer :modelId="model.id" :downloadable="model.downloadable" />
           <Transition name="fase">
@@ -45,11 +45,17 @@
             </div>
           </Transition>
           <ImageDrawer
+            v-show="model.images.length > 0"
             :modelId="model.id"
             :images="model.images"
             :has-permissions="hasPermissions"
             @delete-image="handleDeleteImg"
             class="opacity-0 group-hover:opacity-100 transition-all duration-300"
+            :class="
+              isMobileDevice
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100'
+            "
           />
         </div>
         <div class="flex flex-col gap-4 lg:w-4/9">
@@ -126,7 +132,10 @@
               </p>
             </div>
           </div>
-          <div class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4">
+          <div
+            v-if="model.pdfs.length > 0"
+            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4"
+          >
             <h2 class="subtitle text-primary-500">Further Reading</h2>
             <ul class="body text-info-600 underline">
               <li
@@ -255,6 +264,7 @@ import { useEdit } from '../scripts/useEdit'
 import { isDefined, useEventListener } from '@vueuse/core'
 import { useVisualizerStore } from '../stores/visualizerStore'
 import { useMedia } from '../scripts/useMedia'
+import { useDevice } from '../scripts/useDevice'
 
 const route = useRoute()
 const router = useRouter()
@@ -274,6 +284,8 @@ const hotspotStore = useHotspotStore()
 const toastStore = useToastStore()
 
 const showConfirmModal = ref(false)
+
+const { isMobileDevice } = useDevice()
 
 const environment = import.meta.env.VITE_ENVIRONMENT!
 const r2BaseURL =

@@ -5,7 +5,7 @@
     @dragover.prevent
     @drop.prevent="handleDrop"
     :class="zoneActive ? 'bg-grayscale-200' : ''"
-    class="flex justify-center items-center w-full min-h-40 border-2 border-dashed border-primary-600 rounded-sm mb-5 p-5"
+    class="flex justify-center items-center w-full min-h-40 border-2 border-dashed border-primary-600 rounded-sm p-5"
   >
     <label
       for="mediaInput"

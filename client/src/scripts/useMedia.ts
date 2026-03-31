@@ -32,7 +32,6 @@ export const useMedia = (
     }
 
     if (newPdfs.length > 0) {
-      console.log('New pdfs: ', newPdfs)
       const pdfRecords: ModelPdf[] = newPdfs.map((pdf) => ({
         ...pdf,
         modelId: model.value!.id,
