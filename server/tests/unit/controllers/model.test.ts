@@ -149,6 +149,8 @@ describe('Model Controller - Unit Tests', () => {
         tags: [fakeTag],
         dimensions: [fakeDimension],
         hotspots: [fakeHotspot],
+        images: [],
+        pdfs: [],
       }
 
       mockRequest.params = { id: fakeModel.id }
