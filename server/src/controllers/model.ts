@@ -3,7 +3,7 @@ import prisma from '../services/prisma'
 import {
   generatePresignedUrl,
   generatePresignedUploadUrl,
-  deleteObjectFromR2,
+  deleteAllFromR2,
 } from '../scripts/r2Storage'
 import { ModelRequestBody } from '../scripts/validators'
 import { withPrismaRetry } from '../scripts/prisma'
@@ -76,10 +76,55 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
           select: { type: true, value: true, unit: true },
         },
         hotspots: true,
+        images: { orderBy: { order: 'asc' } },
+        pdfs: {
+          select: { id: true, title: true },
+        },
       },
     })
 
-    res.status(200).json({ model })
+    if (!model) {
+      res.status(404).json({ error: 'Model not found' })
+      return
+    }
+
+    const thumbnailUrl = await generatePresignedUrl(
+      BUCKET_NAME,
+      `${model.id}/thumbnail.png`,
+    )
+
+    const imagesWithUrls = await Promise.all(
+      model.images.map(async (img) => ({
+        ...img,
+        fullUrl: await generatePresignedUrl(
+          BUCKET_NAME,
+          `${model.id}/images/${img.id}/full.webp`,
+        ),
+        thumbUrl: await generatePresignedUrl(
+          BUCKET_NAME,
+          `${model.id}/images/${img.id}/thumb.webp`,
+        ),
+      })),
+    )
+
+    const pdfsWithUrls = await Promise.all(
+      model.pdfs.map(async (pdf) => ({
+        ...pdf,
+        url: await generatePresignedUrl(
+          BUCKET_NAME,
+          `${model.id}/pdfs/${pdf.id}.pdf`,
+        ),
+      })),
+    )
+
+    const modelData = {
+      ...model,
+      thumbnailUrl,
+      images: imagesWithUrls,
+      pdfs: pdfsWithUrls,
+    }
+
+    res.status(200).json({ model: modelData })
   } catch (error) {
     console.error('[server]: Failed to fetch model data. ERR: ', error)
     res.status(500).json({
@@ -332,21 +377,10 @@ export const deleteModel = async (
       return
     }
 
-    await prisma.model.delete({
-      where: {
-        id: modelId,
-      },
-    })
-
-    const filesToDelete = [
-      `${modelId}/model.glb`,
-      `${modelId}/thumbnail.png`,
-      // Add multimedia files here
-    ]
-
-    for (const file of filesToDelete) {
-      await deleteObjectFromR2(BUCKET_NAME, file)
-    }
+    await Promise.all([
+      prisma.model.delete({ where: { id: modelId } }),
+      deleteAllFromR2(BUCKET_NAME, `${modelId}/`),
+    ])
 
     res.status(200).json({ message: `Model ${modelId} deleted successfully!` })
   } catch (error) {

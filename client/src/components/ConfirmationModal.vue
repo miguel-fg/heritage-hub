@@ -12,7 +12,10 @@
         <h1 class="title text-grayscale-900">
           <slot name="title">Are you sure?</slot>
         </h1>
-        <h2 class="font-poppins text-grayscale-700">
+        <h2
+          class="font-poppins text-grayscale-700"
+          :class="$slots.warning ? '' : 'text-center text-balance'"
+        >
           <slot name="subtitle">This action cannot be undone.</slot>
         </h2>
         <div
@@ -40,11 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import Button from "./Button.vue";
+import Button from './Button.vue'
 
 const props = defineProps({
   visible: { type: Boolean },
-});
+})
 
-const emit = defineEmits(["confirm", "cancel"]);
+const emit = defineEmits(['confirm', 'cancel'])
 </script>

@@ -35,12 +35,12 @@ vi.mock('../../../src/services/prisma', () => ({
 
 const mockGeneratePresignedUrl = vi.hoisted(() => vi.fn())
 const mockGeneratePresignedUploadUrl = vi.hoisted(() => vi.fn())
-const mockDeleteObjectFromR2 = vi.hoisted(() => vi.fn())
+const mockDeleteAllFromR2 = vi.hoisted(() => vi.fn())
 
 vi.mock('../../../src/scripts/r2Storage', () => ({
   generatePresignedUrl: mockGeneratePresignedUrl,
   generatePresignedUploadUrl: mockGeneratePresignedUploadUrl,
-  deleteObjectFromR2: mockDeleteObjectFromR2,
+  deleteAllFromR2: mockDeleteAllFromR2,
 }))
 
 import {
@@ -149,6 +149,8 @@ describe('Model Controller - Unit Tests', () => {
         tags: [fakeTag],
         dimensions: [fakeDimension],
         hotspots: [fakeHotspot],
+        images: [],
+        pdfs: [],
       }
 
       mockRequest.params = { id: fakeModel.id }
@@ -172,6 +174,10 @@ describe('Model Controller - Unit Tests', () => {
             select: { type: true, value: true, unit: true },
           },
           hotspots: true,
+          images: { orderBy: { order: 'asc' } },
+          pdfs: {
+            select: { id: true, title: true },
+          },
         },
       })
 
@@ -432,7 +438,6 @@ describe('Model Controller - Unit Tests', () => {
 
       prismaMock.model.findUnique.mockResolvedValue(fakeModel)
       prismaMock.model.delete.mockResolvedValue(fakeModel)
-      mockDeleteObjectFromR2.mockResolvedValue(undefined)
 
       await deleteModel(mockRequest as Request, mockResponse as Response)
 
@@ -444,7 +449,7 @@ describe('Model Controller - Unit Tests', () => {
         where: { id: fakeModel.id },
       })
 
-      expect(mockDeleteObjectFromR2).toHaveBeenCalledTimes(2)
+      expect(mockDeleteAllFromR2).toHaveBeenCalledTimes(1)
       expect(mockStatus).toHaveBeenCalledWith(200)
       expect(mockJson).toHaveBeenCalledWith({
         message: `Model ${fakeModel.id} deleted successfully!`,

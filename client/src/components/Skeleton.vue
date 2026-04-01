@@ -56,7 +56,7 @@
     </div>
     <div
       v-else-if="props.for === 'model'"
-      class="flex items-center justify-center w-full h-120 bg-grayscale-200/50 rounded-sm"
+      class="flex items-center justify-center w-full h-90 md:h-120 lg:h-200 max-h-[650px] bg-grayscale-200/50 rounded-sm"
     >
       <svg
         class="w-10 h-10 fill-grayscale-200 text-grayscale-100"
@@ -76,5 +76,5 @@
 <script setup lang="ts">
 const props = defineProps({
   for: String,
-});
+})
 </script>

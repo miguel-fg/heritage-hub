@@ -27,6 +27,7 @@ model Model {
     dimensions      Dimension[]
     hotspots        Hotspot[]
     images          ModelImage[]
+    pdfs            ModelPdfs[]
 }
 
 model Hotspot {
@@ -82,6 +83,14 @@ model ModelImage {
 
     order         Int
     alt           String?
+    createdAt     DateTime   @default(now())
+}
+
+model ModelPdfs {
+    id            String     @id @default(nanoid(16)) @db.Uuid
+    model         Model      @relation(fields: [modelId], references: [id], onDelete: Cascade)
+    modelId       String     @db.Uuid
+    title         String?
     createdAt     DateTime   @default(now())
 }
 

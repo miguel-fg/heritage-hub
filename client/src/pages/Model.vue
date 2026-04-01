@@ -1,7 +1,7 @@
 <template>
   <div class="w-full @container">
     <div
-      class="w-full min-h-screen mx-auto mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
+      class="w-full min-h-screen mx-auto mt-10 md:mt-15 lg:mt-20 max-w-[1920px] px-4 md:px-8 lg:px-16 @min-[1984px]:px-0"
     >
       <ModelPageToolbar
         :has-permissions="hasPermissions"
@@ -12,7 +12,7 @@
             if (model) handleEdit(model)
           }
         "
-        @attach=""
+        @attach="() => (showMediaUploadModal = true)"
         @delete="() => (showConfirmModal = true)"
       />
       <div v-if="loading" class="flex flex-col gap-4 lg:flex-row">
@@ -25,12 +25,38 @@
       </div>
       <div
         v-else-if="!loading && model"
-        class="flex flex-col gap-4 lg:flex-row mt-5"
+        class="flex flex-col gap-4 lg:flex-row mt-2 md:mt-5"
       >
         <div
-          class="flex h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center"
+          ref="visArea"
+          class="flex h-90 md:h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center relative group"
         >
           <Visualizer :modelId="model.id" :downloadable="model.downloadable" />
+          <Transition name="fase">
+            <div
+              v-if="visualizerStore.selectedIndex > 0 && currentImage"
+              class="absolute inset-0 flex items-center justify-center bg-white"
+            >
+              <img
+                :src="currentImage.fullUrl"
+                :alt="currentImage.alt ?? ''"
+                class="max-h-full max-w-full object-contain"
+              />
+            </div>
+          </Transition>
+          <ImageDrawer
+            v-show="model.images.length > 0"
+            :thumbnail="model.thumbnailUrl"
+            :images="model.images"
+            :has-permissions="hasPermissions"
+            @delete-image="handleDeleteImg"
+            class="opacity-0 group-hover:opacity-100 transition-all duration-300"
+            :class="
+              isMobileDevice
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100'
+            "
+          />
         </div>
         <div class="flex flex-col gap-4 lg:w-4/9">
           <div>
@@ -75,9 +101,9 @@
               model.dimensions.length > 0 ||
               model.materials.length > 0
             "
-            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4 md:gap-0 md:flex-row md:justify-between"
+            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4 md:flex-row md:justify-between"
           >
-            <div v-if="model.dimensions.length > 0">
+            <div v-if="model.dimensions.length > 0" class="shrink-0">
               <h2 class="subtitle text-primary-500">Dimensions</h2>
               <ul class="body text-grayscale-900">
                 <li v-for="dim in model.dimensions">
@@ -105,6 +131,45 @@
                 {{ model.provenance }}
               </p>
             </div>
+          </div>
+          <div
+            v-if="model.pdfs.length > 0"
+            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4"
+          >
+            <h2 class="subtitle text-primary-500">Further Reading</h2>
+            <ul class="body text-info-600 underline">
+              <li
+                v-for="file in model.pdfs"
+                class="mb-4 flex gap-4 items-center group"
+              >
+                <a
+                  :href="file.url"
+                  :download="`${file.title ?? 'article'}`"
+                  target="_blank"
+                  referrer="noreferrer"
+                  class="flex gap-2 items-center hover:text-info-700 w-min transition-colors duration-300"
+                >
+                  <Icon
+                    icon="vscode-icons:file-type-pdf2"
+                    width="40"
+                    height="40"
+                  />
+                  {{ file.title ?? 'article.pdf' }}
+                </a>
+                <button
+                  v-if="hasPermissions"
+                  @click="() => handleDeletePdf(file.id)"
+                  class="p-2 cursor-pointer text-danger-500 hover:text-danger-700 transition-all duration-300"
+                  :class="
+                    isMobileDevice
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  "
+                >
+                  <Icon icon="bx:trash" width="24" height="24" />
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -146,16 +211,49 @@
     <template #confirm>Delete</template>
     <template #cancel>Cancel</template>
   </ConfirmationModal>
+  <ConfirmationModal
+    :visible="showDeleteImgModal && imgToDelete !== null"
+    @confirm="confirmImgDelete"
+    @cancel="cancelImgDelete"
+  >
+    <template #title>Confirm deletion</template>
+    <template #subtitle
+      >Are you sure you want to permanently delete this image?</template
+    >
+    <template #confirm>Delete</template>
+    <template #cancel>Cancel</template>
+  </ConfirmationModal>
+  <ConfirmationModal
+    :visible="showDeletePDFModal && pdfToDelete !== null"
+    @confirm="confirmPdfDelete"
+    @cancel="cancelPdfDelete"
+  >
+    <template #title>Confirm deletion</template>
+    <template #subtitle
+      >Are you sure you want to permanently delete this file?</template
+    >
+    <template #confirm>Delete</template>
+    <template #cancel>Cancel</template>
+  </ConfirmationModal>
+  <MediaUploadModal
+    v-if="model"
+    :visible="showMediaUploadModal"
+    :model-id="model.id"
+    :image-count="model.images.length"
+    @done="(images, pdfs) => handleMediaUploaded(images, pdfs)"
+    @cancel="() => (showMediaUploadModal = false)"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axiosInstance from '../scripts/axiosConfig'
 import Button from '../components/Button.vue'
 import Tag from '../components/Tag.vue'
 import Skeleton from '../components/Skeleton.vue'
 import Visualizer from '../components/three/Visualizer.vue'
+import ImageDrawer from '../components/ImageDrawer.vue'
 import { useDimensions } from '../scripts/useDimensions'
 import Footer from '../components/Footer.vue'
 import { useUserStore } from '../stores/userStore'
@@ -163,11 +261,15 @@ import { useModelStore } from '../stores/modelStore'
 import { useHotspotStore } from '../stores/hotspotStore'
 import { useToastStore } from '../stores/toastStore'
 import ConfirmationModal from '../components/ConfirmationModal.vue'
+import MediaUploadModal from '../components/MediaUploadModal.vue'
 import ModelPageToolbar from '../components/ModelPageToolbar.vue'
 import { Icon } from '@iconify/vue'
 import { type Model } from '../types/model'
 import { useEdit } from '../scripts/useEdit'
-import { isDefined } from '@vueuse/core'
+import { isDefined, useEventListener } from '@vueuse/core'
+import { useVisualizerStore } from '../stores/visualizerStore'
+import { useMedia } from '../scripts/useMedia'
+import { useDevice } from '../scripts/useDevice'
 
 const route = useRoute()
 const router = useRouter()
@@ -187,6 +289,8 @@ const hotspotStore = useHotspotStore()
 const toastStore = useToastStore()
 
 const showConfirmModal = ref(false)
+
+const { isMobileDevice } = useDevice()
 
 const cleanDate = (rawDate: string): string => {
   const date = new Date(rawDate)
@@ -298,6 +402,34 @@ const handleEdit = async (model: Model) => {
   }
 }
 
+const visualizerStore = useVisualizerStore()
+const visArea = useTemplateRef('visArea')
+
+useEventListener(visArea, 'mouseleave', () => {
+  visualizerStore.closeImageDrawer()
+})
+
+const currentImage = computed(() =>
+  visualizerStore.selectedIndex > 0
+    ? model.value?.images[visualizerStore.selectedIndex - 1]
+    : null,
+)
+
+const {
+  showMediaUploadModal,
+  showDeleteImgModal,
+  showDeletePDFModal,
+  imgToDelete,
+  pdfToDelete,
+  handleMediaUploaded,
+  handleDeleteImg,
+  cancelImgDelete,
+  confirmImgDelete,
+  handleDeletePdf,
+  cancelPdfDelete,
+  confirmPdfDelete,
+} = useMedia(model, hasPermissions)
+
 onMounted(() => {
   fetchModelData()
 })
@@ -307,5 +439,7 @@ onUnmounted(() => {
   loading.value = false
   error.value = null
   hotspotStore.cleanHotspotState()
+  visualizerStore.setSelectedIndex(0)
+  visualizerStore.closeImageDrawer()
 })
 </script>

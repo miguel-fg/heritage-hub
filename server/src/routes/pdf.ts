@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import { authGuard } from '../middleware/authGuard'
-import {
-  createImages,
-  deleteImage,
-  processImage,
-  cancelImages,
-} from '../controllers/image'
 import { validateBody, validateModifyPermissions } from '../middleware/validate'
-import { modelImagesSchema } from '../scripts/validators'
+import {
+  createPdfs,
+  deletePdf,
+  processPdf,
+  cancelPdfs,
+} from '../controllers/pdf'
 import { upload } from '../middleware/upload'
+import { modelPdfsSchema } from '../scripts/validators'
 
 const router = Router()
 
@@ -16,15 +16,15 @@ router.post(
   '/',
   authGuard,
   validateModifyPermissions((req) => req.body.modelId),
-  validateBody(modelImagesSchema),
-  createImages,
+  validateBody(modelPdfsSchema),
+  createPdfs,
 )
 
 router.delete(
   '/',
   authGuard,
   validateModifyPermissions((req) => req.body.modelId),
-  deleteImage,
+  deletePdf,
 )
 
 router.post(
@@ -32,14 +32,14 @@ router.post(
   authGuard,
   upload.single('file'),
   validateModifyPermissions((req) => req.body.modelId),
-  processImage,
+  processPdf,
 )
 
 router.delete(
   '/process',
   authGuard,
   validateModifyPermissions((req) => req.body.modelId),
-  cancelImages,
+  cancelPdfs,
 )
 
 export default router

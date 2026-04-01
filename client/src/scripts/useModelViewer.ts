@@ -61,6 +61,7 @@ export const useModelViewer = (
       })
       renderer.value.setPixelRatio(Math.min(window.devicePixelRatio, 3))
       renderer.value.shadowMap.enabled = true
+      renderer.value.domElement.style.touchAction = 'pan-y'
 
       if (container) {
         container.value?.appendChild(renderer.value.domElement)
