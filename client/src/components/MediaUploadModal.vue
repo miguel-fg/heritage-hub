@@ -98,6 +98,8 @@ import MediaDropzone from './MediaDropzone.vue'
 import MediaListItem from './MediaListItem.vue'
 import { v4 as uuid } from 'uuid'
 import axiosInstance from '../scripts/axiosConfig'
+import { useToastStore } from '../stores/toastStore'
+import { type ModelImage, type ModelPdf } from '../types/model'
 
 const props = defineProps<{
   visible?: boolean
@@ -105,20 +107,9 @@ const props = defineProps<{
   imageCount: number
 }>()
 
-interface UploadedImage {
-  id: string
-  order: number
-  alt?: string
-}
-
-interface UploadedPDF {
-  id: string
-  title: string
-}
-
 const emit = defineEmits<{
   cancel: []
-  done: [images: UploadedImage[], pdfs: UploadedPDF[]]
+  done: [images: ModelImage[], pdfs: ModelPdf[]]
 }>()
 
 const uploadType = ref<'attach' | 'embed'>('attach')
@@ -134,6 +125,8 @@ interface ProcessedFile {
 }
 
 const fileList = ref<ProcessedFile[]>([])
+
+const toastStore = useToastStore()
 
 const uploadFile = (entry: ProcessedFile): Promise<void> => {
   const ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT!
@@ -226,7 +219,7 @@ const allReady = computed(
 const handleConfirm = async () => {
   const successful = fileList.value.filter((f) => f.progress === 100)
 
-  const images = successful
+  const imagesToCreate = successful
     .filter((f) => f.type === 'image')
     .map((f, index) => ({
       id: f.id,
@@ -234,21 +227,46 @@ const handleConfirm = async () => {
       alt: f.alt,
     }))
 
-  const pdfs = successful
+  const pdfsToCreate = successful
     .filter((f) => f.type === 'pdf')
     .map((f) => ({ id: f.id, title: f.file.name }))
 
-  await Promise.all([
-    ...(images.length > 0
-      ? [axiosInstance.post('/images', { modelId: props.modelId, images })]
-      : []),
-    ...(pdfs.length > 0
-      ? [axiosInstance.post('/pdfs', { modelId: props.modelId, pdfs })]
-      : []),
-  ])
+  try {
+    const uploadPromises: Promise<any>[] = []
 
-  fileList.value = []
-  emit('done', images, pdfs)
+    if (imagesToCreate.length > 0) {
+      uploadPromises.push(
+        axiosInstance.post('/images', {
+          modelId: props.modelId,
+          images: imagesToCreate,
+        }),
+      )
+    } else {
+      uploadPromises.push(Promise.resolve({ data: { images: [] } }))
+    }
+
+    if (pdfsToCreate.length > 0) {
+      uploadPromises.push(
+        axiosInstance.post('/pdfs', {
+          modelId: props.modelId,
+          pdfs: pdfsToCreate,
+        }),
+      )
+    } else {
+      uploadPromises.push(Promise.resolve({ data: { pdfs: [] } }))
+    }
+
+    const [imageResponse, pdfResponse] = await Promise.all(uploadPromises)
+
+    const finalImages = imageResponse.data.images
+    const finalPdfs = pdfResponse.data.pdfs
+
+    fileList.value = []
+    emit('done', finalImages, finalPdfs)
+  } catch (error) {
+    console.error('Failed to confirm media upload: ', error)
+    toastStore.showToast('error', 'Failed to save media records.')
+  }
 }
 
 const handleCancel = async () => {
