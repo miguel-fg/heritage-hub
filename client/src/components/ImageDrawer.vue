@@ -49,7 +49,7 @@
           "
         >
           <img
-            :src="`${r2BaseURL}/${props.modelId}/thumbnail.png`"
+            :src="props.thumbnail"
             class="size-full object-cover rounded-xs"
             loading="lazy"
           />
@@ -67,7 +67,7 @@
         >
           <div class="relative size-full group/delete">
             <img
-              :src="`${r2BaseURL}/${props.modelId}/images/${image.id}/thumb.webp`"
+              :src="image.thumbUrl"
               :alt="image.alt ?? ''"
               class="size-full object-cover rounded-xs"
               loading="lazy"
@@ -75,7 +75,12 @@
             <button
               v-if="props.hasPermissions"
               @click.stop="emit('delete-image', image.id)"
-              class="absolute right-1 top-1 p-1 bg-grayscale-900/60 hover:bg-grayscale-900/90 opacity-0 group-hover/delete:opacity-100 text-danger-300 hover:text-danger-400 transition-all duration-200 cursor-pointer rounded-xs"
+              class="absolute right-1 top-1 p-1 bg-grayscale-900/60 hover:bg-grayscale-900/90 active:bg-grayscale-900/90 text-danger-300 hover:text-danger-400 transition-all duration-100 cursor-pointer rounded-xs"
+              :class="
+                smallerThanMd && visualizerStore.selectedIndex === i + 1
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover/delete:opacity-100'
+              "
             >
               <Icon icon="bx:trash" width="20" height="20" />
             </button>
@@ -105,7 +110,7 @@ import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { ref, computed, watch, nextTick, onBeforeUpdate } from 'vue'
 
 const props = defineProps<{
-  modelId: string
+  thumbnail: string
   images: ModelImage[]
   hasPermissions: boolean
   class?: string
@@ -117,12 +122,6 @@ const smallerThanMd = breakpoints.smaller('md')
 const emit = defineEmits(['delete-image'])
 
 const visualizerStore = useVisualizerStore()
-
-const environment = import.meta.env.VITE_ENVIRONMENT!
-const r2BaseURL =
-  environment === 'ngrok' || environment === 'dev'
-    ? import.meta.env.VITE_R2_DEV_URL!
-    : import.meta.env.VITE_R2_PROD_URL!
 
 const drawerHeight = computed(() =>
   visualizerStore.isImageDrawerOpen ? (smallerThanMd ? 'h-25' : 'h-30') : 'h-0',

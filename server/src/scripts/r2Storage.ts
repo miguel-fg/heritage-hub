@@ -11,13 +11,14 @@ import s3Client from '../services/s3Client'
 export const generatePresignedUrl = async (
   bucketName: string,
   objectKey: string,
+  expiresIn: number = 3600,
 ): Promise<string> => {
   const command = new GetObjectCommand({
     Bucket: bucketName,
     Key: objectKey,
   })
 
-  return await getSignedUrl(s3Client, command, { expiresIn: 3600 })
+  return await getSignedUrl(s3Client, command, { expiresIn })
 }
 
 export const generatePresignedUploadUrl = async (

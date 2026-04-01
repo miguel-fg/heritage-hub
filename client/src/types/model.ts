@@ -18,6 +18,7 @@ export type Model = {
   pdfs: ModelPdf[]
   modelPath: string
   thumbnailPath: string
+  thumbnailUrl: string
   downloadable: boolean
   createdAt: string
 }
@@ -87,10 +88,13 @@ export type ModelImage = {
   order: number
   alt?: string
   createdAt?: string
+  thumbUrl: string
+  fullUrl: string
 }
 
 export type ModelPdf = {
   id: string
   title?: string
   createdAt?: string
+  url: string
 }

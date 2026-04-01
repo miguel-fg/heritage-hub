@@ -38,7 +38,7 @@
               class="absolute inset-0 flex items-center justify-center bg-white"
             >
               <img
-                :src="`${r2BaseURL}/${model.id}/images/${currentImage.id}/full.webp`"
+                :src="currentImage.fullUrl"
                 :alt="currentImage.alt ?? ''"
                 class="max-h-full max-w-full object-contain"
               />
@@ -46,7 +46,7 @@
           </Transition>
           <ImageDrawer
             v-show="model.images.length > 0"
-            :modelId="model.id"
+            :thumbnail="model.thumbnailUrl"
             :images="model.images"
             :has-permissions="hasPermissions"
             @delete-image="handleDeleteImg"
@@ -143,7 +143,7 @@
                 class="mb-4 flex gap-4 items-center group"
               >
                 <a
-                  :href="`${r2BaseURL}/${model.id}/pdfs/${file.id}.pdf`"
+                  :href="file.url"
                   :download="`${file.title ?? 'article'}`"
                   target="_blank"
                   referrer="noreferrer"
@@ -291,12 +291,6 @@ const toastStore = useToastStore()
 const showConfirmModal = ref(false)
 
 const { isMobileDevice } = useDevice()
-
-const environment = import.meta.env.VITE_ENVIRONMENT!
-const r2BaseURL =
-  environment === 'ngrok' || environment === 'dev'
-    ? import.meta.env.VITE_R2_DEV_URL!
-    : import.meta.env.VITE_R2_PROD_URL!
 
 const cleanDate = (rawDate: string): string => {
   const date = new Date(rawDate)
