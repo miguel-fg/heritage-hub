@@ -4,6 +4,7 @@ import { ModelImageRequestBody } from '../scripts/validators'
 import sharp from 'sharp'
 import s3Client from '../services/s3Client'
 import { PutObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
+import { generatePresignedUrl } from '../scripts/r2Storage'
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
 
@@ -21,11 +22,25 @@ export const createImages = async (
   const { modelId, images } = req.body
 
   try {
-    await prisma.modelImage.createMany({
+    const newImages = await prisma.modelImage.createManyAndReturn({
       data: images.map((img) => ({ ...img, modelId })),
     })
 
-    res.status(201).json({ message: 'Images created successfully' })
+    const imagesWithUrls = await Promise.all(
+      newImages.map(async (img) => ({
+        ...img,
+        fullUrl: await generatePresignedUrl(
+          BUCKET_NAME,
+          `${modelId}/images/${img.id}/full.webp`,
+        ),
+        thumbUrl: await generatePresignedUrl(
+          BUCKET_NAME,
+          `${modelId}/images/${img.id}/thumb.webp`,
+        ),
+      })),
+    )
+
+    res.status(201).json({ images: imagesWithUrls })
   } catch (error) {
     console.error('[server] Failed to create images. ERR: ', error)
     res.status(500).json({

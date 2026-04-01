@@ -18,8 +18,8 @@ export const useMedia = (
   const pdfToDelete = ref<string | null>(null)
 
   const handleMediaUploaded = (
-    newImages: { id: string; order: number; alt?: string }[],
-    newPdfs: { id: string; title: string }[],
+    newImages: ModelImage[],
+    newPdfs: ModelPdf[],
   ) => {
     if (!model.value) return
 

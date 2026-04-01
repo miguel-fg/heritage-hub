@@ -7,6 +7,7 @@ import {
 import s3Client from '../services/s3Client'
 import prisma from '../services/prisma'
 import { type ModelPdfRequestBody } from '../scripts/validators'
+import { generatePresignedUrl } from '../scripts/r2Storage'
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
 
@@ -24,11 +25,21 @@ export const createPdfs = async (
   const { modelId, pdfs } = req.body
 
   try {
-    await prisma.modelPdfs.createMany({
+    const newPdfs = await prisma.modelPdfs.createManyAndReturn({
       data: pdfs.map((pdf) => ({ ...pdf, modelId })),
     })
 
-    res.status(201).json({ message: 'PDFs created successfully' })
+    const pdfsWithUrls = await Promise.all(
+      newPdfs.map(async (pdf) => ({
+        ...pdf,
+        url: await generatePresignedUrl(
+          BUCKET_NAME,
+          `${modelId}/pdfs/${pdf.id}.pdf`,
+        ),
+      })),
+    )
+
+    res.status(201).json({ pdfs: pdfsWithUrls })
   } catch (error) {
     console.error('[server] Failed to create PDFs. ERR: ', error)
     res.status(500).json({
