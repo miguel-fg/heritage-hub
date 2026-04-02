@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center gap-2 w-full">
-    <div class="flex items-center gap-1 grow-1">
+    <div class="flex items-center gap-1 grow-1 min-w-0">
       <Icon
         v-if="isPdf"
         icon="bx:file"
@@ -15,11 +15,11 @@
         height="40"
         class="text-grayscale-500"
       />
-      <div class="flex flex-col gap-1 grow-1">
+      <div class="flex flex-col gap-1 grow-1 min-w-0">
         <div
           class="flex justify-between items-end font-poppins text-grayscale-900"
         >
-          <span>{{ props.file.name }}</span>
+          <span class="truncate min-w-0">{{ truncatedName }}</span>
           <span class="text-xs font-poppins text-grayscale-600"
             >{{ props.progress }}%</span
           >
@@ -60,4 +60,21 @@ const props = defineProps<{
 }>()
 
 const isPdf = computed(() => props.file.type === 'application/pdf')
+
+const truncatedName = computed(() => {
+  const name = props.file.name
+  const lastDot = name.lastIndexOf('.')
+
+  if (lastDot === -1) {
+    if (name.length <= 20) return name
+
+    return name.slice(0, 20) + '...'
+  }
+
+  const ext = name.slice(lastDot)
+  const base = name.slice(0, lastDot)
+
+  if (base.length <= 20) return name
+  return base.slice(0, 20) + '...' + ext
+})
 </script>

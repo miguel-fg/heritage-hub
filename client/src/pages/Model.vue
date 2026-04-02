@@ -140,21 +140,24 @@
             <ul class="body text-info-600 underline">
               <li
                 v-for="file in model.pdfs"
-                class="mb-4 flex gap-4 items-center group"
+                class="mb-4 flex gap-4 items-center group min-w-0"
               >
                 <a
                   :href="file.url"
                   :download="`${file.title ?? 'article'}`"
                   target="_blank"
                   referrer="noreferrer"
-                  class="flex gap-2 items-center hover:text-info-700 w-min transition-colors duration-300"
+                  class="flex gap-2 items-center hover:text-info-700 transition-colors duration-300 min-w-0"
                 >
                   <Icon
                     icon="vscode-icons:file-type-pdf2"
                     width="40"
                     height="40"
+                    class="shrink-0"
                   />
-                  {{ file.title ?? 'article.pdf' }}
+                  <span class="truncate">{{
+                    file.title ?? 'article.pdf'
+                  }}</span>
                 </a>
                 <button
                   v-if="hasPermissions"
