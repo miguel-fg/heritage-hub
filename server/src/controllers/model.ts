@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import prisma from '../services/prisma'
 import {
   generatePresignedUrl,
+  generateFilePresignedUrl,
   generatePresignedUploadUrl,
   deleteAllFromR2,
 } from '../scripts/r2Storage'
@@ -110,9 +111,10 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
     const pdfsWithUrls = await Promise.all(
       model.pdfs.map(async (pdf) => ({
         ...pdf,
-        url: await generatePresignedUrl(
+        url: await generateFilePresignedUrl(
           BUCKET_NAME,
           `${model.id}/pdfs/${pdf.id}.pdf`,
+          pdf.title ?? 'article.pdf',
         ),
       })),
     )

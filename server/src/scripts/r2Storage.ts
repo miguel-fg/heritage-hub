@@ -21,6 +21,21 @@ export const generatePresignedUrl = async (
   return await getSignedUrl(s3Client, command, { expiresIn })
 }
 
+export const generateFilePresignedUrl = async (
+  bucketName: string,
+  objectKey: string,
+  filename: string,
+  expiresIn: number = 3600,
+): Promise<string> => {
+  const command = new GetObjectCommand({
+    Bucket: bucketName,
+    Key: objectKey,
+    ResponseContentDisposition: `attachment; filename="${filename}"`,
+  })
+
+  return await getSignedUrl(s3Client, command, { expiresIn })
+}
+
 export const generatePresignedUploadUrl = async (
   bucketName: string,
   objectKey: string,
