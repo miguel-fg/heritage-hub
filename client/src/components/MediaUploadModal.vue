@@ -61,7 +61,7 @@
         </div>
         <div
           v-if="fileList.length"
-          class="flex flex-col max-h-62 overflow-y-auto mb-5 gap-3"
+          class="flex flex-col max-h-62 overflow-y-auto overflow-x-hidden mb-5 gap-3"
         >
           <MediaListItem
             v-for="entry in fileList"
