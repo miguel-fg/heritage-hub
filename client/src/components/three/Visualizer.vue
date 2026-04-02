@@ -338,6 +338,7 @@ const handleTouch = (event: TouchEvent) => {
 }
 
 const debouncedResize = debounce(handleResize)
+const resizeObserver = new ResizeObserver(debouncedResize.bind(debouncedResize))
 const throttledMouseMove = useThrottleFn(handleMouseMove, 20)
 
 // Media drawer
@@ -357,6 +358,10 @@ onMounted(async () => {
     await setInitialThumbnail(props.modelId)
   }
 
+  if (container.value) {
+    resizeObserver.observe(container.value)
+  }
+
   window.addEventListener('resize', debouncedResize)
 })
 
@@ -365,6 +370,7 @@ onBeforeUnmount(() => {
   hotspotStore.cleanMarkers(scene, modelScale)
   textureCleanup()
   cleanup()
+  resizeObserver.disconnect()
   window.removeEventListener('resize', debouncedResize)
 })
 </script>

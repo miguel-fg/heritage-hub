@@ -16,7 +16,7 @@
         />
       </div>
       <div v-else-if="file" class="flex flex-col gap-10 md:flex-row md:gap-16">
-        <div class="w-full md:w-3/7 md:max-h-[400px]">
+        <div class="w-full md:w-3/7 h-90 lg:h-120 md:max-h-[650px]">
           <h1 class="title text-primary-500 mb-5">New 3D Model</h1>
           <Visualizer
             :model-id="modelId"
