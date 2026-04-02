@@ -7,7 +7,7 @@ import {
 import s3Client from '../services/s3Client'
 import prisma from '../services/prisma'
 import { type ModelPdfRequestBody } from '../scripts/validators'
-import { generatePresignedUrl } from '../scripts/r2Storage'
+import { generateFilePresignedUrl } from '../scripts/r2Storage'
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
 
@@ -32,9 +32,10 @@ export const createPdfs = async (
     const pdfsWithUrls = await Promise.all(
       newPdfs.map(async (pdf) => ({
         ...pdf,
-        url: await generatePresignedUrl(
+        url: await generateFilePresignedUrl(
           BUCKET_NAME,
           `${modelId}/pdfs/${pdf.id}.pdf`,
+          pdf.title ?? 'article.pdf',
         ),
       })),
     )
