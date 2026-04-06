@@ -18,9 +18,7 @@ model Model {
     provenance      String?
     materials       Material[]
     tags            Tag[]
-    modelPath       String
-    thumbnailPath   String
-    multimediaPath  String[]
+    objFileType     FileType?
     downloadable    Boolean     @default(true)
     createdAt       DateTime    @default(now())
 
@@ -137,4 +135,9 @@ enum DimensionType {
     DEPTH
     WEIGHT
     VOLUME
+}
+
+enum FileType {
+    GLB
+    OBJ
 }

@@ -16,9 +16,8 @@ export type Model = {
   hotspots: ModelHotspot[]
   images: ModelImage[]
   pdfs: ModelPdf[]
-  modelPath: string
-  thumbnailPath: string
   thumbnailUrl: string
+  objFileType: ModelFileType
   downloadable: boolean
   createdAt: string
 }
@@ -98,3 +97,6 @@ export type ModelPdf = {
   createdAt?: string
   url: string
 }
+
+// 3D file types
+export type ModelFileType = 'GLB' | 'OBJ'

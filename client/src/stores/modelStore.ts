@@ -1,102 +1,101 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import axiosInstance from "../scripts/axiosConfig.ts";
-import { unzipSync } from "fflate";
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import axiosInstance from '../scripts/axiosConfig.ts'
+import { unzipSync } from 'fflate'
 
 interface Tag {
-  name: string;
+  name: string
 }
 
 interface Material {
-  name: string;
+  name: string
 }
 
 interface Model {
-  id: string;
-  name: string;
-  caption: string;
-  tags: Array<Tag>;
-  materials: Array<Material>;
-  thumbnailPath: string;
-  downloadable: boolean;
-  createdAt: string;
+  id: string
+  name: string
+  caption: string
+  tags: Array<Tag>
+  materials: Array<Material>
+  downloadable: boolean
+  createdAt: string
 }
 
 interface PresignedUrl {
-  url: string;
-  expiresAt: number;
+  url: string
+  expiresAt: number
 }
 
 interface ModelUrls {
-  thumbnail?: PresignedUrl;
-  object?: PresignedUrl;
+  thumbnail?: PresignedUrl
+  object?: PresignedUrl
 }
 
 interface PaginationState {
-  page: number;
-  limit: number;
-  hasMore: boolean;
-  total: number;
+  page: number
+  limit: number
+  hasMore: boolean
+  total: number
 }
 
-export const useModelStore = defineStore("models", () => {
-  const models = ref<Array<Model> | null>(null);
-  const loading = ref(false);
-  const error = ref();
+export const useModelStore = defineStore('models', () => {
+  const models = ref<Array<Model> | null>(null)
+  const loading = ref(false)
+  const error = ref()
 
-  const presignedUrlCache = ref<Record<string, ModelUrls>>({});
+  const presignedUrlCache = ref<Record<string, ModelUrls>>({})
 
   const pagination = ref<PaginationState>({
     page: 1,
     limit: 18,
     hasMore: true,
     total: 0,
-  });
+  })
 
   const fetchModels = async (limit = 18, skip = 0) => {
-    error.value = null;
-    loading.value = true;
+    error.value = null
+    loading.value = true
 
     try {
-      const response = await axiosInstance.get("/models", {
+      const response = await axiosInstance.get('/models', {
         params: {
           limit,
           skip,
         },
-      });
+      })
 
-      const { models: fetchedModels, total } = response.data;
+      const { models: fetchedModels, total } = response.data
 
-      models.value = fetchedModels;
+      models.value = fetchedModels
 
       pagination.value = {
         page: Math.floor(skip / limit) + 1,
         limit,
         total,
         hasMore: skip + limit < total,
-      };
+      }
     } catch (err) {
-      console.error("[model store]: Failed to fetch models. ERR: ", err);
-      error.value = err;
-      models.value = null;
+      console.error('[model store]: Failed to fetch models. ERR: ', err)
+      error.value = err
+      models.value = null
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
 
   const getThumbnailUrl = async (modelId: string) => {
-    const cachedModel = presignedUrlCache.value[modelId] || {};
-    const cachedThumbnail = cachedModel.thumbnail;
+    const cachedModel = presignedUrlCache.value[modelId] || {}
+    const cachedThumbnail = cachedModel.thumbnail
 
     if (cachedThumbnail && cachedThumbnail.expiresAt > Date.now()) {
-      return cachedThumbnail.url;
+      return cachedThumbnail.url
     }
 
     try {
       const response = await axiosInstance.get(
         `/models/${modelId}/thumbnail-url`,
-      );
-      const newUrl = response.data.thumbnailUrl;
+      )
+      const newUrl = response.data.thumbnailUrl
 
       presignedUrlCache.value[modelId] = {
         ...cachedModel,
@@ -104,22 +103,22 @@ export const useModelStore = defineStore("models", () => {
           url: newUrl,
           expiresAt: Date.now() + 3600 * 1000,
         },
-      };
+      }
 
-      return newUrl;
+      return newUrl
     } catch (error) {
       console.error(
-        "[model store]: Failed to fetch new presigned URL. ERR: ",
+        '[model store]: Failed to fetch new presigned URL. ERR: ',
         error,
-      );
-      return null;
+      )
+      return null
     }
-  };
+  }
 
   // Fake Thumbnail Url For Testing Only
   const getFakeThumbnailUrl = (modelId: string) => {
-    return `https://picsum.photos/400/500?random=${modelId}`;
-  };
+    return `https://picsum.photos/400/500?random=${modelId}`
+  }
 
   const getObjectUrl = async (
     modelId: string,
@@ -128,20 +127,20 @@ export const useModelStore = defineStore("models", () => {
   ) => {
     // Load model from local file
     if (editing && file) {
-      return await getLocalObjectUrl(file);
+      return await getLocalObjectUrl(file)
     }
 
     // Fetch model from cache or Cloudflare
-    const cachedModel = presignedUrlCache.value[modelId] || {};
-    const cachedObject = cachedModel.object;
+    const cachedModel = presignedUrlCache.value[modelId] || {}
+    const cachedObject = cachedModel.object
 
     if (cachedObject && cachedObject.expiresAt > Date.now()) {
-      return cachedObject.url;
+      return cachedObject.url
     }
 
     try {
-      const response = await axiosInstance.get(`/models/${modelId}/object`);
-      const newUrl = response.data.objectUrl;
+      const response = await axiosInstance.get(`/models/${modelId}/object`)
+      const newUrl = response.data.objectUrl
 
       presignedUrlCache.value[modelId] = {
         ...cachedModel,
@@ -149,48 +148,48 @@ export const useModelStore = defineStore("models", () => {
           url: newUrl,
           expiresAt: Date.now() + 3600 * 1000,
         },
-      };
+      }
 
-      return newUrl;
+      return newUrl
     } catch (error) {
       console.error(
-        "[model store]: Failed to fetch new presigned URL. ERR: ",
+        '[model store]: Failed to fetch new presigned URL. ERR: ',
         error,
-      );
-      return null;
+      )
+      return null
     }
-  };
+  }
 
   const getLocalObjectUrl = async (file: File) => {
     if (!file) {
-      console.error("Local file not found");
-      throw new Error("Local file not found");
+      console.error('Local file not found')
+      throw new Error('Local file not found')
     }
 
-    const filename = file.name.toLowerCase();
+    const filename = file.name.toLowerCase()
 
-    if (filename.endsWith(".glb")) {
-      return URL.createObjectURL(file);
+    if (filename.endsWith('.glb')) {
+      return URL.createObjectURL(file)
     }
 
-    if (filename.endsWith(".zip")) {
-      const arrayBuffer = await file.arrayBuffer();
-      const files = unzipSync(new Uint8Array(arrayBuffer));
+    if (filename.endsWith('.zip')) {
+      const arrayBuffer = await file.arrayBuffer()
+      const files = unzipSync(new Uint8Array(arrayBuffer))
 
       const glbs = Object.entries(files).filter(([path]) =>
-        path.toLowerCase().endsWith(".glb"),
-      );
+        path.toLowerCase().endsWith('.glb'),
+      )
 
       if (glbs.length > 0) {
-        const [_, data] = glbs[0];
-        const blob = new Blob([data], { type: "model/gltf-binary" });
-        return URL.createObjectURL(blob);
+        const [_, data] = glbs[0]
+        const blob = new Blob([data], { type: 'model/gltf-binary' })
+        return URL.createObjectURL(blob)
       }
     }
 
-    console.error("Unsupported file format detected");
-    throw new Error("Unsupported file format detected");
-  };
+    console.error('Unsupported file format detected')
+    throw new Error('Unsupported file format detected')
+  }
 
   const resetPagination = () => {
     pagination.value = {
@@ -198,21 +197,21 @@ export const useModelStore = defineStore("models", () => {
       limit: pagination.value.limit,
       hasMore: true,
       total: 0,
-    };
-    models.value = null;
-  };
+    }
+    models.value = null
+  }
 
   const removeCachedUrls = (modelId: string) => {
-    delete presignedUrlCache.value[modelId];
-  };
+    delete presignedUrlCache.value[modelId]
+  }
 
   const removeModelById = (modelId: string) => {
     if (models.value) {
-      models.value = models.value.filter((m) => m.id !== modelId);
+      models.value = models.value.filter((m) => m.id !== modelId)
     }
 
-    delete presignedUrlCache.value[modelId];
-  };
+    delete presignedUrlCache.value[modelId]
+  }
 
   return {
     models,
@@ -227,5 +226,5 @@ export const useModelStore = defineStore("models", () => {
     getObjectUrl,
     removeModelById,
     removeCachedUrls,
-  };
-});
+  }
+})
