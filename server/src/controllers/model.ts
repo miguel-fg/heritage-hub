@@ -240,6 +240,7 @@ export const newModel = async (
       materials: {
         connectOrCreate: materials,
       },
+      objFileType: 'GLB',
     },
   })
 

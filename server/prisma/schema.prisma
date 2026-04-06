@@ -18,7 +18,7 @@ model Model {
     provenance      String?
     materials       Material[]
     tags            Tag[]
-    objFileType     FileType?
+    objFileType     FileType
     downloadable    Boolean     @default(true)
     createdAt       DateTime    @default(now())
 
