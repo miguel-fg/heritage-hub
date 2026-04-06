@@ -33,7 +33,6 @@ export const getModels = async (req: Request, res: Response): Promise<void> => {
             name: true,
           },
         },
-        thumbnailPath: true,
         downloadable: true,
         createdAt: true,
       },
@@ -235,9 +234,6 @@ export const newModel = async (
       accNum,
       provenance,
       downloadable,
-      modelPath: `${id}/model.glb`,
-      thumbnailPath: `${id}/thumbnail.png`,
-      multimediaPath: [],
       tags: {
         connectOrCreate: tags,
       },
