@@ -3,9 +3,10 @@ import axiosInstance from './axiosConfig'
 import { type DimensionKey, type Dimension, type Hotspot } from '../types/model'
 import axios from 'axios'
 import { useDimensions } from './useDimensions'
+import { type ModelFiles } from '../types/model'
 
 // GLB File
-const file = ref<File | null>(null)
+const file = ref<ModelFiles | null>(null)
 
 // ModelForm fields
 const mName = ref<string>('')
