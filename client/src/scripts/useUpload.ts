@@ -1,6 +1,12 @@
 import { ref } from 'vue'
 import axiosInstance from './axiosConfig'
-import { type DimensionKey, type Dimension, type Hotspot } from '../types/model'
+import {
+  type DimensionKey,
+  type Dimension,
+  type Hotspot,
+  type ModelAssets,
+  type AssetType,
+} from '../types/model'
 import axios from 'axios'
 import { useDimensions } from './useDimensions'
 import { type ModelFiles } from '../types/model'
@@ -76,6 +82,8 @@ export const useUpload = () => {
   const error = ref<any>(null)
 
   const publishModel = async (modelId: string): Promise<boolean> => {
+    if (!file.value) return false
+
     loading.value = true
 
     const formData = {
@@ -86,10 +94,12 @@ export const useUpload = () => {
       accNum: mAccNum.value,
       provenance: mProvenance.value,
       downloadable: downloadable.value,
+      objFileType: file.value.type,
       materials: sanitizeMultiselect(selectedMaterials.value),
       tags: sanitizeMultiselect(selectedTags.value),
       dimensions: sanitizeDimensions(selectedDimensions.value, modelId),
       hotspots: sanitizeHotspots(selectedHotspots.value, modelId),
+      assets: sanitizeAssets(modelId),
     }
 
     let uploadSuccess = false
@@ -344,6 +354,24 @@ export const useUpload = () => {
     }
 
     return true
+  }
+
+  const sanitizeAssets = (modelId: string): ModelAssets => {
+    if (!file.value) throw new Error('No files to populate assets')
+
+    if (file.value.type === 'GLB') {
+      return [{ modelId, type: 'GLB', filename: file.value.glb.name }]
+    }
+
+    return [
+      { modelId, type: 'OBJ', filename: file.value.obj.name },
+      { modelId, type: 'MTL', filename: file.value.mtl.name },
+      ...file.value.textures.map((t) => ({
+        modelId,
+        type: 'TEXTURE' as AssetType,
+        filename: t.name,
+      })),
+    ]
   }
 
   const resetUploadState = () => {

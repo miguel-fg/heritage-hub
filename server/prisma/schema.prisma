@@ -16,12 +16,13 @@ model Model {
     caption         String
     description     String
     provenance      String?
-    materials       Material[]
-    tags            Tag[]
     objFileType     FileType
     downloadable    Boolean     @default(true)
     createdAt       DateTime    @default(now())
 
+    assets          Asset[]
+    materials       Material[]
+    tags            Tag[]
     dimensions      Dimension[]
     hotspots        Hotspot[]
     images          ModelImage[]
@@ -70,6 +71,15 @@ model Dimension {
     type      DimensionType
     value     Float
     unit      String
+}
+
+model Asset {
+    id        Int        @id @default(autoincrement())
+    model     Model      @relation(fields: [modelId], references: [id], onDelete: Cascade)
+    modelId   String     @db.Uuid
+    
+    type      AssetType
+    filename  String
 }
 
 /* ----------- MULTIMEDIA TABLES ------------ */
@@ -140,4 +150,11 @@ enum DimensionType {
 enum FileType {
     GLB
     OBJ
+}
+
+enum AssetType {
+    GLB
+    OBJ
+    MTL
+    TEXTURE
 }

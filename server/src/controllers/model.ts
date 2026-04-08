@@ -246,10 +246,12 @@ export const newModel = async (
     accNum,
     provenance,
     downloadable,
+    objFileType,
     tags,
     materials,
     dimensions,
     hotspots,
+    assets,
   } = req.body
 
   const createModel = prisma.model.create({
@@ -262,13 +264,13 @@ export const newModel = async (
       accNum,
       provenance,
       downloadable,
+      objFileType,
       tags: {
         connectOrCreate: tags,
       },
       materials: {
         connectOrCreate: materials,
       },
-      objFileType: 'GLB',
     },
   })
 
@@ -280,9 +282,18 @@ export const newModel = async (
     data: hotspots,
   })
 
+  const createAssets = prisma.asset.createMany({
+    data: assets,
+  })
+
   try {
     await withPrismaRetry(() =>
-      prisma.$transaction([createModel, createDimensions, createHotspots]),
+      prisma.$transaction([
+        createModel,
+        createDimensions,
+        createHotspots,
+        createAssets,
+      ]),
     )
 
     res.status(201).json({ message: 'Model created successfully', modelId: id })

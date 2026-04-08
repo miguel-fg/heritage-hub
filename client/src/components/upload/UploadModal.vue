@@ -167,6 +167,7 @@ const uploadModel = async () => {
 
   if (!uploaded) {
     toastStore.showToast('error', 'Failed to publish model')
+    console.error('Failed to upload model to Cloudflare')
     publishing.value = false
     return
   }
@@ -178,6 +179,10 @@ const uploadModel = async () => {
 
   if (!success) {
     toastStore.showToast('error', 'Failed to publish model')
+    console.error('Failed to write model information to database')
+    console.warn(
+      `Orphaned files in cloud storage for model ID: ${modelId.value}.`,
+    )
     publishing.value = false
     return
   }

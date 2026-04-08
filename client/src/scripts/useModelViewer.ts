@@ -272,7 +272,7 @@ export const useModelViewer = (
 
       console.log('GLB format detected. Loading..')
       const glbFile =
-        editing && fileRef?.type === 'GLB' ? fileRef.file : undefined
+        editing && fileRef?.type === 'GLB' ? fileRef.glb : undefined
       const url = await modelStore.getGLBUrl(modelId, editing, glbFile)
       return await loadGLBModel(url)
     } catch (error) {

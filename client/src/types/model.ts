@@ -113,3 +113,11 @@ export type OBJUrls = {
     filename: string
   }[]
 }
+
+export type AssetType = 'GLB' | 'OBJ' | 'MTL' | 'TEXTURE'
+
+export type ModelAssets = {
+  modelId: string
+  type: AssetType
+  filename: string
+}[]

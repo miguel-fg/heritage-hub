@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col w-full">
+  <div class="flex flex-col w-full gap-1">
     <label :for="props.fieldId" class="subtitle text-grayscale-700">{{
       props.label + mandatory
     }}</label>
