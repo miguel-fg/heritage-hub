@@ -8,7 +8,7 @@
       v-if="loading"
       class="absolute top-0 left-0 z-50 w-full h-full flex flex-col justify-center items-center"
     >
-      <h1 class="subtitle text-grayscale-900">Loading 3D Model</h1>
+      <h1 class="subtitle text-grayscale-900 mb-2">Loading 3D Model</h1>
       <div class="bg-grayscale-100 h-2 w-2/3 rounded-xs">
         <div
           class="h-full bg-primary-500 transition-all duration-300 ease-out"
@@ -67,7 +67,14 @@
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef, onMounted, ref, watch, onBeforeUnmount } from 'vue'
+import {
+  useTemplateRef,
+  onMounted,
+  ref,
+  watch,
+  onBeforeUnmount,
+  type PropType,
+} from 'vue'
 import { useHotspotStore } from '../../stores/hotspotStore'
 import { useToolbar } from '../../scripts/useToolbar'
 import Toolbar from './Toolbar.vue'
@@ -82,12 +89,13 @@ import { useModelViewer } from '../../scripts/useModelViewer'
 import { useHotspots } from '../../scripts/useHotspots'
 import { useThumbnail } from '../../scripts/useThumbnail'
 import { useVisualizerStore } from '../../stores/visualizerStore'
+import { type ModelFiles } from '../../types/model'
 
 const props = defineProps({
   modelId: { type: String, required: true },
   downloadable: { type: Boolean, default: false },
   editing: { type: Boolean, default: false },
-  fileRef: { type: File, required: false },
+  fileRef: { type: Object as PropType<ModelFiles>, required: false },
   captureRequest: { type: Boolean, default: false },
   deleteUnsaved: { type: Boolean, default: false },
   commitUnsaved: { type: Boolean, default: false },

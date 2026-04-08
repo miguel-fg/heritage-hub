@@ -102,5 +102,14 @@ export type ModelPdf = {
 export type ModelFileType = 'GLB' | 'OBJ'
 
 export type ModelFiles =
-  | { type: 'GLB'; file: File }
+  | { type: 'GLB'; glb: File }
   | { type: 'OBJ'; obj: File; mtl: File; textures: File[] }
+
+export type OBJUrls = {
+  obj: string
+  mtl: string
+  textures: {
+    url: string
+    filename: string
+  }[]
+}

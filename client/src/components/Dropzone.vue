@@ -1,5 +1,5 @@
 <template>
-  <h1 class="title text-primary-500">File Select</h1>
+  <h1 class="title text-primary-500 mb-5">File Select</h1>
   <div
     @dragenter.prevent="toggleActive"
     @dragleave="toggleActive"
@@ -20,7 +20,7 @@
         Click to choose a
         <span class="font-bold">.glb</span>
         file or an <span class="font-bold">.obj</span> bundle (.obj + .mtl +
-        textures), drag and drop them here.
+        textures) or drag and drop them here.
       </p>
     </label>
     <input
@@ -166,7 +166,7 @@ const processFiles = async (incoming: File[]) => {
         return
       }
 
-      file.value = { type: 'GLB', file: glb }
+      file.value = { type: 'GLB', glb }
       emit('update')
     } catch {
       toastStore.showToast(
@@ -188,7 +188,7 @@ const processFiles = async (incoming: File[]) => {
       return
     }
 
-    file.value = { type: 'GLB', file: incoming[0] }
+    file.value = { type: 'GLB', glb: incoming[0] }
     emit('update')
     return
   }

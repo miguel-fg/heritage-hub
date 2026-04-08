@@ -4,6 +4,7 @@ import { type DimensionKey, type Dimension, type Hotspot } from '../types/model'
 import axios from 'axios'
 import { useDimensions } from './useDimensions'
 import { type ModelFiles } from '../types/model'
+import { dataUrlToFile } from './hhUtils'
 
 // GLB File
 const file = ref<ModelFiles | null>(null)
@@ -254,34 +255,95 @@ export const useUpload = () => {
     return result
   }
 
-  const getObjectUploadUrl = async (modelId: string) => {
+  const getObjectUploadUrls = async (modelId: string) => {
     try {
-      const response = await axiosInstance.post(`/models/upload-url`, {
+      if (!file.value) return null
+
+      const body: Record<string, unknown> = {
         modelId,
-      })
+        fileType: file.value.type,
+      }
 
-      const urls = response.data
+      if (file.value.type === 'OBJ') {
+        body.textures = file.value.textures.map((t) => t.name)
+      }
 
-      return urls
+      const response = await axiosInstance.post(`/models/upload-url`, body)
+
+      return response.data
     } catch (error) {
       console.error('Failed to fetch upload presigned URL. ERR: ', error)
       return null
     }
   }
 
-  const uploadModeltoR2 = async (file: File, presignedUrl: string) => {
+  const uploadFileToR2 = async (file: File, presignedUrl: string) => {
     try {
       const response = await axios.put(presignedUrl, file)
 
-      if (response.status >= 200 && response.status < 300) {
-        return true
-      } else {
-        throw new Error(`Upload failed with status: ${response.status}`)
-      }
+      return response.status >= 200 && response.status < 300
     } catch (error) {
       console.error('Error uploading file to Cloudflare R2. ERR: ', error)
       return false
     }
+  }
+
+  const uploadGLBModelToR2 = async (modelId: string): Promise<boolean> => {
+    if (!file.value || file.value.type !== 'GLB' || !thumbnail.value)
+      return false
+
+    const urls = await getObjectUploadUrls(modelId)
+    if (!urls) return false
+
+    const { modelUrl, thumbnailUrl } = urls
+
+    const modelUploaded = await uploadFileToR2(file.value.glb, modelUrl)
+    if (!modelUploaded) return false
+
+    const thumbnailUploaded = await uploadFileToR2(
+      dataUrlToFile(thumbnail.value),
+      thumbnailUrl,
+    )
+    if (!thumbnailUploaded) return false
+
+    return true
+  }
+
+  const uploadOBJModelToR2 = async (modelId: string): Promise<boolean> => {
+    if (!file.value || file.value.type !== 'OBJ' || !thumbnail.value)
+      return false
+
+    const urls = await getObjectUploadUrls(modelId)
+    if (!urls) return false
+
+    const { modelUrl, materialsUrl, thumbnailUrl, textureUrls } = urls
+
+    const modelUploaded = await uploadFileToR2(file.value.obj, modelUrl)
+    if (!modelUploaded) return false
+
+    const mtlUploaded = await uploadFileToR2(file.value.mtl, materialsUrl)
+    if (!mtlUploaded) return false
+
+    const thumbnailUploaded = await uploadFileToR2(
+      dataUrlToFile(thumbnail.value),
+      thumbnailUrl,
+    )
+    if (!thumbnailUploaded) return false
+
+    for (const texture of file.value.textures) {
+      const match = textureUrls.find(
+        (t: { filename: string; url: string }) => t.filename === texture.name,
+      )
+
+      if (!match) {
+        console.error(`No presigned URL found for texture: ${texture.name}`)
+        return false
+      }
+      const uploaded = await uploadFileToR2(texture, match.url)
+      if (!uploaded) return false
+    }
+
+    return true
   }
 
   const resetUploadState = () => {
@@ -378,8 +440,10 @@ export const useUpload = () => {
     validateForm,
     loading,
     publishModel,
-    getObjectUploadUrl,
-    uploadModeltoR2,
+    getObjectUploadUrls,
+    uploadFileToR2,
+    uploadGLBModelToR2,
+    uploadOBJModelToR2,
     resetUploadState,
   }
 }
