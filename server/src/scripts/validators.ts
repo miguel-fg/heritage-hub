@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+const FILE_TYPES = ['GLB', 'OBJ'] as const
+
+const ASSET_TYPES = ['GLB', 'OBJ', 'MTL', 'TEXTURE'] as const
+
 const DIMENSION_TYPES = [
   'WIDTH',
   'HEIGHT',
@@ -32,6 +36,7 @@ export const modelSchema = z.object({
   accNum: z.string().nullable(),
   provenance: z.string().nullable(),
   downloadable: z.boolean(),
+  objFileType: z.enum(FILE_TYPES),
   tags: z.array(
     z.object({
       where: z.object({ name: z.string().min(1) }),
@@ -67,6 +72,13 @@ export const modelSchema = z.object({
       quatY: z.number(),
       quatZ: z.number(),
       quatW: z.number(),
+    }),
+  ),
+  assets: z.array(
+    z.object({
+      modelId: z.string().uuid(),
+      type: z.enum(ASSET_TYPES),
+      filename: z.string(),
     }),
   ),
 })

@@ -177,20 +177,48 @@ export const getModelUploadUrl = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { modelId } = req.body
+  const { modelId, fileType, textures } = req.body
 
   try {
-    const modelUrl = await generatePresignedUploadUrl(
-      BUCKET_NAME,
-      `${modelId}/model.glb`,
-    )
-
     const thumbnailUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
       `${modelId}/thumbnail.png`,
     )
 
-    res.status(200).json({ modelUrl, thumbnailUrl })
+    if (fileType === 'GLB') {
+      const modelUrl = await generatePresignedUploadUrl(
+        BUCKET_NAME,
+        `${modelId}/model.glb`,
+      )
+
+      res.status(200).json({ modelUrl, thumbnailUrl })
+      return
+    }
+
+    if (fileType === 'OBJ') {
+      const modelUrl = await generatePresignedUploadUrl(
+        BUCKET_NAME,
+        `${modelId}/model.obj`,
+      )
+
+      const materialsUrl = await generatePresignedUploadUrl(
+        BUCKET_NAME,
+        `${modelId}/materials.mtl`,
+      )
+
+      const textureUrls = await Promise.all(
+        textures.map((filename: string) =>
+          generatePresignedUploadUrl(
+            BUCKET_NAME,
+            `${modelId}/textures/${filename}`,
+          ).then((url) => ({ filename, url })),
+        ),
+      )
+
+      res
+        .status(200)
+        .json({ modelUrl, materialsUrl, thumbnailUrl, textureUrls })
+    }
   } catch (error) {
     console.error('[server]: Failed to generate upload URL. ERR: ', error)
     res.status(500).json({
@@ -218,10 +246,12 @@ export const newModel = async (
     accNum,
     provenance,
     downloadable,
+    objFileType,
     tags,
     materials,
     dimensions,
     hotspots,
+    assets,
   } = req.body
 
   const createModel = prisma.model.create({
@@ -234,13 +264,13 @@ export const newModel = async (
       accNum,
       provenance,
       downloadable,
+      objFileType,
       tags: {
         connectOrCreate: tags,
       },
       materials: {
         connectOrCreate: materials,
       },
-      objFileType: 'GLB',
     },
   })
 
@@ -252,9 +282,18 @@ export const newModel = async (
     data: hotspots,
   })
 
+  const createAssets = prisma.asset.createMany({
+    data: assets,
+  })
+
   try {
     await withPrismaRetry(() =>
-      prisma.$transaction([createModel, createDimensions, createHotspots]),
+      prisma.$transaction([
+        createModel,
+        createDimensions,
+        createHotspots,
+        createAssets,
+      ]),
     )
 
     res.status(201).json({ message: 'Model created successfully', modelId: id })

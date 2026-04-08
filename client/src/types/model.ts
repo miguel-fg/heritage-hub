@@ -100,3 +100,24 @@ export type ModelPdf = {
 
 // 3D file types
 export type ModelFileType = 'GLB' | 'OBJ'
+
+export type ModelFiles =
+  | { type: 'GLB'; glb: File }
+  | { type: 'OBJ'; obj: File; mtl: File; textures: File[] }
+
+export type OBJUrls = {
+  obj: string
+  mtl: string
+  textures: {
+    url: string
+    filename: string
+  }[]
+}
+
+export type AssetType = 'GLB' | 'OBJ' | 'MTL' | 'TEXTURE'
+
+export type ModelAssets = {
+  modelId: string
+  type: AssetType
+  filename: string
+}[]

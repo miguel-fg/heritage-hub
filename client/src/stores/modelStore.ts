@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axiosInstance from '../scripts/axiosConfig.ts'
 import { unzipSync } from 'fflate'
+import type { ModelFiles, OBJUrls } from '../types/model.ts'
 
 interface Tag {
   name: string
@@ -120,7 +121,7 @@ export const useModelStore = defineStore('models', () => {
     return `https://picsum.photos/400/500?random=${modelId}`
   }
 
-  const getObjectUrl = async (
+  const getGLBUrl = async (
     modelId: string,
     editing = false,
     file: File | null | undefined,
@@ -158,6 +159,26 @@ export const useModelStore = defineStore('models', () => {
       )
       return null
     }
+  }
+
+  const getOBJUrls = async (
+    _modelId: string,
+    editing = false,
+    files?: ModelFiles & { type: 'OBJ' },
+  ): Promise<OBJUrls> => {
+    if (editing && files) {
+      return {
+        obj: URL.createObjectURL(files.obj),
+        mtl: URL.createObjectURL(files.mtl),
+        textures: files.textures.map((t) => ({
+          url: URL.createObjectURL(t),
+          filename: t.name,
+        })),
+      }
+    }
+
+    // TODO: fetch presigned URLs from backend for cloud-based OBJ models
+    throw new Error('Cloud-based OBJ loading is not yet implemented')
   }
 
   const getLocalObjectUrl = async (file: File) => {
@@ -223,7 +244,8 @@ export const useModelStore = defineStore('models', () => {
     presignedUrlCache,
     getThumbnailUrl,
     getFakeThumbnailUrl,
-    getObjectUrl,
+    getGLBUrl,
+    getOBJUrls,
     removeModelById,
     removeCachedUrls,
   }

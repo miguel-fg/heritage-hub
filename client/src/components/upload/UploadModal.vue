@@ -96,7 +96,6 @@ import ModelForm from '../ModelForm.vue'
 import Button from '../Button.vue'
 import Spinner from '../Spinner.vue'
 import { useModelStore } from '../../stores/modelStore.ts'
-import { dataUrlToFile } from '../../scripts/hhUtils.ts'
 import { storeToRefs } from 'pinia'
 import { useHotspotStore } from '../../stores/hotspotStore.ts'
 import { useDimensions } from '../../scripts/useDimensions.ts'
@@ -128,8 +127,8 @@ const {
   mDescription,
   descriptionError,
   isValid,
-  getObjectUploadUrl,
-  uploadModeltoR2,
+  uploadGLBModelToR2,
+  uploadOBJModelToR2,
   publishModel,
 } = useUpload()
 
@@ -161,15 +160,14 @@ const uploadModel = async () => {
 
   // 3D File Upload
   console.log('Uploading model to Cloudflare...')
-  const { modelUrl, thumbnailUrl } = await getObjectUploadUrl(modelId.value)
-  const modelUploaded = await uploadModeltoR2(file.value, modelUrl)
-  const thumbnailUploaded = await uploadModeltoR2(
-    dataUrlToFile(thumbnail.value),
-    thumbnailUrl,
-  )
+  const uploaded =
+    file.value.type === 'GLB'
+      ? await uploadGLBModelToR2(modelId.value)
+      : await uploadOBJModelToR2(modelId.value)
 
-  if (!modelUploaded || !thumbnailUploaded) {
+  if (!uploaded) {
     toastStore.showToast('error', 'Failed to publish model')
+    console.error('Failed to upload model to Cloudflare')
     publishing.value = false
     return
   }
@@ -181,6 +179,10 @@ const uploadModel = async () => {
 
   if (!success) {
     toastStore.showToast('error', 'Failed to publish model')
+    console.error('Failed to write model information to database')
+    console.warn(
+      `Orphaned files in cloud storage for model ID: ${modelId.value}.`,
+    )
     publishing.value = false
     return
   }

@@ -1,11 +1,13 @@
 import * as THREE from 'three'
 import WebGL from 'three/addons/capabilities/WebGL.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { OBJLoader, MTLLoader } from 'three/examples/jsm/Addons.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { CENTER, MeshBVH, acceleratedRaycast } from 'three-mesh-bvh'
 import { ref, type ShallowRef } from 'vue'
 import { useModelStore } from '../stores/modelStore'
 import { useToastStore } from '../stores/toastStore'
+import type { ModelFiles, OBJUrls } from '../types/model'
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast
 
@@ -88,9 +90,9 @@ export const useModelViewer = (
   }
 
   /**
-   * Load a 3D model from URL
+   * Load a 3D model from a GLB URL
    */
-  const loadModel = async (url: string) => {
+  const loadGLBModel = async (url: string) => {
     if (!url) return
 
     loading.value = true
@@ -173,17 +175,106 @@ export const useModelViewer = (
   }
 
   /**
+   * Load a 3D model from an OBJ bundle
+   */
+  const loadOBJModel = async (urls: OBJUrls) => {
+    loading.value = true
+    loadingProgress.value = 0
+
+    // Textures
+    const manager = new THREE.LoadingManager()
+    manager.setURLModifier((url) => {
+      const filename = url.split('/').pop() || url
+      const match = urls.textures.find((t) => t.filename === filename)
+      return match?.url ?? url
+    })
+
+    // Materials
+    const mtlText = await fetch(urls.mtl).then((r) => r.text())
+    const mtlLoader = new MTLLoader(manager)
+    const materials = mtlLoader.parse(mtlText, '')
+    materials.preload()
+
+    // Object
+    const objLoader = new OBJLoader()
+    objLoader.setMaterials(materials)
+    const object = await new Promise<THREE.Group>((resolve, reject) => {
+      objLoader.load(
+        urls.obj,
+        resolve,
+        (xhr) => {
+          if (xhr.lengthComputable) {
+            loadingProgress.value = Math.round((xhr.loaded / xhr.total) * 85)
+          }
+        },
+        reject,
+      )
+    })
+
+    // Build BVH meshes
+    modelMeshes.value = []
+    object.rotation.x = -Math.PI / 2
+    object.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        modelMeshes.value.push(child)
+        const bvh = new MeshBVH(child.geometry, {
+          maxLeafTris: 10,
+          strategy: CENTER,
+        })
+        child.geometry.boundsTree = bvh
+      }
+    })
+
+    // Center and fit camera
+    const box = new THREE.Box3().setFromObject(object)
+    const center = box.getCenter(new THREE.Vector3())
+    const size = box.getSize(new THREE.Vector3())
+
+    object.position.x -= center.x
+    object.position.y -= center.y - size.y / 2
+    object.position.z -= center.z
+
+    const maxDim = Math.max(size.x, size.y, size.z)
+    modelScale.value = maxDim
+    const fovRad = camera.fov * (Math.PI / 180)
+    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fovRad / 2)) * 1.5
+    camera.position.z = cameraZ
+    camera.near = cameraZ / 100
+    camera.far = cameraZ * 100
+    camera.updateProjectionMatrix()
+
+    if (controls.value) {
+      controls.value.target.set(0, size.y / 2, 0)
+      controls.value.update()
+    }
+
+    model.value = object
+    loadingProgress.value = 100
+    scene.add(object)
+    loading.value = false
+  }
+
+  /**
    * Fetch model URL and load model
    */
   const fetchAndLoadModel = async (
     modelId: string,
     editing: boolean,
-    fileRef?: File,
+    fileRef?: ModelFiles,
   ) => {
     loading.value = true
     try {
-      const url = await modelStore.getObjectUrl(modelId, editing, fileRef)
-      return await loadModel(url)
+      if (fileRef?.type === 'OBJ') {
+        console.log('OBJ format detected. Loading..')
+        const urls = await modelStore.getOBJUrls(modelId, editing, fileRef)
+        return await loadOBJModel(urls)
+      }
+
+      console.log('GLB format detected. Loading..')
+      const glbFile =
+        editing && fileRef?.type === 'GLB' ? fileRef.glb : undefined
+      const url = await modelStore.getGLBUrl(modelId, editing, glbFile)
+      return await loadGLBModel(url)
     } catch (error) {
       console.error('Error fetching model URL: ', error)
       toastStore.showToast('error', 'Failed to load 3D model')
@@ -294,7 +385,7 @@ export const useModelViewer = (
     loadingProgress,
     objectUrl,
     init,
-    loadModel,
+    loadGLBModel,
     fetchAndLoadModel,
     animate,
     handleResize,

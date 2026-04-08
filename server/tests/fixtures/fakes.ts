@@ -9,6 +9,13 @@ export const fakeUser = {
   permissions: 'STANDARD' as const,
 }
 
+export const fakeGLBAsset = {
+  id: faker.number.int({ max: 1000 }),
+  modelId: faker.string.uuid(),
+  type: 'GLB',
+  filename: faker.system.commonFileName('glb'),
+}
+
 export const fakeModel = {
   id: faker.string.uuid(),
   ownerId: fakeUser.id,
@@ -20,11 +27,10 @@ export const fakeModel = {
     casing: 'upper',
   }),
   provenance: faker.lorem.sentence(),
-  modelPath: '<modelId>/model.glb',
-  thumbnailPath: '<modelId>/thumbnail.png',
-  multimediaPath: [],
   downloadable: faker.datatype.boolean,
+  objFileType: 'GLB',
   createdAt: faker.date.anytime,
+  assets: fakeGLBAsset,
 }
 
 export const fakeTag = {

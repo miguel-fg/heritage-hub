@@ -26,6 +26,9 @@ const prismaMock = vi.hoisted(() => ({
     createMany: vi.fn(),
     deleteMany: vi.fn(),
   },
+  asset: {
+    createMany: vi.fn(),
+  },
   $transaction: vi.fn(),
 }))
 
@@ -277,26 +280,23 @@ describe('Model Controller - Unit Tests', () => {
   })
 
   describe('getModelUploadUrl', () => {
-    it('should return two upload presigned URLs', async () => {
+    it('should return GLB upload presigned URLs', async () => {
       const modelId = fakeModel.id
-      mockRequest.body = { modelId }
-
+      mockRequest.body = { modelId, fileType: 'GLB' }
       mockGeneratePresignedUploadUrl
-        .mockReturnValueOnce('objectUpload.url')
-        .mockReturnValueOnce('thumbnailUpload.url')
-
+        .mockResolvedValueOnce('thumbnailUpload.url')
+        .mockResolvedValueOnce('objectUpload.url')
       await getModelUploadUrl(mockRequest as Request, mockResponse as Response)
-
       expect(mockGeneratePresignedUploadUrl).toBeCalledTimes(2)
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         1,
         undefined,
-        `${modelId}/model.glb`,
+        `${modelId}/thumbnail.png`,
       )
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         2,
         undefined,
-        `${modelId}/thumbnail.png`,
+        `${modelId}/model.glb`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)
       expect(mockJson).toHaveBeenCalledWith({
@@ -305,14 +305,60 @@ describe('Model Controller - Unit Tests', () => {
       })
     })
 
-    it('should handle upload URL generation errors', async () => {
-      mockRequest.body = { modelId: 'invalid-id' }
-      const error = new Error('Could not generate upload URL')
-
-      mockGeneratePresignedUploadUrl.mockRejectedValue(error)
-
+    it('should return OBJ upload presigned URLs', async () => {
+      const modelId = fakeModel.id
+      const textures = ['diffuse.jpg', 'normal.png']
+      mockRequest.body = { modelId, fileType: 'OBJ', textures }
+      mockGeneratePresignedUploadUrl
+        .mockResolvedValueOnce('thumbnailUpload.url')
+        .mockResolvedValueOnce('objectUpload.url')
+        .mockResolvedValueOnce('materialsUpload.url')
+        .mockResolvedValueOnce('texture0Upload.url')
+        .mockResolvedValueOnce('texture1Upload.url')
       await getModelUploadUrl(mockRequest as Request, mockResponse as Response)
+      expect(mockGeneratePresignedUploadUrl).toBeCalledTimes(5)
+      expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
+        1,
+        undefined,
+        `${modelId}/thumbnail.png`,
+      )
+      expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
+        2,
+        undefined,
+        `${modelId}/model.obj`,
+      )
+      expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
+        3,
+        undefined,
+        `${modelId}/materials.mtl`,
+      )
+      expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
+        4,
+        undefined,
+        `${modelId}/textures/diffuse.jpg`,
+      )
+      expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
+        5,
+        undefined,
+        `${modelId}/textures/normal.png`,
+      )
+      expect(mockStatus).toHaveBeenCalledWith(200)
+      expect(mockJson).toHaveBeenCalledWith({
+        modelUrl: 'objectUpload.url',
+        materialsUrl: 'materialsUpload.url',
+        thumbnailUrl: 'thumbnailUpload.url',
+        textureUrls: [
+          { filename: 'diffuse.jpg', url: 'texture0Upload.url' },
+          { filename: 'normal.png', url: 'texture1Upload.url' },
+        ],
+      })
+    })
 
+    it('should handle upload URL generation errors', async () => {
+      mockRequest.body = { modelId: 'invalid-id', fileType: 'GLB' }
+      const error = new Error('Could not generate upload URL')
+      mockGeneratePresignedUploadUrl.mockRejectedValue(error)
+      await getModelUploadUrl(mockRequest as Request, mockResponse as Response)
       expect(mockStatus).toHaveBeenCalledWith(500)
       expect(mockJson).toBeCalledWith({
         error: expect.stringContaining('Failed to generate upload URL'),
@@ -325,7 +371,7 @@ describe('Model Controller - Unit Tests', () => {
       mockRequest.body = { ...fakeModel }
       mockRequest.user = fakeUser
 
-      prismaMock.$transaction.mockResolvedValue([{}, {}, {}])
+      prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}])
 
       await newModel(mockRequest as Request, mockResponse as Response)
 
