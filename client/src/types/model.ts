@@ -16,6 +16,7 @@ export type Model = {
   hotspots: ModelHotspot[]
   images: ModelImage[]
   pdfs: ModelPdf[]
+  assets: ModelAssets
   thumbnailUrl: string
   objFileType: ModelFileType
   downloadable: boolean

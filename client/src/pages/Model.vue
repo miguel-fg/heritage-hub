@@ -31,7 +31,12 @@
           ref="visArea"
           class="flex h-90 md:h-120 lg:h-200 lg:w-5/9 max-h-[650px] rounded-sm justify-center items-center relative group"
         >
-          <Visualizer :modelId="model.id" :downloadable="model.downloadable" />
+          <Visualizer
+            :modelId="model.id"
+            :downloadable="model.downloadable"
+            :obj-file-type="model.objFileType"
+            :assets="model.assets"
+          />
           <Transition name="fase">
             <div
               v-if="visualizerStore.selectedIndex > 0 && currentImage"
