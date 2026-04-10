@@ -153,6 +153,7 @@ export const useModelViewer = (
 
             scene.add(gltf.scene)
             loading.value = false
+            console.log('DONE')
             resolve(gltf)
           },
           (xhr) => {
@@ -252,6 +253,7 @@ export const useModelViewer = (
     loadingProgress.value = 100
     scene.add(object)
     loading.value = false
+    console.log('DONE')
   }
 
   /**
@@ -267,7 +269,7 @@ export const useModelViewer = (
     loading.value = true
     try {
       if (fileRef?.type === 'OBJ' || objFileType === 'OBJ') {
-        console.log('OBJ format detected. Loading..')
+        console.log('Loading OBJ...')
         const urls = await modelStore.getOBJUrls(
           modelId,
           editing,
@@ -277,7 +279,7 @@ export const useModelViewer = (
         return await loadOBJModel(urls)
       }
 
-      console.log('GLB format detected. Loading..')
+      console.log('Loading GLB...')
       const glbFile =
         editing && fileRef?.type === 'GLB' ? fileRef.glb : undefined
       const url = await modelStore.getGLBUrl(modelId, editing, glbFile)

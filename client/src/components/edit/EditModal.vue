@@ -22,6 +22,8 @@
             @unsaved-deleted="setCleanUnsaved(false)"
             :commit-unsaved="commitUnsaved"
             @unsaved-commited="hotspotCommited"
+            :obj-file-type="toEdit.objFileType"
+            :assets="toEdit.assets"
           />
         </div>
         <div class="w-full md:w-4/7">

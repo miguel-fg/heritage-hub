@@ -11,7 +11,7 @@
         class="w-full rounded-xs drop-shadow-xs"
       />
       <Skeleton v-else-if="loading" for="thumbnail" />
-      <h1 class="title mt-1 text-primary-500">
+      <h1 class="title mt-1 text-primary-500 leading-tight">
         {{ props.item.name }}
       </h1>
       <p class="body text-grayscale-900">{{ props.item.caption }}</p>
@@ -28,30 +28,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { useModelStore } from "../stores/modelStore";
-import Tag from "./Tag.vue";
-import Skeleton from "./Skeleton.vue";
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useModelStore } from '../stores/modelStore'
+import Tag from './Tag.vue'
+import Skeleton from './Skeleton.vue'
 
 const props = defineProps({
   item: { type: Object, required: true },
   index: Number,
-});
+})
 
-const modelStore = useModelStore();
-const loading = ref(false);
-const thumbnailUrl = ref("");
+const modelStore = useModelStore()
+const loading = ref(false)
+const thumbnailUrl = ref('')
 
-const router = useRouter();
+const router = useRouter()
 
 const handleNavigation = () => {
-  router.push({ name: "Model", params: { id: props.item.id } });
-};
+  router.push({ name: 'Model', params: { id: props.item.id } })
+}
 
 onMounted(async () => {
-  loading.value = true;
-  thumbnailUrl.value = await modelStore.getThumbnailUrl(props.item.id);
-  loading.value = false;
-});
+  loading.value = true
+  thumbnailUrl.value = await modelStore.getThumbnailUrl(props.item.id)
+  loading.value = false
+})
 </script>
