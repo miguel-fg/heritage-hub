@@ -1,12 +1,14 @@
 <template>
-  <h1 class="title text-primary-500 mb-5">File Select</h1>
+  <h1 class="title text-primary-500 mb-5 w-full max-w-300 mx-auto">
+    File Select
+  </h1>
   <div
     @dragenter.prevent="toggleActive"
     @dragleave="toggleActive"
     @dragover.prevent
     @drop.prevent="handleDrop"
     :class="active ? 'bg-grayscale-200 border-grayscale-400' : ''"
-    class="flex justify-center items-center w-full h-148 px-3 border-2 border-dashed border-grayscale-300 bg-grayscale-100 rounded-xs hover:bg-grayscale-200 hover:border-grayscale-400"
+    class="flex justify-center items-center w-full max-w-300 mx-auto h-148 px-3 border-2 border-dashed border-grayscale-300 bg-grayscale-100 rounded-xs hover:bg-grayscale-200 hover:border-grayscale-400"
   >
     <label
       for="objectInput"
@@ -32,7 +34,7 @@
       @change="handleFileChange"
     />
   </div>
-  <div class="flex gap-3 w-full justify-end mt-4">
+  <div class="flex gap-3 w-full max-w-300 mx-auto justify-end mt-4">
     <Button type="secondary" @click="emit('cancel')">Cancel</Button>
     <Button type="primary" @click="uploadClick">Upload</Button>
   </div>
@@ -137,12 +139,14 @@ const processFiles = async (incoming: File[]) => {
     incoming.length === 1 &&
     incoming[0].name.toLowerCase().endsWith('.zip')
   ) {
+    console.log('Validating ZIP file...')
     const extracted = await extractFilesFromZip(incoming[0])
     const hasObj = extracted.some((f) => f.name.toLowerCase().endsWith('.obj'))
     // OBJ Files
     if (hasObj) {
       const valid = validateOBJFiles(extracted)
       if (valid) {
+        console.log('DONE')
         emit('update')
         return
       } else {
@@ -167,6 +171,7 @@ const processFiles = async (incoming: File[]) => {
       }
 
       file.value = { type: 'GLB', glb }
+      console.log('DONE')
       emit('update')
     } catch {
       toastStore.showToast(
@@ -178,7 +183,11 @@ const processFiles = async (incoming: File[]) => {
   }
 
   // Single GLB
-  if (incoming.length === 1) {
+  if (
+    incoming.length === 1 &&
+    incoming[0].name.toLowerCase().endsWith('.glb')
+  ) {
+    console.log('Validating GLB file...')
     const isValid = await validateGLTFFile(incoming[0])
     if (!isValid) {
       toastStore.showToast(
@@ -189,6 +198,7 @@ const processFiles = async (incoming: File[]) => {
     }
 
     file.value = { type: 'GLB', glb: incoming[0] }
+    console.log('DONE')
     emit('update')
     return
   }
@@ -203,9 +213,11 @@ const processFiles = async (incoming: File[]) => {
     return
   }
 
+  console.log('Validating OBJ files...')
   const valid = validateOBJFiles(incoming)
 
   if (valid) {
+    console.log('DONE')
     emit('update')
     return
   } else {
