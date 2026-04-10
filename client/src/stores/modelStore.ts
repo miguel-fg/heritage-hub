@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axiosInstance from '../scripts/axiosConfig.ts'
 import { unzipSync } from 'fflate'
-import type { ModelFiles, OBJUrls } from '../types/model.ts'
+import type { ModelAssets, ModelFiles, OBJUrls } from '../types/model.ts'
 
 interface Tag {
   name: string
@@ -22,15 +22,29 @@ interface Model {
   createdAt: string
 }
 
+interface GLBUrlCache {
+  thumbnail?: PresignedUrl
+  object?: PresignedUrl
+}
+
+interface OBJUrlCache {
+  thumbnail?: PresignedUrl
+  objFiles?: {
+    obj?: PresignedUrl
+    mtl?: PresignedUrl
+    textures?: {
+      filename: string
+      url: PresignedUrl
+    }[]
+  }
+}
+
 interface PresignedUrl {
   url: string
   expiresAt: number
 }
 
-interface ModelUrls {
-  thumbnail?: PresignedUrl
-  object?: PresignedUrl
-}
+type ModelUrls = GLBUrlCache | OBJUrlCache
 
 interface PaginationState {
   page: number
@@ -132,7 +146,7 @@ export const useModelStore = defineStore('models', () => {
     }
 
     // Fetch model from cache or Cloudflare
-    const cachedModel = presignedUrlCache.value[modelId] || {}
+    const cachedModel: GLBUrlCache = presignedUrlCache.value[modelId] || {}
     const cachedObject = cachedModel.object
 
     if (cachedObject && cachedObject.expiresAt > Date.now()) {
@@ -162,10 +176,12 @@ export const useModelStore = defineStore('models', () => {
   }
 
   const getOBJUrls = async (
-    _modelId: string,
+    modelId: string,
     editing = false,
     files?: ModelFiles & { type: 'OBJ' },
+    assets: ModelAssets = [],
   ): Promise<OBJUrls> => {
+    // Local files
     if (editing && files) {
       return {
         obj: URL.createObjectURL(files.obj),
@@ -177,8 +193,64 @@ export const useModelStore = defineStore('models', () => {
       }
     }
 
-    // TODO: fetch presigned URLs from backend for cloud-based OBJ models
-    throw new Error('Cloud-based OBJ loading is not yet implemented')
+    // Check cache
+    const cachedModel: OBJUrlCache = presignedUrlCache.value[modelId] || {}
+    const cachedObjFiles = cachedModel.objFiles
+
+    if (
+      cachedObjFiles?.obj &&
+      cachedObjFiles?.mtl &&
+      cachedObjFiles?.textures &&
+      cachedObjFiles.obj.expiresAt > Date.now() &&
+      cachedObjFiles.mtl.expiresAt > Date.now() &&
+      cachedObjFiles.textures.every((t) => t.url.expiresAt > Date.now())
+    ) {
+      return {
+        obj: cachedObjFiles.obj.url,
+        mtl: cachedObjFiles.mtl.url,
+        textures: cachedObjFiles.textures.map((t) => ({
+          filename: t.filename,
+          url: t.url.url,
+        })),
+      }
+    }
+
+    // Build presigned URLs from asset filenames
+    try {
+      const textureAssets = assets.filter((a) => a.type === 'TEXTURE')
+      const response = await axiosInstance.get(`models/${modelId}/object`, {
+        params: {
+          textures: textureAssets.map((a) => a.filename).join(','),
+        },
+      })
+
+      const { objUrl, mtlUrl, textureUrls } = response.data
+      const expiresAt = Date.now() + 3600 * 1000
+
+      presignedUrlCache.value[modelId] = {
+        ...cachedModel,
+        objFiles: {
+          obj: { url: objUrl, expiresAt },
+          mtl: { url: mtlUrl, expiresAt },
+          textures: textureUrls.map((t: { filename: string; url: string }) => ({
+            filename: t.filename,
+            url: { url: t.url, expiresAt },
+          })),
+        },
+      }
+
+      return {
+        obj: objUrl,
+        mtl: mtlUrl,
+        textures: textureUrls,
+      }
+    } catch (error) {
+      console.error(
+        '[model store]: Failed to fetch OBJ presigned URLs. ERR: ',
+        error,
+      )
+      throw error
+    }
   }
 
   const getLocalObjectUrl = async (file: File) => {

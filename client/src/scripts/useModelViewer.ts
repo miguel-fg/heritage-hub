@@ -7,7 +7,7 @@ import { CENTER, MeshBVH, acceleratedRaycast } from 'three-mesh-bvh'
 import { ref, type ShallowRef } from 'vue'
 import { useModelStore } from '../stores/modelStore'
 import { useToastStore } from '../stores/toastStore'
-import type { ModelFiles, OBJUrls } from '../types/model'
+import type { ModelAssets, ModelFiles, OBJUrls } from '../types/model'
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast
 
@@ -153,6 +153,7 @@ export const useModelViewer = (
 
             scene.add(gltf.scene)
             loading.value = false
+            console.log('DONE')
             resolve(gltf)
           },
           (xhr) => {
@@ -252,6 +253,7 @@ export const useModelViewer = (
     loadingProgress.value = 100
     scene.add(object)
     loading.value = false
+    console.log('DONE')
   }
 
   /**
@@ -261,16 +263,23 @@ export const useModelViewer = (
     modelId: string,
     editing: boolean,
     fileRef?: ModelFiles,
+    objFileType: 'GLB' | 'OBJ' = 'GLB',
+    assets: ModelAssets = [],
   ) => {
     loading.value = true
     try {
-      if (fileRef?.type === 'OBJ') {
-        console.log('OBJ format detected. Loading..')
-        const urls = await modelStore.getOBJUrls(modelId, editing, fileRef)
+      if (fileRef?.type === 'OBJ' || objFileType === 'OBJ') {
+        console.log('Loading OBJ...')
+        const urls = await modelStore.getOBJUrls(
+          modelId,
+          editing,
+          fileRef?.type === 'OBJ' ? fileRef : undefined,
+          assets,
+        )
         return await loadOBJModel(urls)
       }
 
-      console.log('GLB format detected. Loading..')
+      console.log('Loading GLB...')
       const glbFile =
         editing && fileRef?.type === 'GLB' ? fileRef.glb : undefined
       const url = await modelStore.getGLBUrl(modelId, editing, glbFile)

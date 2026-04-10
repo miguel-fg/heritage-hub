@@ -154,6 +154,7 @@ describe('Model Controller - Unit Tests', () => {
         hotspots: [fakeHotspot],
         images: [],
         pdfs: [],
+        assets: [],
       }
 
       mockRequest.params = { id: fakeModel.id }
@@ -177,6 +178,7 @@ describe('Model Controller - Unit Tests', () => {
             select: { type: true, value: true, unit: true },
           },
           hotspots: true,
+          assets: true,
           images: { orderBy: { order: 'asc' } },
           pdfs: {
             select: { id: true, title: true },
@@ -245,15 +247,17 @@ describe('Model Controller - Unit Tests', () => {
   })
 
   describe('getModelObjectUrl', () => {
-    it('should return a presigned object URL', async () => {
+    it('should return a presigned object URL for a GLB model', async () => {
       const modelId = fakeModel.id
-
       mockRequest.params = { id: modelId }
-
-      mockGeneratePresignedUrl.mockReturnValue('presignedObject.url')
-
+      mockRequest.query = {}
+      prismaMock.model.findUnique.mockResolvedValueOnce({ objFileType: 'GLB' })
+      mockGeneratePresignedUrl.mockResolvedValueOnce('presignedObject.url')
       await getModelObjectUrl(mockRequest as Request, mockResponse as Response)
-
+      expect(prismaMock.model.findUnique).toHaveBeenCalledWith({
+        where: { id: modelId },
+        select: { objFileType: true },
+      })
       expect(mockGeneratePresignedUrl).toHaveBeenCalledWith(
         undefined,
         `${modelId}/model.glb`,
@@ -264,14 +268,66 @@ describe('Model Controller - Unit Tests', () => {
       })
     })
 
-    it('should handle object URL generation errors', async () => {
-      mockRequest.params = { id: 'invalid-id' }
-      const error = new Error('Could not generate presigned URL')
-
-      mockGeneratePresignedUrl.mockRejectedValue(error)
-
+    it('should return presigned URLs for an OBJ model', async () => {
+      const modelId = fakeModel.id
+      const textures = 'diffuse.jpg,normal.png'
+      mockRequest.params = { id: modelId }
+      mockRequest.query = { textures }
+      prismaMock.model.findUnique.mockResolvedValueOnce({ objFileType: 'OBJ' })
+      mockGeneratePresignedUrl
+        .mockResolvedValueOnce('presignedObj.url')
+        .mockResolvedValueOnce('presignedMtl.url')
+        .mockResolvedValueOnce('presignedTexture0.url')
+        .mockResolvedValueOnce('presignedTexture1.url')
       await getModelObjectUrl(mockRequest as Request, mockResponse as Response)
+      expect(mockGeneratePresignedUrl).toHaveBeenCalledTimes(4)
+      expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
+        1,
+        undefined,
+        `${modelId}/model.obj`,
+      )
+      expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
+        2,
+        undefined,
+        `${modelId}/materials.mtl`,
+      )
+      expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
+        3,
+        undefined,
+        `${modelId}/textures/diffuse.jpg`,
+      )
+      expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
+        4,
+        undefined,
+        `${modelId}/textures/normal.png`,
+      )
+      expect(mockStatus).toHaveBeenCalledWith(200)
+      expect(mockJson).toHaveBeenCalledWith({
+        objUrl: 'presignedObj.url',
+        mtlUrl: 'presignedMtl.url',
+        textureUrls: [
+          { filename: 'diffuse.jpg', url: 'presignedTexture0.url' },
+          { filename: 'normal.png', url: 'presignedTexture1.url' },
+        ],
+      })
+    })
 
+    it('should return 404 if model is not found', async () => {
+      mockRequest.params = { id: 'nonexistent-id' }
+      mockRequest.query = {}
+      prismaMock.model.findUnique.mockResolvedValueOnce(null)
+      await getModelObjectUrl(mockRequest as Request, mockResponse as Response)
+      expect(mockStatus).toHaveBeenCalledWith(404)
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Model not found' })
+    })
+
+    it('should handle presigned URL generation errors', async () => {
+      mockRequest.params = { id: fakeModel.id }
+      mockRequest.query = {}
+      prismaMock.model.findUnique.mockResolvedValueOnce({ objFileType: 'GLB' })
+      const error = new Error('Could not generate presigned URL')
+      mockGeneratePresignedUrl.mockRejectedValue(error)
+      await getModelObjectUrl(mockRequest as Request, mockResponse as Response)
       expect(mockStatus).toHaveBeenCalledWith(500)
       expect(mockJson).toHaveBeenCalledWith({
         error: expect.stringContaining('Failed to generate presigned URL'),

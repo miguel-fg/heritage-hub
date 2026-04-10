@@ -89,7 +89,7 @@ import { useModelViewer } from '../../scripts/useModelViewer'
 import { useHotspots } from '../../scripts/useHotspots'
 import { useThumbnail } from '../../scripts/useThumbnail'
 import { useVisualizerStore } from '../../stores/visualizerStore'
-import { type ModelFiles } from '../../types/model'
+import { type ModelAssets, type ModelFiles } from '../../types/model'
 
 const props = defineProps({
   modelId: { type: String, required: true },
@@ -99,6 +99,8 @@ const props = defineProps({
   captureRequest: { type: Boolean, default: false },
   deleteUnsaved: { type: Boolean, default: false },
   commitUnsaved: { type: Boolean, default: false },
+  objFileType: { type: String as PropType<'GLB' | 'OBJ'>, default: 'GLB' },
+  assets: { type: Array as PropType<ModelAssets>, default: () => [] },
 })
 
 const emit = defineEmits([
@@ -356,7 +358,13 @@ onMounted(async () => {
   const initialized = init()
   if (!initialized) return
 
-  await fetchAndLoadModel(props.modelId, props.editing, props.fileRef)
+  await fetchAndLoadModel(
+    props.modelId,
+    props.editing,
+    props.fileRef,
+    props.objFileType,
+    props.assets,
+  )
 
   loadExistingHotspots()
 

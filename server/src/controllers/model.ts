@@ -76,6 +76,7 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
           select: { type: true, value: true, unit: true },
         },
         hotspots: true,
+        assets: true,
         images: { orderBy: { order: 'asc' } },
         pdfs: {
           select: { id: true, title: true },
@@ -159,12 +160,51 @@ export const getModelObjectUrl = async (
   res: Response,
 ): Promise<void> => {
   const modelId = req.params.id
+  const { textures } = req.query
+
+  const model = await prisma.model.findUnique({
+    where: { id: modelId },
+    select: { objFileType: true },
+  })
+
+  if (!model) {
+    res.status(404).json({ error: 'Model not found' })
+    return
+  }
 
   try {
-    const objectKey = `${modelId}/model.glb`
+    if (model.objFileType === 'GLB') {
+      const objectUrl = await generatePresignedUrl(
+        BUCKET_NAME,
+        `${modelId}/model.glb`,
+      )
 
-    const objectUrl = await generatePresignedUrl(BUCKET_NAME, objectKey)
-    res.status(200).json({ objectUrl })
+      res.status(200).json({ objectUrl })
+      return
+    }
+
+    if (model.objFileType === 'OBJ') {
+      const textureFilenames = (textures as string).split(',').filter(Boolean)
+      const objUrl = await generatePresignedUrl(
+        BUCKET_NAME,
+        `${modelId}/model.obj`,
+      )
+      const mtlUrl = await generatePresignedUrl(
+        BUCKET_NAME,
+        `${modelId}/materials.mtl`,
+      )
+      const textureUrls = await Promise.all(
+        textureFilenames.map(async (filename) => ({
+          filename,
+          url: await generatePresignedUrl(
+            BUCKET_NAME,
+            `${modelId}/textures/${filename}`,
+          ),
+        })),
+      )
+
+      res.status(200).json({ objUrl, mtlUrl, textureUrls })
+    }
   } catch (error) {
     console.error('[server]: Failed to generate presigned URL. ERR: ', error)
     res.status(500).json({
