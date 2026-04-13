@@ -59,6 +59,13 @@ const toggleActive = () => {
 }
 
 const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
+  const MAX_GLB_SIZE = 150 * 1024 * 1024 // 150 MB
+
+  if (targetFile.size > MAX_GLB_SIZE) {
+    toastStore.showToast('error', 'GLB file exceeds the 150MB limit')
+    return false
+  }
+
   const fileName = targetFile.name.toLowerCase()
 
   if (fileName.endsWith('.gltf')) {
@@ -86,6 +93,11 @@ const validateGLTFFile = async (targetFile: File): Promise<boolean> => {
 }
 
 const validateOBJFiles = (files: File[]): boolean => {
+  const MAX_OBJ_SIZE = 150 * 1024 * 1024 // 150 MB
+  const MAX_MTL_SIZE = 10 * 1024 * 1024 // 10 MB
+  const MAX_TEXTURE_SIZE = 50 * 1024 * 1024 // 50 MB
+  const MAX_TOTAL_SIZE = 250 * 1024 * 1024 // 250 MB
+
   const objFiles = files.filter((f) => f.name.toLowerCase().endsWith('.obj'))
   const mtlFiles = files.filter((f) => f.name.toLowerCase().endsWith('.mtl'))
   const textureFiles = files.filter((f) =>
@@ -121,6 +133,31 @@ const validateOBJFiles = (files: File[]): boolean => {
       'error',
       `Unexpected files(s): ${unknownFiles.map((f) => f.name).join(', ')}`,
     )
+    return false
+  }
+
+  const totalSize = [...objFiles, ...mtlFiles, ...textureFiles].reduce(
+    (sum, f) => sum + f.size,
+    0,
+  )
+
+  if (objFiles[0].size > MAX_OBJ_SIZE) {
+    toastStore.showToast('error', 'OBJ file exceeds the 150MB limit')
+    return false
+  }
+
+  if (mtlFiles[0].size > MAX_MTL_SIZE) {
+    toastStore.showToast('error', 'MTL file exceeds the 10MB limit')
+    return false
+  }
+
+  if (textureFiles.some((f) => f.size > MAX_TEXTURE_SIZE)) {
+    toastStore.showToast('error', 'Each texture file must be under 50MB')
+    return false
+  }
+
+  if (totalSize > MAX_TOTAL_SIZE) {
+    toastStore.showToast('error', 'Total bundle size exceeds the 250MB limit')
     return false
   }
 
