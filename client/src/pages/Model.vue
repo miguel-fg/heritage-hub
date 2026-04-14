@@ -106,9 +106,12 @@
               model.dimensions.length > 0 ||
               model.materials.length > 0
             "
-            class="pt-4 border-t-1 border-grayscale-300 flex flex-col gap-4 md:flex-row md:justify-between"
+            class="md:border-t-1 border-grayscale-300 md:pt-4 flex flex-col gap-4 md:flex-row md:justify-between"
           >
-            <div v-if="model.dimensions.length > 0" class="shrink-0">
+            <div
+              v-if="model.dimensions.length > 0"
+              class="pt-4 border-t-1 md:pt-0 md:border-t-0 border-grayscale-300 shrink-0"
+            >
               <h2 class="subtitle text-primary-500">Dimensions</h2>
               <ul class="body text-grayscale-900">
                 <li v-for="dim in model.dimensions">
@@ -129,7 +132,7 @@
             </div>
             <div
               v-if="model.provenance"
-              class="pt-4 border-t-1 border-grayscale-300 md:pt-0 md:border-t-0"
+              class="pt-4 border-t-1 border-grayscale-300 md:pt-0 md:border-t-0 w-1/2"
             >
               <h2 class="subtitle text-primary-500">Provenance</h2>
               <p class="body text-grayscale-900 whitespace-pre-line">

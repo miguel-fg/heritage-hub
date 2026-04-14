@@ -8,7 +8,9 @@
         <div class="flex flex-col">
           <div class="flex lg:justify-between items-center py-2 gap-5">
             <div class="flex gap-4 lg:gap-12 grow-1 items-center">
-              <img class="w-10" src="/HH_red.svg" alt="Heritage Hub logo" />
+              <RouterLink to="/" class="cursor-pointer">
+                <img class="w-10" src="/HH_red.svg" alt="Heritage Hub logo" />
+              </RouterLink>
               <Button class="lg:hidden" type="search" @click="handleSearch">
                 <span class="text-grayscale-400 my-auto">
                   <Icon icon="bx:search" width="20" />
