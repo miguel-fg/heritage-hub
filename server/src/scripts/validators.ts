@@ -85,6 +85,56 @@ export const modelSchema = z.object({
 
 export type ModelRequestBody = z.infer<typeof modelSchema>
 
+export const modelEditSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(3).max(75),
+  caption: z.string().min(1).max(250),
+  description: z.string().min(20).max(2000),
+  accNum: z.string().nullable(),
+  provenance: z.string().nullable(),
+  downloadable: z.boolean(),
+  objFileType: z.enum(FILE_TYPES),
+  tags: z.array(
+    z.object({
+      where: z.object({ name: z.string().min(1) }),
+      create: z.object({ name: z.string().min(1) }),
+    }),
+  ),
+  materials: z.array(
+    z.object({
+      where: z.object({ name: z.string().min(1) }),
+      create: z.object({ name: z.string().min(1) }),
+    }),
+  ),
+  dimensions: z.array(
+    z.object({
+      modelId: z.string().uuid(),
+      type: z.enum(DIMENSION_TYPES),
+      value: z.number().positive(),
+      unit: z.enum(DIMENSION_UNITS),
+    }),
+  ),
+  hotspots: z.array(
+    z.object({
+      modelId: z.string().uuid(),
+      label: z.string().min(1),
+      content: z.string().min(1),
+      posX: z.number(),
+      posY: z.number(),
+      posZ: z.number(),
+      norX: z.number(),
+      norY: z.number(),
+      norZ: z.number(),
+      quatX: z.number(),
+      quatY: z.number(),
+      quatZ: z.number(),
+      quatW: z.number(),
+    }),
+  ),
+})
+
+export type ModelEditRequestBody = z.infer<typeof modelEditSchema>
+
 export const modelImagesSchema = z.object({
   modelId: z.string().uuid(),
   images: z

@@ -6,7 +6,7 @@ import {
   generatePresignedUploadUrl,
   deleteAllFromR2,
 } from '../scripts/r2Storage'
-import { ModelRequestBody } from '../scripts/validators'
+import { ModelRequestBody, ModelEditRequestBody } from '../scripts/validators'
 import { withPrismaRetry } from '../scripts/prisma'
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
@@ -267,6 +267,27 @@ export const getModelUploadUrl = async (
   }
 }
 
+export const getNewThumbnailUrl = async (
+  req: Request<{ id: string }>,
+  res: Response,
+): Promise<void> => {
+  const { id } = req.params
+
+  try {
+    const thumbnailUrl = await generatePresignedUploadUrl(
+      BUCKET_NAME,
+      `${id}/thumbnail.png`,
+    )
+
+    res.status(200).json({ thumbnailUrl })
+  } catch (error) {
+    console.error('[server]: Failed to generate upload URL. ERR: ', error)
+    res.status(500).json({
+      error: `[server]: Failed to generate upload URL. ERR: ${error}`,
+    })
+  }
+}
+
 export const newModel = async (
   req: Request<unknown, unknown, ModelRequestBody>,
   res: Response,
@@ -346,7 +367,7 @@ export const newModel = async (
 }
 
 export const updateModel = async (
-  req: Request<{ id: string }, unknown, ModelRequestBody>,
+  req: Request<{ id: string }, unknown, ModelEditRequestBody>,
   res: Response,
 ): Promise<void> => {
   if (!req.user) {
@@ -364,6 +385,7 @@ export const updateModel = async (
     accNum,
     provenance,
     downloadable,
+    objFileType,
     tags,
     materials,
     dimensions,
@@ -386,6 +408,7 @@ export const updateModel = async (
       accNum,
       provenance,
       downloadable,
+      objFileType,
       tags: { set: [], connectOrCreate: tags },
       materials: { set: [], connectOrCreate: materials },
     },

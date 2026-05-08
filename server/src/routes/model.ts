@@ -7,6 +7,7 @@ import {
   getModelThumbnailUrl,
   getModelObjectUrl,
   getModelUploadUrl,
+  getNewThumbnailUrl,
   deleteModel,
 } from '../controllers/model'
 import {
@@ -15,7 +16,7 @@ import {
   validateModifyPermissions,
 } from '../middleware/validate'
 import { authGuard } from '../middleware/authGuard'
-import { modelSchema } from '../scripts/validators'
+import { modelSchema, modelEditSchema } from '../scripts/validators'
 
 const router = Router()
 
@@ -37,12 +38,18 @@ router.post(
   validateUploadPermissions,
   getModelUploadUrl,
 )
+router.post(
+  '/new-thumbnail/:id',
+  authGuard,
+  validateModifyPermissions((req) => req.params.id),
+  getNewThumbnailUrl,
+)
 
 router.put(
   '/:id',
   authGuard,
   validateModifyPermissions((req) => req.params.id),
-  validateBody(modelSchema),
+  validateBody(modelEditSchema),
   updateModel,
 )
 router.delete(
