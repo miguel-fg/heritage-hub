@@ -126,7 +126,7 @@ export const useEdit = () => {
   const saveChanges = async () => {
     if (!isValid || !toEdit.value) return
 
-    const { thumbnail, getObjectUploadUrls, uploadFileToR2 } = useUpload()
+    const { thumbnail, getNewThumbnailUrl, uploadFileToR2 } = useUpload()
 
     if (!thumbnail.value) return
 
@@ -136,7 +136,13 @@ export const useEdit = () => {
       console.log('[useEdit.ts]: New thumbnail detected.')
       console.log('[useEdit.ts]: Uploading new thumbnail to Cloudflare...')
 
-      const { thumbnailUrl } = await getObjectUploadUrls(toEdit.value.id)
+      const { thumbnailUrl } = await getNewThumbnailUrl(toEdit.value.id)
+
+      if (!thumbnailUrl) {
+        toastStore.showToast('error', 'Failed to generate a new thumbnail URL')
+        return false
+      }
+
       const thumbnailUploaded = await uploadFileToR2(
         dataUrlToFile(thumbnail.value),
         thumbnailUrl,
@@ -180,6 +186,7 @@ export const useEdit = () => {
       downloadable: downloadable.value,
       accNum: toEdit.value.accNum,
       provenance: toEdit.value.provenance,
+      objFileType: toEdit.value.objFileType,
       materials: sanitizeMultiselect(toEdit.value.materials),
       tags: sanitizeMultiselect(toEdit.value.tags),
       dimensions: sanitizeDimensions(dimensions.value, toEdit.value.id),

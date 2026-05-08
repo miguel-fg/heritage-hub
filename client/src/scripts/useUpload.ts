@@ -287,6 +287,22 @@ export const useUpload = () => {
     }
   }
 
+  const getNewThumbnailUrl = async (modelId: string) => {
+    try {
+      const response = await axiosInstance.post(
+        `/models/new-thumbnail/${modelId}`,
+      )
+
+      return response.data
+    } catch (error) {
+      console.error(
+        'Failed to fetch new thumbnail upload presigned URL. ERR: ',
+        error,
+      )
+      return null
+    }
+  }
+
   const uploadFileToR2 = async (file: File, presignedUrl: string) => {
     try {
       const response = await axios.put(presignedUrl, file)
@@ -469,6 +485,7 @@ export const useUpload = () => {
     loading,
     publishModel,
     getObjectUploadUrls,
+    getNewThumbnailUrl,
     uploadFileToR2,
     uploadGLBModelToR2,
     uploadOBJModelToR2,
