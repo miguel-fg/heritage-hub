@@ -37,5 +37,20 @@ Heritage Hub is a full-stack web application designed for cultural heritage pres
 - **Responsive Design:** Cross-device compatibility
 
 ### Backend
+- **Node.js / Express:** REST API server
+- **Prisma:** ORM for database access and schema management
+- **PostgreSQL (Neon):** Serverless relational database
+- **Multer:** Middleware for handling multipart file uploads
+- **Sharp:** Image optimization pipeline before asset delivery
+- **Custom CAS Integration:** Authentication flow built on [The Copenhagen Book](https://thecopenhagenbook.com/) guidelines — redirects to SFU's CAS server
+- **Cloudflare R2:** Object storage for 3D model and image asset delivery
 
-- ****
+### Testing
+- **Vitest:** Unit testing across both client and server
+
+## Deployment
+Both the client and server are hosted on **Render**.
+- **Client:** Vue.js app served as a static site
+- **Server:** Express API running as a web service
+- **Database:** Managed PostgreSQL instance via Neon
+- **Assets:** Delivered via Cloudflare R2
