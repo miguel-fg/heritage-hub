@@ -1,6 +1,7 @@
 import { ref, type Ref, type ComputedRef } from 'vue'
 import axiosInstance from './axiosConfig'
 import { useToastStore } from '../stores/toastStore'
+import { useVisualizerStore } from '../stores/visualizerStore'
 import { type Model, type ModelImage, type ModelPdf } from '../types/model'
 
 export const useMedia = (
@@ -8,11 +9,12 @@ export const useMedia = (
   hasPermissions: ComputedRef<boolean>,
 ) => {
   const toastStore = useToastStore()
+  const visualizerStore = useVisualizerStore()
 
   const showMediaUploadModal = ref(false)
 
-  const showDeleteImgModal = ref(false)
-  const imgToDelete = ref<string | null>(null)
+  const showEditImgModal = ref(false)
+  const imgToEdit = ref<Model['images'][number] | null>(null)
 
   const showDeletePDFModal = ref(false)
   const pdfToDelete = ref<string | null>(null)
@@ -43,38 +45,66 @@ export const useMedia = (
     toastStore.showToast('success', 'Files saved successfully')
   }
 
-  const handleDeleteImg = async (imgId: string) => {
-    imgToDelete.value = imgId
-    showDeleteImgModal.value = true
+  const handleEditImg = (img: Model['images'][number]) => {
+    imgToEdit.value = { ...img }
+    showEditImgModal.value = true
   }
 
-  const cancelImgDelete = () => {
-    showDeleteImgModal.value = false
-    imgToDelete.value = null
+  const confirmImgEdit = async () => {
+    if (!model.value || !imgToEdit.value || !hasPermissions.value) return
+
+    const data = {
+      modelId: model.value.id,
+      image: {
+        alt: imgToEdit.value.alt?.trim() || null,
+        label: imgToEdit.value.label?.trim() || null,
+        description: imgToEdit.value.description?.trim() || null,
+      },
+    }
+
+    try {
+      await axiosInstance.put(`/images/edit/${imgToEdit.value.id}`, data)
+
+      model.value.images = model.value.images.map((img): ModelImage => {
+        if (imgToEdit.value && img.id === imgToEdit.value.id) {
+          return { ...imgToEdit.value }
+        }
+        return img
+      })
+
+      toastStore.showToast('success', 'Changes saved successfully')
+    } catch (error) {
+      console.error('Failed to update image.', error)
+      toastStore.showToast('error', 'Failed to update image.')
+    } finally {
+      imgToEdit.value = null
+      showEditImgModal.value = false
+    }
   }
 
   const confirmImgDelete = async () => {
-    if (!model.value || !imgToDelete.value || !hasPermissions.value) return
+    if (!model.value || !imgToEdit.value || !hasPermissions.value) return
 
     try {
       await axiosInstance.delete('/images', {
         data: {
           modelId: model.value.id,
-          imageId: imgToDelete.value,
+          imageId: imgToEdit.value.id,
         },
       })
 
       model.value.images = model.value.images.filter(
-        (img) => img.id !== imgToDelete.value,
+        (img) => img.id !== imgToEdit.value!.id,
       )
 
       toastStore.showToast('success', 'Image deleted successfully')
+      visualizerStore.refreshVisualizer()
     } catch (error) {
       console.error('Failed to delete image.', error)
       toastStore.showToast('error', 'Failed to delete image.')
     } finally {
-      imgToDelete.value = null
-      showDeleteImgModal.value = false
+      imgToEdit.value = null
+      showEditImgModal.value = false
     }
   }
 
@@ -115,16 +145,16 @@ export const useMedia = (
 
   return {
     showMediaUploadModal,
-    showDeleteImgModal,
+    showEditImgModal,
     showDeletePDFModal,
-    imgToDelete,
+    imgToEdit,
     pdfToDelete,
     handleMediaUploaded,
-    handleDeleteImg,
-    cancelImgDelete,
+    handleEditImg,
     confirmImgDelete,
     handleDeletePdf,
     cancelPdfDelete,
     confirmPdfDelete,
+    confirmImgEdit,
   }
 }

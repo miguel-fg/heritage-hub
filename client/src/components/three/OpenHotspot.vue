@@ -17,7 +17,7 @@
         >
           {{ hotspot.label }}
         </h1>
-        <p class="font-garamond text-primary-900 whitespace-pre-line">
+        <p class="font-garamond text-grayscale-900 whitespace-pre-line">
           {{ hotspot.content }}
         </p>
       </div>
@@ -26,21 +26,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useHotspotStore } from "../../stores/hotspotStore";
-import CloseIcon from "../icons/CloseIcon.vue";
+import { computed } from 'vue'
+import { useHotspotStore } from '../../stores/hotspotStore'
+import CloseIcon from '../icons/CloseIcon.vue'
 
 const props = defineProps<{
-  hotspotId: number | null;
-}>();
+  hotspotId: number | null
+}>()
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(['close'])
 
-const hotspotStore = useHotspotStore();
+const hotspotStore = useHotspotStore()
 
 const hotspot = computed(() => {
-  if (!props.hotspotId) return undefined;
+  if (!props.hotspotId) return undefined
 
-  return hotspotStore.getHotspot(props.hotspotId);
-});
+  return hotspotStore.getHotspot(props.hotspotId)
+})
 </script>

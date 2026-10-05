@@ -91,6 +91,8 @@ model ModelImage {
 
     order         Int
     alt           String?
+    label         String?
+    description   String?
     createdAt     DateTime   @default(now())
 }
 

@@ -31,6 +31,11 @@ export const useVisualizerStore = defineStore('visualizer', () => {
     setSelectedIndex(selectedIndex.value - 1)
   }
 
+  const refreshVisualizer = () => {
+    closeImageDrawer()
+    selectedIndex.value = 0
+  }
+
   return {
     isImageDrawerOpen,
     toggleImageDrawer,
@@ -39,5 +44,6 @@ export const useVisualizerStore = defineStore('visualizer', () => {
     setSelectedIndex,
     incrementIndex,
     decrementIndex,
+    refreshVisualizer,
   }
 })

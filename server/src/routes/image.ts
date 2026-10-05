@@ -5,9 +5,10 @@ import {
   deleteImage,
   processImage,
   cancelImages,
+  editImage,
 } from '../controllers/image'
 import { validateBody, validateModifyPermissions } from '../middleware/validate'
-import { modelImagesSchema } from '../scripts/validators'
+import { modelImageEditSchema, modelImagesSchema } from '../scripts/validators'
 import { upload } from '../middleware/upload'
 
 const router = Router()
@@ -25,6 +26,14 @@ router.delete(
   authGuard,
   validateModifyPermissions((req) => req.body.modelId),
   deleteImage,
+)
+
+router.put(
+  '/edit/:id',
+  authGuard,
+  validateModifyPermissions((req) => req.body.modelId),
+  validateBody(modelImageEditSchema),
+  editImage,
 )
 
 router.post(

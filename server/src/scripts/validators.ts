@@ -143,12 +143,25 @@ export const modelImagesSchema = z.object({
         id: z.string().uuid(),
         order: z.number().int().nonnegative(),
         alt: z.string().optional(),
+        label: z.string().optional(),
+        description: z.string().optional(),
       }),
     )
     .min(1),
 })
 
 export type ModelImageRequestBody = z.infer<typeof modelImagesSchema>
+
+export const modelImageEditSchema = z.object({
+  modelId: z.string().uuid(),
+  image: z.object({
+    alt: z.string().optional().nullable(),
+    label: z.string().optional().nullable(),
+    description: z.string().optional().nullable(),
+  }),
+})
+
+export type ModelImageEditRequestBody = z.infer<typeof modelImageEditSchema>
 
 export const modelPdfsSchema = z.object({
   modelId: z.string().uuid(),
