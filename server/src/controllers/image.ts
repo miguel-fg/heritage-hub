@@ -101,7 +101,7 @@ export const deleteImage = async (
       ),
     ])
 
-    res.status(200).json({ message: 'Image deleted sucessfully' })
+    res.status(200).json({ message: 'Image deleted successfully' })
   } catch (error) {
     console.error('[server]: Failed to delete image. ERR: ', error)
     res
@@ -124,7 +124,7 @@ export const editImage = async (
   const { id } = req.params
   const { modelId, image } = req.body
 
-  if (!id) {
+  if (!id || !modelId) {
     res.status(400).json({ error: 'modelId and image id are required' })
     return
   }
@@ -146,7 +146,7 @@ export const editImage = async (
     }
 
     if (img.modelId !== modelId) {
-      res.status(403).json({ error: 'Mistmaching model IDs' })
+      res.status(403).json({ error: 'Mismatching model IDs' })
       return
     }
 
