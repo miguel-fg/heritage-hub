@@ -15,6 +15,7 @@ const mockAxiosGet = vi.hoisted(() => vi.fn())
 vi.mock('axios', () => ({
   default: {
     get: mockAxiosGet,
+    isAxiosError: (e: any) => e?.isAxiosError === true,
   },
 }))
 
@@ -140,6 +141,7 @@ describe('Auth Controller - Unit Tests', () => {
 
       expect(mockAxiosGet).toHaveBeenCalledWith(
         `https://cas.sfu.ca/cas/serviceValidate?service=${encodeURIComponent(serviceURL)}&ticket=${encodeURIComponent(ticket)}`,
+        { timeout: 10_000 },
       )
 
       expect(prismaMock.user.upsert).toHaveBeenCalledWith({
@@ -189,6 +191,7 @@ describe('Auth Controller - Unit Tests', () => {
 
       expect(mockAxiosGet).toHaveBeenCalledWith(
         `https://cas.sfu.ca/cas/serviceValidate?service=${encodeURIComponent(serviceURL)}&ticket=${encodeURIComponent(ticket)}`,
+        { timeout: 10_000 },
       )
 
       expect(mockParseStringPromise).toHaveBeenCalledWith(casResponse, {
@@ -265,6 +268,49 @@ describe('Auth Controller - Unit Tests', () => {
       expect(prismaMock.user.upsert).not.toHaveBeenCalled()
     })
 
+    it.each([
+      ['ETIMEDOUT', 'connect ETIMEDOUT'],
+      ['ECONNABORTED', 'timeout of 10000ms exceeded'],
+    ])(
+      'should return 502 when CAS is unreachable (%s)',
+      async (code, message) => {
+        mockRequest.query = { ticket }
+
+        const error = Object.assign(new Error(message), {
+          isAxiosError: true,
+          code,
+        })
+        mockAxiosGet.mockRejectedValue(error)
+
+        await validateCASTicket(
+          mockRequest as Request,
+          mockResponse as Response,
+        )
+
+        expect(mockStatus).toHaveBeenCalledWith(502)
+        expect(mockSend).toHaveBeenCalledWith('Could not reach SFU CAS')
+        expect(prismaMock.user.upsert).not.toHaveBeenCalled()
+      },
+    )
+
+    it('should return 500 (not 502) when CAS replies with an HTTP error', async () => {
+      mockRequest.query = { ticket }
+
+      const error = Object.assign(
+        new Error('Request failed with status code 503'),
+        {
+          isAxiosError: true,
+          response: { status: 503 },
+        },
+      )
+      mockAxiosGet.mockRejectedValue(error)
+
+      await validateCASTicket(mockRequest as Request, mockResponse as Response)
+
+      expect(mockStatus).toHaveBeenCalledWith(500)
+      expect(mockSend).toHaveBeenCalledWith('Authentication failed')
+    })
+
     it('should handle CAS server errors', async () => {
       mockRequest.query = { ticket }
 
@@ -274,7 +320,7 @@ describe('Auth Controller - Unit Tests', () => {
       await validateCASTicket(mockRequest as Request, mockResponse as Response)
 
       expect(mockStatus).toHaveBeenCalledWith(500)
-      expect(mockSend).toHaveBeenCalledWith('Internal error')
+      expect(mockSend).toHaveBeenCalledWith('Authentication failed')
     })
 
     it('should handle XML parsing errors', async () => {
@@ -287,7 +333,7 @@ describe('Auth Controller - Unit Tests', () => {
       await validateCASTicket(mockRequest as Request, mockResponse as Response)
 
       expect(mockStatus).toHaveBeenCalledWith(500)
-      expect(mockSend).toHaveBeenCalledWith('Internal error')
+      expect(mockSend).toHaveBeenCalledWith('Authentication failed')
     })
 
     it('should handle database errors during user upset', async () => {
@@ -309,7 +355,7 @@ describe('Auth Controller - Unit Tests', () => {
       await validateCASTicket(mockRequest as Request, mockResponse as Response)
 
       expect(mockStatus).toHaveBeenCalledWith(500)
-      expect(mockSend).toHaveBeenCalledWith('Internal error')
+      expect(mockSend).toHaveBeenCalledWith('Authentication failed')
     })
   })
 })
