@@ -86,6 +86,8 @@ export type ModelImage = {
   id: string
   modelId: string
   order: number
+  label?: string
+  description?: string
   alt?: string
   createdAt?: string
   thumbUrl: string

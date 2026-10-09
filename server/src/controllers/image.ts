@@ -1,6 +1,9 @@
 import { Request, Response } from 'express'
 import prisma from '../services/prisma'
-import { ModelImageRequestBody } from '../scripts/validators'
+import {
+  ModelImageEditRequestBody,
+  ModelImageRequestBody,
+} from '../scripts/validators'
 import sharp from 'sharp'
 import s3Client from '../services/s3Client'
 import { PutObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
@@ -98,12 +101,72 @@ export const deleteImage = async (
       ),
     ])
 
-    res.status(200).json({ message: 'Image deleted sucessfully' })
+    res.status(200).json({ message: 'Image deleted successfully' })
   } catch (error) {
     console.error('[server]: Failed to delete image. ERR: ', error)
     res
       .status(500)
       .json({ error: `[server]: Failed to delete image. ERR: ${error}` })
+  }
+}
+
+export const editImage = async (
+  req: Request<{ id: string }, unknown, ModelImageEditRequestBody>,
+  res: Response,
+): Promise<void> => {
+  const user = req.user
+
+  if (!user) {
+    res.status(401).send('Unauthorized')
+    return
+  }
+
+  const { id } = req.params
+  const { modelId, image } = req.body
+
+  if (!id || !modelId) {
+    res.status(400).json({ error: 'modelId and image id are required' })
+    return
+  }
+
+  if (!image) {
+    res.status(400).json({ error: 'No model image information provided' })
+    return
+  }
+
+  try {
+    const img = await prisma.modelImage.findUnique({
+      where: { id },
+      select: { modelId: true },
+    })
+
+    if (!img) {
+      res.status(404).json({ error: 'Image not found ' })
+      return
+    }
+
+    if (img.modelId !== modelId) {
+      res.status(403).json({ error: 'Mismatching model IDs' })
+      return
+    }
+
+    const response = await prisma.modelImage.update({
+      where: { id },
+      data: {
+        alt: image.alt,
+        label: image.label,
+        description: image.description,
+      },
+    })
+
+    res
+      .status(200)
+      .json({ message: 'Image updated successfully', image: response })
+  } catch (error) {
+    console.error('[server]: Failed to update image. ERR: ', error)
+    res
+      .status(500)
+      .json({ error: `[server]: Failed to update image. ERR: ${error}` })
   }
 }
 

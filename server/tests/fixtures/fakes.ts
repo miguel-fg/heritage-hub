@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { Readable } from 'stream'
 
 export const fakeUser = {
   id: faker.string.uuid(),
@@ -67,3 +68,33 @@ export const fakeHotspot = {
   quatZ: faker.number.float(),
   quatW: faker.number.float(),
 }
+
+export const fakeModelImage = {
+  id: faker.string.uuid(),
+  modelId: fakeModel.id,
+  order: 0,
+  alt: faker.lorem.sentence(),
+  label: faker.lorem.words(3),
+  description: faker.lorem.paragraph(),
+  createdAt: faker.date.anytime,
+}
+const mimeTypes = [
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+]
+
+export const fakeMulterFile = {
+  filename: faker.system.commonFileName('png'),
+  fieldname: 'file',
+  originalname: faker.system.commonFileName(),
+  mimetype: mimeTypes[faker.number.int({ min: 0, max: mimeTypes.length - 1 })],
+  path: faker.system.filePath(),
+  encoding: 'utf-8',
+  size: faker.number.int({ min: 1000, max: 10000 }),
+  stream: new Readable(),
+  destination: '',
+  buffer: Buffer.from(''),
+} satisfies Express.Multer.File

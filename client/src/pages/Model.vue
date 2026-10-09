@@ -47,15 +47,19 @@
                 :alt="currentImage.alt ?? ''"
                 class="max-h-full max-w-full object-contain"
               />
+              <ImageDescription
+                @edit="handleEditImg(currentImage)"
+                :label="currentImage.label"
+                :description="currentImage.description"
+                :permissions="hasPermissions"
+              />
             </div>
           </Transition>
           <ImageDrawer
             v-show="model.images.length > 0"
             :thumbnail="model.thumbnailUrl"
             :images="model.images"
-            :has-permissions="hasPermissions"
-            @delete-image="handleDeleteImg"
-            class="opacity-0 group-hover:opacity-100 transition-all duration-300"
+            class="opacity-0 group-hover:opacity-100 transition-all duration-300 z-40"
             :class="
               isMobileDevice
                 ? 'opacity-100'
@@ -223,18 +227,6 @@
     <template #cancel>Cancel</template>
   </ConfirmationModal>
   <ConfirmationModal
-    :visible="showDeleteImgModal && imgToDelete !== null"
-    @confirm="confirmImgDelete"
-    @cancel="cancelImgDelete"
-  >
-    <template #title>Confirm deletion</template>
-    <template #subtitle
-      >Are you sure you want to permanently delete this image?</template
-    >
-    <template #confirm>Delete</template>
-    <template #cancel>Cancel</template>
-  </ConfirmationModal>
-  <ConfirmationModal
     :visible="showDeletePDFModal && pdfToDelete !== null"
     @confirm="confirmPdfDelete"
     @cancel="cancelPdfDelete"
@@ -253,6 +245,18 @@
     :image-count="model.images.length"
     @done="(images, pdfs) => handleMediaUploaded(images, pdfs)"
     @cancel="() => (showMediaUploadModal = false)"
+  />
+  <ImageEditModal
+    @save-edit="confirmImgEdit"
+    @delete-image="confirmImgDelete"
+    @cancel-edit="
+      () => {
+        imgToEdit = null
+        showEditImgModal = false
+      }
+    "
+    :visible="showEditImgModal"
+    :to-edit="imgToEdit"
   />
 </template>
 
@@ -274,6 +278,8 @@ import { useToastStore } from '../stores/toastStore'
 import ConfirmationModal from '../components/ConfirmationModal.vue'
 import MediaUploadModal from '../components/MediaUploadModal.vue'
 import ModelPageToolbar from '../components/ModelPageToolbar.vue'
+import ImageDescription from '../components/ImageDescription.vue'
+import ImageEditModal from '../components/ImageEditModal.vue'
 import { Icon } from '@iconify/vue'
 import { type Model } from '../types/model'
 import { useEdit } from '../scripts/useEdit'
@@ -428,17 +434,17 @@ const currentImage = computed(() =>
 
 const {
   showMediaUploadModal,
-  showDeleteImgModal,
+  showEditImgModal,
   showDeletePDFModal,
-  imgToDelete,
+  imgToEdit,
   pdfToDelete,
   handleMediaUploaded,
-  handleDeleteImg,
-  cancelImgDelete,
+  handleEditImg,
   confirmImgDelete,
   handleDeletePdf,
   cancelPdfDelete,
   confirmPdfDelete,
+  confirmImgEdit,
 } = useMedia(model, hasPermissions)
 
 onMounted(() => {
