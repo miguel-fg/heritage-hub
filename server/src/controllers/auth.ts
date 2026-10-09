@@ -43,6 +43,7 @@ export const validateCASTicket = async (req: Request, res: Response) => {
 
     const { data } = await axios.get(
       `${CAS_BASE}/serviceValidate?service=${encodeURIComponent(serviceURL)}&ticket=${encodeURIComponent(ticket)}`,
+      { timeout: 10_000 },
     )
 
     const parsed = await parseStringPromise(data, { explicitArray: false })
@@ -66,7 +67,13 @@ export const validateCASTicket = async (req: Request, res: Response) => {
 
     res.redirect(`${frontendURL}/auth/callback?otc=${otc}`)
   } catch (err) {
-    console.error(err)
-    res.status(500).send('Internal error')
+    if (axios.isAxiosError(err) && !err.response) {
+      console.error(`CAS unreachable: ${err.code} - ${err.message}`)
+      res.status(502).send('Could not reach SFU CAS')
+      return
+    }
+
+    console.error(`CAS validation failed: ${(err as Error).message}`)
+    res.status(500).send('Authentication failed')
   }
 }
