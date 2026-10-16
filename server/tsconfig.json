@@ -2,6 +2,7 @@
   "compilerOptions": {
     "moduleDetection": "force",
     "module": "Preserve",
+    "target": "ESNext",
     "resolveJsonModule": true,
     "allowJs": true,
     "esModuleInterop": true,

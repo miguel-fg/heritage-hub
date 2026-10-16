@@ -1,18 +1,18 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { NextFunction, Request, Response } from 'express'
-import { fakeUser } from '../../fixtures/fakes'
+import { fakeUser } from '../fixtures/fakes'
 
 const mockValidateSessionToken = vi.hoisted(() => vi.fn())
 const mockDeleteSessionTokenCookie = vi.hoisted(() => vi.fn())
 const mockSetSessionTokenCookie = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/scripts/auth', () => ({
+vi.mock('../../src/scripts/auth', () => ({
   validateSessionToken: mockValidateSessionToken,
   deleteSessionTokenCookie: mockDeleteSessionTokenCookie,
   setSessionTokenCookie: mockSetSessionTokenCookie,
 }))
 
-import { authGuard } from '../../../src/middleware/authGuard'
+import { authGuard } from '../../src/middleware/authGuard'
 
 describe('AuthGuard Middleware - Unit Tests', () => {
   let mockRequest: Partial<Request>

@@ -5,17 +5,17 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: [
-      'tests/unit/**/*.test.ts',
-      'tests/integration/**/*.test.ts',
-      'tests/e2e/**/*.test.ts',
-    ],
+    include: ['tests/**/*.test.ts'],
     setupFiles: ['./tests/setup.ts'],
     onConsoleLog: (_log, type) => {
       if (type === 'stderr') {
         return false
       }
     },
+    coverage: {
+      include: ['src/**/*.ts'],
+    },
+    clearMocks: true,
   },
   resolve: {
     alias: {

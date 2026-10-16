@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { NextFunction, Request, Response } from 'express'
-import { checkOrigin } from '../../../src/middleware/checkOrigin'
+import { checkOrigin } from '../../src/middleware/checkOrigin'
 
 describe('CheckOrigin Middleware - Unit Tests', () => {
   let mockRequest: Partial<Request>

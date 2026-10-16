@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
-const FILE_TYPES = ['GLB', 'OBJ'] as const
+export const FILE_TYPES = ['GLB', 'OBJ'] as const
 
-const ASSET_TYPES = ['GLB', 'OBJ', 'MTL', 'TEXTURE'] as const
+export const ASSET_TYPES = ['GLB', 'OBJ', 'MTL', 'TEXTURE'] as const
 
-const DIMENSION_TYPES = [
+export const DIMENSION_TYPES = [
   'WIDTH',
   'HEIGHT',
   'DEPTH',
@@ -12,7 +12,7 @@ const DIMENSION_TYPES = [
   'VOLUME',
 ] as const
 
-const DIMENSION_UNITS = [
+export const DIMENSION_UNITS = [
   'mm',
   'cm',
   'm',

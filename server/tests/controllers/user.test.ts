@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
-import { fakeUser } from '../../fixtures/fakes'
+import { fakeUser } from '../fixtures/fakes'
 
 const mockGenerateSessionToken = vi.hoisted(() => vi.fn())
 const mockCreateSession = vi.hoisted(() => vi.fn())
@@ -9,7 +9,7 @@ const mockDeleteSessionTokenCookie = vi.hoisted(() => vi.fn())
 const mockOneTimeCodeTransaction = vi.hoisted(() => vi.fn())
 const mockInvalidateSession = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/scripts/auth', () => ({
+vi.mock('../../src/scripts/auth', () => ({
   generateSessionToken: mockGenerateSessionToken,
   createSession: mockCreateSession,
   setSessionTokenCookie: mockSetSessionTokenCookie,
@@ -26,7 +26,7 @@ const prismaMock = vi.hoisted(() => ({
   $transaction: vi.fn(),
 }))
 
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
@@ -37,7 +37,7 @@ import {
   patchUsers,
   exchangeOneTimeCode,
   deleteUserSession,
-} from '../../../src/controllers/user'
+} from '../../src/controllers/user'
 
 describe('User Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>

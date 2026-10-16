@@ -1,20 +1,20 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
-import { fakeMaterial } from '../../fixtures/fakes'
+import { fakeTag } from '../fixtures/fakes'
 
 const prismaMock = vi.hoisted(() => ({
-  material: {
+  tag: {
     findMany: vi.fn(),
   },
 }))
 
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
-import { getMaterials } from '../../../src/controllers/material'
+import { getTags } from '../../src/controllers/tag'
 
-describe('Material Controller - Unit Tests', () => {
+describe('Tag Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>
   let mockResponse: Partial<Response>
   let mockStatus: ReturnType<typeof vi.fn>
@@ -33,15 +33,15 @@ describe('Material Controller - Unit Tests', () => {
     } as unknown as Response
   })
 
-  describe('getMaterials', () => {
-    it('should return materials from database', async () => {
-      const materials = [{ name: fakeMaterial.name }]
+  describe('getTags', () => {
+    it('should return tags from database', async () => {
+      const tags = [{ name: fakeTag.name }]
 
-      prismaMock.material.findMany.mockResolvedValue(materials)
+      prismaMock.tag.findMany.mockResolvedValue(tags)
 
-      await getMaterials(mockRequest as Request, mockResponse as Response)
+      await getTags(mockRequest as Request, mockResponse as Response)
 
-      expect(prismaMock.material.findMany).toHaveBeenCalledWith({
+      expect(prismaMock.tag.findMany).toHaveBeenCalledWith({
         select: {
           name: true,
         },
@@ -50,20 +50,18 @@ describe('Material Controller - Unit Tests', () => {
         },
       })
       expect(mockStatus).toHaveBeenCalledWith(200)
-      expect(mockJson).toHaveBeenCalledWith({ materials })
+      expect(mockJson).toHaveBeenCalledWith({ tags })
     })
 
     it('should handle database errors', async () => {
       const error = new Error('Database connection failed')
-      prismaMock.material.findMany.mockRejectedValue(error)
+      prismaMock.tag.findMany.mockRejectedValue(error)
 
-      await getMaterials(mockRequest as Request, mockResponse as Response)
+      await getTags(mockRequest as Request, mockResponse as Response)
 
       expect(mockStatus).toHaveBeenCalledWith(500)
       expect(mockJson).toHaveBeenCalledWith({
-        error: expect.stringContaining(
-          'Failed to fetch materials from database',
-        ),
+        error: expect.stringContaining('Failed to fetch tags from database'),
       })
     })
   })

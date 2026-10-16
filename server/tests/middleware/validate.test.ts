@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { NextFunction, Request, Response } from 'express'
 import { z, ZodError } from 'zod'
-import { fakeUser } from '../../fixtures/fakes'
+import { fakeUser } from '../fixtures/fakes'
 
 const prismaMock = vi.hoisted(() => ({
   model: {
@@ -9,7 +9,7 @@ const prismaMock = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
@@ -17,7 +17,7 @@ import {
   validateBody,
   validateUploadPermissions,
   validateModifyPermissions,
-} from '../../../src/middleware/validate'
+} from '../../src/middleware/validate'
 
 describe('Validate Middleware - Unit Tests', () => {
   let mockRequest: Partial<Request>

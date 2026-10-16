@@ -5,7 +5,7 @@ const mockGetCASServiceURL = vi.hoisted(() => vi.fn())
 const mockGetFrontendURL = vi.hoisted(() => vi.fn())
 const mockCreateOneTimeCode = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/scripts/auth', () => ({
+vi.mock('../../src/scripts/auth', () => ({
   getCASServiceURL: mockGetCASServiceURL,
   getFrontendURL: mockGetFrontendURL,
   createOneTimeCode: mockCreateOneTimeCode,
@@ -33,11 +33,11 @@ const prismaMock = vi.hoisted(() => ({
     upsert: vi.fn(),
   },
 }))
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
-import { redirectCAS, validateCASTicket } from '../../../src/controllers/auth'
+import { redirectCAS, validateCASTicket } from '../../src/controllers/auth'
 
 describe('Auth Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>

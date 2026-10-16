@@ -1,11 +1,11 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
-import { fakeModel, fakeTag, fakeMaterial } from '../../fixtures/fakes'
+import { fakeModel, fakeTag, fakeMaterial } from '../fixtures/fakes'
 
 const mockBuildModelSearchConditions = vi.hoisted(() => vi.fn())
 const mockBuildModelSortConditions = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/scripts/prisma', () => ({
+vi.mock('../../src/scripts/prisma', () => ({
   buildModelSearchConditions: mockBuildModelSearchConditions,
   buildModelSortConditions: mockBuildModelSortConditions,
   withPrismaRetry: vi.fn((fn) => fn()),
@@ -18,11 +18,11 @@ const prismaMock = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
-import { searchModels } from '../../../src/controllers/search'
+import { searchModels } from '../../src/controllers/search'
 
 describe('Search Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>
