@@ -92,9 +92,11 @@ export const withPrismaRetry = async <T>(
   retries = 3,
   delayMs = 200,
 ): Promise<T> => {
+  const attempts = Math.max(1, retries)
+
   let lastError: unknown
 
-  for (let attempt = 0; attempt < retries; attempt++) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
     try {
       return await fn()
     } catch (error: any) {
@@ -103,7 +105,7 @@ export const withPrismaRetry = async <T>(
       if (
         error?.code &&
         retryableCodes.includes(error.code) &&
-        attempt < retries - 1
+        attempt < attempts - 1
       ) {
         lastError = error
         await new Promise((res) => setTimeout(res, delayMs))

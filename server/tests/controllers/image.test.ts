@@ -4,8 +4,8 @@ import {
   fakeModel,
   fakeModelImage,
   fakeUser,
-  fakeMulterFile,
-} from '../../fixtures/fakes'
+  fakeMulterImgFile,
+} from '../fixtures/fakes'
 import { PutObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 
 const prismaMock = vi.hoisted(() => ({
@@ -17,13 +17,13 @@ const prismaMock = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
 const mockGeneratePresignedUrl = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/scripts/r2Storage', () => ({
+vi.mock('../../src/scripts/r2Storage', () => ({
   generatePresignedUrl: mockGeneratePresignedUrl,
 }))
 
@@ -31,7 +31,7 @@ const s3ClientMock = vi.hoisted(() => ({
   send: vi.fn().mockResolvedValue({}),
 }))
 
-vi.mock('../../../src/services/s3Client', () => ({
+vi.mock('../../src/services/s3Client', () => ({
   default: s3ClientMock,
 }))
 
@@ -56,7 +56,7 @@ import {
   processImage,
   cancelImages,
   deleteImage,
-} from '../../../src/controllers/image'
+} from '../../src/controllers/image'
 
 describe('Image Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>
@@ -435,6 +435,7 @@ describe('Image Controller - Unit Tests', () => {
         error: 'modelId and image id are required',
       })
     })
+
     it('throws 400 when image information is missing in request body', async () => {
       mockRequest.params = { id: fakeModelImage.id }
       mockRequest.body = {
@@ -451,6 +452,29 @@ describe('Image Controller - Unit Tests', () => {
       expect(mockJson).toHaveBeenCalledWith({
         error: 'No model image information provided',
       })
+    })
+
+    it('throws 404 if no image with provided ID is found in the database', async () => {
+      mockRequest.params = { id: fakeModelImage.id }
+      mockRequest.body = {
+        modelId: fakeModel.id,
+        image: {
+          alt: 'image alt',
+          label: 'lorem ipsum',
+          description: 'lorem ipsum description',
+        },
+      }
+      mockRequest.user = fakeUser
+
+      prismaMock.modelImage.findUnique.mockResolvedValue(null)
+
+      await editImage(
+        mockRequest as Request<{ id: string }>,
+        mockResponse as Response,
+      )
+
+      expect(mockStatus).toHaveBeenCalledWith(404)
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Image not found' })
     })
 
     it('throws 403 when finding a modelId mismatch', async () => {
@@ -544,7 +568,7 @@ describe('Image Controller - Unit Tests', () => {
 
   describe('processImage', () => {
     it('generates image files and writes files to cloud storage', async () => {
-      mockRequest.file = fakeMulterFile
+      mockRequest.file = fakeMulterImgFile
       mockRequest.user = fakeUser
       mockRequest.body = { modelId: fakeModel.id, imageId: fakeModelImage.id }
 
@@ -590,7 +614,7 @@ describe('Image Controller - Unit Tests', () => {
     })
 
     it('rejects operation for unauthenticated users', async () => {
-      mockRequest.file = fakeMulterFile
+      mockRequest.file = fakeMulterImgFile
       mockRequest.body = { modelId: fakeModel.id, imageId: fakeModelImage.id }
 
       await processImage(mockRequest as Request, mockResponse as Response)
@@ -615,7 +639,7 @@ describe('Image Controller - Unit Tests', () => {
       expect(mockJson).toHaveBeenCalledWith({ error: 'No file provided' })
     })
     it('throws 400 when missing imageId', async () => {
-      mockRequest.file = fakeMulterFile
+      mockRequest.file = fakeMulterImgFile
       mockRequest.user = fakeUser
       mockRequest.body = { modelId: fakeModel.id }
 
@@ -634,7 +658,7 @@ describe('Image Controller - Unit Tests', () => {
     })
 
     it('throws 400 when missing modelId', async () => {
-      mockRequest.file = fakeMulterFile
+      mockRequest.file = fakeMulterImgFile
       mockRequest.user = fakeUser
       mockRequest.body = { imageId: fakeModelImage.id }
 
@@ -652,7 +676,7 @@ describe('Image Controller - Unit Tests', () => {
       })
     })
     it('prevents writing files to storage if sharp throws and error', async () => {
-      mockRequest.file = fakeMulterFile
+      mockRequest.file = fakeMulterImgFile
       mockRequest.user = fakeUser
       mockRequest.body = { modelId: fakeModel.id, imageId: fakeModelImage.id }
 
@@ -669,7 +693,7 @@ describe('Image Controller - Unit Tests', () => {
     })
 
     it('throws 500 on R2 failure', async () => {
-      mockRequest.file = fakeMulterFile
+      mockRequest.file = fakeMulterImgFile
       mockRequest.user = fakeUser
       mockRequest.body = { modelId: fakeModel.id, imageId: fakeModelImage.id }
 

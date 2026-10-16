@@ -76,21 +76,36 @@ export const fakeModelImage = {
   alt: faker.lorem.sentence(),
   label: faker.lorem.words(3),
   description: faker.lorem.paragraph(),
-  createdAt: faker.date.anytime,
+  createdAt: faker.date.anytime(),
 }
-const mimeTypes = [
-  'image/gif',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'application/pdf',
-]
+const imgMimeTypes = ['image/gif', 'image/jpeg', 'image/png', 'image/webp']
 
-export const fakeMulterFile = {
+export const fakeMulterImgFile = {
   filename: faker.system.commonFileName('png'),
   fieldname: 'file',
   originalname: faker.system.commonFileName(),
-  mimetype: mimeTypes[faker.number.int({ min: 0, max: mimeTypes.length - 1 })],
+  mimetype:
+    imgMimeTypes[faker.number.int({ min: 0, max: imgMimeTypes.length - 1 })],
+  path: faker.system.filePath(),
+  encoding: 'utf-8',
+  size: faker.number.int({ min: 1000, max: 10000 }),
+  stream: new Readable(),
+  destination: '',
+  buffer: Buffer.from(''),
+} satisfies Express.Multer.File
+
+export const fakeModelPDF = {
+  id: faker.string.uuid(),
+  modelId: fakeModel.id,
+  title: faker.system.commonFileName().split('.')[0],
+  createdAt: faker.date.anytime(),
+}
+
+export const fakeMulterPDFFile = {
+  filename: faker.system.commonFileName('pdf'),
+  fieldname: 'file',
+  originalname: faker.system.commonFileName(),
+  mimetype: 'application/pdf',
   path: faker.system.filePath(),
   encoding: 'utf-8',
   size: faker.number.int({ min: 1000, max: 10000 }),

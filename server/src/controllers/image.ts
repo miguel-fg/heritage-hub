@@ -141,7 +141,7 @@ export const editImage = async (
     })
 
     if (!img) {
-      res.status(404).json({ error: 'Image not found ' })
+      res.status(404).json({ error: 'Image not found' })
       return
     }
 

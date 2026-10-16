@@ -7,7 +7,7 @@ import {
   fakeUser,
   fakeDimension,
   fakeHotspot,
-} from '../../fixtures/fakes'
+} from '../fixtures/fakes'
 
 const prismaMock = vi.hoisted(() => ({
   model: {
@@ -32,16 +32,18 @@ const prismaMock = vi.hoisted(() => ({
   $transaction: vi.fn(),
 }))
 
-vi.mock('../../../src/services/prisma', () => ({
+vi.mock('../../src/services/prisma', () => ({
   default: prismaMock,
 }))
 
 const mockGeneratePresignedUrl = vi.hoisted(() => vi.fn())
 const mockGeneratePresignedUploadUrl = vi.hoisted(() => vi.fn())
 const mockDeleteAllFromR2 = vi.hoisted(() => vi.fn())
+const mockGenerateFilePresignedUrl = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/scripts/r2Storage', () => ({
+vi.mock('../../src/scripts/r2Storage', () => ({
   generatePresignedUrl: mockGeneratePresignedUrl,
+  generateFilePresignedUrl: mockGenerateFilePresignedUrl,
   generatePresignedUploadUrl: mockGeneratePresignedUploadUrl,
   deleteAllFromR2: mockDeleteAllFromR2,
 }))
@@ -52,11 +54,12 @@ import {
   getModelThumbnailUrl,
   getModelObjectUrl,
   getModelUploadUrl,
+  getNewThumbnailUrl,
   newModel,
   updateModel,
   deleteModel,
-} from '../../../src/controllers/model'
-import { ModelRequestBody } from '../../../src/scripts/validators'
+} from '../../src/controllers/model'
+import { ModelRequestBody } from '../../src/scripts/validators'
 
 describe('Model Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>
@@ -152,15 +155,32 @@ describe('Model Controller - Unit Tests', () => {
         tags: [fakeTag],
         dimensions: [fakeDimension],
         hotspots: [fakeHotspot],
-        images: [],
-        pdfs: [],
+        images: [{ id: 'img1', order: 0 }],
+        pdfs: [
+          { id: 'pdf1', title: 'Paper.pdf' },
+          { id: 'pdf2', title: null },
+        ],
         assets: [],
       }
 
       mockRequest.params = { id: fakeModel.id }
       prismaMock.model.findUnique.mockResolvedValue(model)
 
+      mockGeneratePresignedUrl.mockImplementation(
+        async (_bucket, key) => `signed:${key}`,
+      )
+
+      mockGenerateFilePresignedUrl.mockImplementation(
+        async (_bucket, key, filename) => `signed:${key}:${filename}`,
+      )
+
       await getModel(mockRequest as Request, mockResponse as Response)
+
+      expect(mockGenerateFilePresignedUrl).toHaveBeenCalledWith(
+        undefined,
+        `${fakeModel.id}/pdfs/pdf2.pdf`,
+        'article.pdf',
+      )
 
       expect(prismaMock.model.findUnique).toHaveBeenCalledWith({
         where: { id: fakeModel.id },
@@ -187,12 +207,49 @@ describe('Model Controller - Unit Tests', () => {
       })
 
       expect(mockStatus).toHaveBeenCalledWith(200)
-      expect(mockJson).toHaveBeenCalledWith({ model })
+      expect(mockJson).toHaveBeenCalledWith({
+        model: {
+          ...model,
+          thumbnailUrl: `signed:${fakeModel.id}/thumbnail.png`,
+          images: [
+            {
+              id: 'img1',
+              order: 0,
+              fullUrl: `signed:${fakeModel.id}/images/img1/full.webp`,
+              thumbUrl: `signed:${fakeModel.id}/images/img1/thumb.webp`,
+            },
+          ],
+          pdfs: [
+            {
+              id: 'pdf1',
+              title: 'Paper.pdf',
+              url: `signed:${fakeModel.id}/pdfs/pdf1.pdf:Paper.pdf`,
+            },
+            {
+              id: 'pdf2',
+              title: null,
+              url: `signed:${fakeModel.id}/pdfs/pdf2.pdf:article.pdf`,
+            },
+          ],
+        },
+      })
+    })
+
+    it('throws 404 when not finding a model', async () => {
+      mockRequest.params = { id: 'nonexistent-id' }
+
+      prismaMock.model.findUnique.mockResolvedValue(null)
+      await getModel(mockRequest as Request, mockResponse as Response)
+
+      expect(mockStatus).toHaveBeenCalledWith(404)
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Model not found',
+      })
     })
 
     it('should handle errors when fetching a single model', async () => {
-      mockRequest.params = { id: 'invalid-id' }
-      const error = new Error('Model not found')
+      mockRequest.params = { id: 'model-id' }
+      const error = new Error('Something went wrong')
 
       prismaMock.model.findUnique.mockRejectedValue(error)
 
@@ -417,6 +474,44 @@ describe('Model Controller - Unit Tests', () => {
       await getModelUploadUrl(mockRequest as Request, mockResponse as Response)
       expect(mockStatus).toHaveBeenCalledWith(500)
       expect(mockJson).toBeCalledWith({
+        error: expect.stringContaining('Failed to generate upload URL'),
+      })
+    })
+  })
+
+  describe('getNewThumbnailUrl', () => {
+    it('should return a presigned upload URL for the thumbnail', async () => {
+      mockRequest.params = { id: fakeModel.id }
+      mockGeneratePresignedUploadUrl.mockResolvedValueOnce('newThumbnail.url')
+
+      await getNewThumbnailUrl(
+        mockRequest as Request<{ id: string }>,
+        mockResponse as Response,
+      )
+
+      expect(mockGeneratePresignedUploadUrl).toHaveBeenCalledWith(
+        undefined,
+        `${fakeModel.id}/thumbnail.png`,
+      )
+      expect(mockStatus).toHaveBeenCalledWith(200)
+      expect(mockJson).toHaveBeenCalledWith({
+        thumbnailUrl: 'newThumbnail.url',
+      })
+    })
+
+    it('should handle upload URL generation errors', async () => {
+      mockRequest.params = { id: 'invalid-id' }
+      mockGeneratePresignedUploadUrl.mockRejectedValueOnce(
+        new Error('Could not generate upload URL'),
+      )
+
+      await getNewThumbnailUrl(
+        mockRequest as Request<{ id: string }>,
+        mockResponse as Response,
+      )
+
+      expect(mockStatus).toHaveBeenCalledWith(500)
+      expect(mockJson).toHaveBeenCalledWith({
         error: expect.stringContaining('Failed to generate upload URL'),
       })
     })
