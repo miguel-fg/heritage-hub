@@ -12,11 +12,16 @@
         <Icon icon="bx:x" width="24" />
       </button>
       <div class="flex flex-col gap-2">
-        <h1
-          class="font-bold text-primary-500 w-full pb-1 pr-6 border-b border-grayscale-300"
+        <strong
+          class="font-bold text-primary-500 w-full pr-6"
+          :class="
+            props.description
+              ? 'border-b border-grayscale-300 pb-1'
+              : 'border-none pb-0'
+          "
         >
           {{ props.label ?? 'Image' }}
-        </h1>
+        </strong>
         <p class="font-garamond text-grayscale-900 whitespace-pre-line">
           {{ props.description }}
         </p>
@@ -56,7 +61,7 @@
 <script setup lang="ts">
 import { useVisualizerStore } from '../stores/visualizerStore'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
@@ -70,7 +75,8 @@ const emit = defineEmits(['edit'])
 const visualizerStore = useVisualizerStore()
 
 const show = computed(
-  () => props.description && !visualizerStore.isImageDrawerOpen,
+  () =>
+    (props.description || props.label) && !visualizerStore.isImageDrawerOpen,
 )
 
 const openDescription = ref(true)
@@ -79,4 +85,11 @@ const toggleDescription = () => (openDescription.value = !openDescription.value)
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
 const smallerThanMd = breakpoints.smaller('md')
+
+watch(
+  () => visualizerStore.selectedIndex,
+  () => {
+    openDescription.value = true
+  },
+)
 </script>
