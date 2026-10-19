@@ -79,6 +79,17 @@ describe('Prisma utility functions', () => {
         isPublic: true,
       })
     })
+
+    it('rejects `other` keys not in allowlist', () => {
+      expect(
+        buildModelSearchConditions({
+          others: ['downloadable', 'bronze', 'isPublic', 'roman'],
+        }),
+      ).toEqual({
+        downloadable: true,
+        isPublic: true,
+      })
+    })
   })
 
   describe('buildModelSortConditions', () => {
