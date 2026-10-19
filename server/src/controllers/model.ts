@@ -8,6 +8,15 @@ import {
 } from '../scripts/r2Storage'
 import { ModelRequestBody, ModelEditRequestBody } from '../scripts/validators'
 import { withPrismaRetry } from '../scripts/prisma'
+import {
+  modelPrefix,
+  modelGLBKey,
+  modelOBJKeys,
+  modelTextureKey,
+  thumbnailKey,
+  imageKeys,
+  pdfKey,
+} from '../scripts/r2Keys'
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
 
@@ -91,21 +100,19 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
 
     const thumbnailUrl = await generatePresignedUrl(
       BUCKET_NAME,
-      `${model.id}/thumbnail.png`,
+      thumbnailKey(model.id),
     )
 
     const imagesWithUrls = await Promise.all(
-      model.images.map(async (img) => ({
-        ...img,
-        fullUrl: await generatePresignedUrl(
-          BUCKET_NAME,
-          `${model.id}/images/${img.id}/full.webp`,
-        ),
-        thumbUrl: await generatePresignedUrl(
-          BUCKET_NAME,
-          `${model.id}/images/${img.id}/thumb.webp`,
-        ),
-      })),
+      model.images.map(async (img) => {
+        const { full, thumb } = imageKeys(model.id, img.id)
+
+        return {
+          ...img,
+          fullUrl: await generatePresignedUrl(BUCKET_NAME, full),
+          thumbUrl: await generatePresignedUrl(BUCKET_NAME, thumb),
+        }
+      }),
     )
 
     const pdfsWithUrls = await Promise.all(
@@ -113,7 +120,7 @@ export const getModel = async (req: Request, res: Response): Promise<void> => {
         ...pdf,
         url: await generateFilePresignedUrl(
           BUCKET_NAME,
-          `${model.id}/pdfs/${pdf.id}.pdf`,
+          pdfKey(model.id, pdf.id),
           pdf.title ?? 'article.pdf',
         ),
       })),
@@ -144,7 +151,7 @@ export const getModelThumbnailUrl = async (
   try {
     const thumbnailUrl = await generatePresignedUrl(
       BUCKET_NAME,
-      `${modelId}/thumbnail.png`,
+      thumbnailKey(modelId),
     )
     res.status(200).json({ thumbnailUrl })
   } catch (error) {
@@ -176,7 +183,7 @@ export const getModelObjectUrl = async (
     if (model.objFileType === 'GLB') {
       const objectUrl = await generatePresignedUrl(
         BUCKET_NAME,
-        `${modelId}/model.glb`,
+        modelGLBKey(modelId),
       )
 
       res.status(200).json({ objectUrl })
@@ -184,21 +191,18 @@ export const getModelObjectUrl = async (
     }
 
     if (model.objFileType === 'OBJ') {
+      const { model, materials } = modelOBJKeys(modelId)
+
+      const objUrl = await generatePresignedUrl(BUCKET_NAME, model)
+      const mtlUrl = await generatePresignedUrl(BUCKET_NAME, materials)
+
       const textureFilenames = (textures as string).split(',').filter(Boolean)
-      const objUrl = await generatePresignedUrl(
-        BUCKET_NAME,
-        `${modelId}/model.obj`,
-      )
-      const mtlUrl = await generatePresignedUrl(
-        BUCKET_NAME,
-        `${modelId}/materials.mtl`,
-      )
       const textureUrls = await Promise.all(
         textureFilenames.map(async (filename) => ({
           filename,
           url: await generatePresignedUrl(
             BUCKET_NAME,
-            `${modelId}/textures/${filename}`,
+            modelTextureKey(modelId, filename),
           ),
         })),
       )
@@ -222,13 +226,13 @@ export const getModelUploadUrl = async (
   try {
     const thumbnailUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
-      `${modelId}/thumbnail.png`,
+      thumbnailKey(modelId),
     )
 
     if (fileType === 'GLB') {
       const modelUrl = await generatePresignedUploadUrl(
         BUCKET_NAME,
-        `${modelId}/model.glb`,
+        modelGLBKey(modelId),
       )
 
       res.status(200).json({ modelUrl, thumbnailUrl })
@@ -236,21 +240,20 @@ export const getModelUploadUrl = async (
     }
 
     if (fileType === 'OBJ') {
-      const modelUrl = await generatePresignedUploadUrl(
-        BUCKET_NAME,
-        `${modelId}/model.obj`,
-      )
+      const { model, materials } = modelOBJKeys(modelId)
+
+      const modelUrl = await generatePresignedUploadUrl(BUCKET_NAME, model)
 
       const materialsUrl = await generatePresignedUploadUrl(
         BUCKET_NAME,
-        `${modelId}/materials.mtl`,
+        materials,
       )
 
       const textureUrls = await Promise.all(
         textures.map((filename: string) =>
           generatePresignedUploadUrl(
             BUCKET_NAME,
-            `${modelId}/textures/${filename}`,
+            modelTextureKey(modelId, filename),
           ).then((url) => ({ filename, url })),
         ),
       )
@@ -276,7 +279,7 @@ export const getNewThumbnailUrl = async (
   try {
     const thumbnailUrl = await generatePresignedUploadUrl(
       BUCKET_NAME,
-      `${id}/thumbnail.png`,
+      thumbnailKey(id),
     )
 
     res.status(200).json({ thumbnailUrl })
@@ -480,7 +483,7 @@ export const deleteModel = async (
 
     await Promise.all([
       prisma.model.delete({ where: { id: modelId } }),
-      deleteAllFromR2(BUCKET_NAME, `${modelId}/`),
+      deleteAllFromR2(BUCKET_NAME, modelPrefix(modelId)),
     ])
 
     res.status(200).json({ message: `Model ${modelId} deleted successfully!` })
