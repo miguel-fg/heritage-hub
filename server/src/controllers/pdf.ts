@@ -112,6 +112,7 @@ export const processPdf = async (
 
   if (!req.file) {
     res.status(400).json({ error: 'No file provided' })
+    return
   }
 
   const { modelId, pdfId } = req.body
