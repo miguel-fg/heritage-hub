@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { Request, Response } from 'express'
 import prisma from '../services/prisma'
 import {
@@ -10,7 +11,7 @@ import { PutObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import { generatePresignedUrl } from '../scripts/r2Storage'
 import { imageKeys } from '../scripts/r2Keys'
 
-const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
+const BUCKET_NAME = ENV.CLOUDFLARE_R2_BUCKET_NAME
 
 export const createImages = async (
   req: Request<unknown, unknown, ModelImageRequestBody>,

@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { Request, Response } from 'express'
 import {
   PutObjectCommand,
@@ -10,7 +11,7 @@ import { type ModelPdfRequestBody } from '../scripts/validators'
 import { generateFilePresignedUrl } from '../scripts/r2Storage'
 import { pdfKey } from '../scripts/r2Keys'
 
-const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
+const BUCKET_NAME = ENV.CLOUDFLARE_R2_BUCKET_NAME
 
 export const createPdfs = async (
   req: Request<unknown, unknown, ModelPdfRequestBody>,

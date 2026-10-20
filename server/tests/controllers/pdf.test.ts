@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
 import {
@@ -124,14 +125,14 @@ describe('PDF Controller - Unit Tests', () => {
 
       expect(mockGenerateFilePresignedUrl).toHaveBeenNthCalledWith(
         1,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${fakeModel.id}/pdfs/pdf-1.pdf`,
         'report.pdf',
       )
 
       expect(mockGenerateFilePresignedUrl).toHaveBeenNthCalledWith(
         2,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${fakeModel.id}/pdfs/pdf-2.pdf`,
         'article.pdf',
       )
@@ -191,7 +192,7 @@ describe('PDF Controller - Unit Tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledTimes(1)
       expect(cmd).toBeInstanceOf(DeleteObjectCommand)
       expect(cmd.input).toEqual({
-        Bucket: undefined,
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Key: `${fakeModel.id}/pdfs/${fakeModelPDF.id}.pdf`,
       })
 
@@ -291,7 +292,7 @@ describe('PDF Controller - Unit Tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledTimes(1)
       expect(cmd).toBeInstanceOf(PutObjectCommand)
       expect(cmd.input).toEqual({
-        Bucket: undefined,
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Key: `${fakeModel.id}/pdfs/${fakeModelPDF.id}.pdf`,
         Body: mockRequest.file!.buffer,
         ContentType: 'application/pdf',
@@ -380,7 +381,7 @@ describe('PDF Controller - Unit Tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledTimes(1)
       expect(cmd).toBeInstanceOf(DeleteObjectsCommand)
       expect(cmd.input).toEqual({
-        Bucket: undefined,
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Delete: {
           Objects: [
             { Key: `${fakeModel.id}/pdfs/pdf-1.pdf` },

@@ -1,15 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { ENV } from '../../env'
 
 const { S3Client } = vi.hoisted(() => ({ S3Client: vi.fn() }))
 
 vi.mock('@aws-sdk/client-s3', () => ({ S3Client }))
 
+const defaultEnv = { ...ENV }
+
 async function loadClient() {
   vi.resetModules()
-
-  vi.stubEnv('CLOUDFLARE_ACCOUNT_ID', 'acc-123')
-  vi.stubEnv('HH_FULL_KEY_ID', 'key-id')
-  vi.stubEnv('HH_FULL_ACCESS_KEY', 'secret-key')
 
   return (await import('../../src/services/s3Client')).default
 }
@@ -19,7 +18,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.unstubAllEnvs()
+  Object.assign(ENV, defaultEnv)
 })
 
 describe('S3 client', () => {
@@ -29,10 +28,10 @@ describe('S3 client', () => {
     expect(S3Client).toHaveBeenCalledTimes(1)
     expect(S3Client).toHaveBeenCalledWith({
       region: 'auto',
-      endpoint: 'https://acc-123.r2.cloudflarestorage.com',
+      endpoint: `https://${ENV.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       credentials: {
-        accessKeyId: 'key-id',
-        secretAccessKey: 'secret-key',
+        accessKeyId: ENV.HH_FULL_KEY_ID,
+        secretAccessKey: ENV.HH_FULL_ACCESS_KEY,
       },
     })
   })

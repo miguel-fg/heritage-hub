@@ -17,6 +17,9 @@ import { encodeBase32LowerCaseNoPadding } from '@oslojs/encoding'
 import { beforeEach } from 'node:test'
 import { OneTimeCode, Session } from '@prisma/client'
 import { Response } from 'express'
+import { ENV } from '../../env'
+
+const defaultEnv = { ...ENV }
 
 vi.mock('@oslojs/encoding', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@oslojs/encoding')>()
@@ -45,75 +48,35 @@ vi.mock('../../src/services/prisma', () => ({
 }))
 
 afterEach(() => {
-  vi.unstubAllEnvs()
+  Object.assign(ENV, defaultEnv)
 })
 
 describe('Auth utility functions', () => {
   describe('getCASServiceURL', () => {
     it('returns the CAS development URL', () => {
-      vi.stubEnv('ENVIRONMENT', 'dev')
-      vi.stubEnv('CAS_DEV', 'DEV_URL')
-      vi.stubEnv('CAS_PROD', 'PROD_URL')
+      ENV.ENVIRONMENT = 'dev'
 
-      expect(getCASServiceURL()).toBe('DEV_URL')
+      expect(getCASServiceURL()).toBe(ENV.CAS_DEV)
     })
 
     it('returns the CAS production URL', () => {
-      vi.stubEnv('ENVIRONMENT', 'prod')
-      vi.stubEnv('CAS_DEV', 'DEV_URL')
-      vi.stubEnv('CAS_PROD', 'PROD_URL')
+      ENV.ENVIRONMENT = 'prod'
 
-      expect(getCASServiceURL()).toBe('PROD_URL')
-    })
-
-    it('returns undefined if neither CAS URLs are defined', () => {
-      vi.stubEnv('ENVIRONMENT', 'prod')
-      vi.stubEnv('CAS_DEV', undefined)
-      vi.stubEnv('CAS_PROD', undefined)
-
-      expect(getCASServiceURL()).toBeUndefined()
-    })
-
-    it('returns the CAS development URL if the ENVIRONMENT variable is undefined', () => {
-      vi.stubEnv('ENVIRONMENT', undefined)
-      vi.stubEnv('CAS_DEV', 'DEV_URL')
-      vi.stubEnv('CAS_PROD', 'PROD_URL')
-
-      expect(getCASServiceURL()).toBe('DEV_URL')
+      expect(getCASServiceURL()).toBe(ENV.CAS_PROD)
     })
   })
 
   describe('getFrontendURL', () => {
     it('returns the HH development URL', () => {
-      vi.stubEnv('ENVIRONMENT', 'dev')
-      vi.stubEnv('HH_DEV', 'DEV_URL')
-      vi.stubEnv('HH_PROD', 'PROD_URL')
+      ENV.ENVIRONMENT = 'dev'
 
-      expect(getFrontendURL()).toBe('DEV_URL')
+      expect(getFrontendURL()).toBe(ENV.HH_DEV)
     })
 
     it('returns the HH production URL', () => {
-      vi.stubEnv('ENVIRONMENT', 'prod')
-      vi.stubEnv('HH_DEV', 'DEV_URL')
-      vi.stubEnv('HH_PROD', 'PROD_URL')
+      ENV.ENVIRONMENT = 'prod'
 
-      expect(getFrontendURL()).toBe('PROD_URL')
-    })
-
-    it('returns undefined if neither HH URLs are defined', () => {
-      vi.stubEnv('ENVIRONMENT', 'prod')
-      vi.stubEnv('HH_DEV', undefined)
-      vi.stubEnv('HH_PROD', undefined)
-
-      expect(getFrontendURL()).toBeUndefined()
-    })
-
-    it('returns the HH development URL if the ENVIRONMENT variable is undefined', () => {
-      vi.stubEnv('ENVIRONMENT', undefined)
-      vi.stubEnv('HH_DEV', 'DEV_URL')
-      vi.stubEnv('HH_PROD', 'PROD_URL')
-
-      expect(getFrontendURL()).toBe('DEV_URL')
+      expect(getFrontendURL()).toBe(ENV.HH_PROD)
     })
   })
 
@@ -393,7 +356,7 @@ describe('Auth utility functions', () => {
       const expiresAt = new Date('2026-12-01T10:00:00Z')
 
       it('sets a Lax, non-Secure cookie outside prod', () => {
-        vi.stubEnv('ENVIRONMENT', 'dev')
+        ENV.ENVIRONMENT = 'dev'
         const res = makeRes()
 
         setSessionTokenCookie(res, 'my-token', expiresAt)
@@ -404,7 +367,7 @@ describe('Auth utility functions', () => {
       })
 
       it('sets a None, Secure cookie in prod', () => {
-        vi.stubEnv('ENVIRONMENT', 'prod')
+        ENV.ENVIRONMENT = 'prod'
         const res = makeRes()
 
         setSessionTokenCookie(res, 'my-token', expiresAt)
@@ -413,22 +376,11 @@ describe('Auth utility functions', () => {
           'session=my-token; HttpOnly; SameSite=None; Expires=Tue, 01 Dec 2026 10:00:00 GMT; Path=/; Secure',
         )
       })
-
-      it('treats an undefined ENVIRONMENT as non-prod', () => {
-        vi.stubEnv('ENVIRONMENT', undefined)
-        const res = makeRes()
-
-        setSessionTokenCookie(res, 'my-token', expiresAt)
-
-        const header = headerOf(res as any)
-        expect(header).toContain('SameSite=Lax')
-        expect(header).not.toContain('Secure')
-      })
     })
 
     describe('deleteSessionTokenCookie', () => {
       it('clears the cookie with Max-Age=0 outside prod', () => {
-        vi.stubEnv('ENVIRONMENT', 'dev')
+        ENV.ENVIRONMENT = 'dev'
         const res = makeRes()
 
         deleteSessionTokenCookie(res)
@@ -439,7 +391,7 @@ describe('Auth utility functions', () => {
       })
 
       it('clears the cookie with None and Secure in prod', () => {
-        vi.stubEnv('ENVIRONMENT', 'prod')
+        ENV.ENVIRONMENT = 'prod'
         const res = makeRes()
 
         deleteSessionTokenCookie(res)
@@ -447,17 +399,6 @@ describe('Auth utility functions', () => {
         expect(headerOf(res as any)).toBe(
           'session=; HttpOnly; SameSite=None; Max-Age=0; Path=/; Secure',
         )
-      })
-
-      it('treats an undefined ENVIRONMENT as non-prod', () => {
-        vi.stubEnv('ENVIRONMENT', undefined)
-        const res = makeRes()
-
-        deleteSessionTokenCookie(res)
-
-        const header = headerOf(res as any)
-        expect(header).toContain('SameSite=Lax')
-        expect(header).not.toContain('Secure')
       })
     })
   })

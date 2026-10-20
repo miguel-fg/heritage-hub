@@ -1,3 +1,4 @@
+import { ENV } from '../env'
 import express, { Express } from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
@@ -14,7 +15,7 @@ import { checkOrigin } from './middleware/checkOrigin'
 
 const app: Express = express()
 
-const isProd = process.env.ENVIRONMENT === 'prod'
+const isProd = ENV.ENVIRONMENT === 'prod'
 
 const prodOrigins = [
   'https://heritage-hub.ca',

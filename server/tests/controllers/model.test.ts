@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { Request, Response } from 'express'
 import {
   fakeModel,
@@ -8,6 +8,8 @@ import {
   fakeDimension,
   fakeHotspot,
 } from '../fixtures/fakes'
+import { ModelRequestBody } from '../../src/scripts/validators'
+import { ENV } from '../../env'
 
 const prismaMock = vi.hoisted(() => ({
   model: {
@@ -59,7 +61,6 @@ import {
   updateModel,
   deleteModel,
 } from '../../src/controllers/model'
-import { ModelRequestBody } from '../../src/scripts/validators'
 
 describe('Model Controller - Unit Tests', () => {
   let mockRequest: Partial<Request>
@@ -177,7 +178,7 @@ describe('Model Controller - Unit Tests', () => {
       await getModel(mockRequest as Request, mockResponse as Response)
 
       expect(mockGenerateFilePresignedUrl).toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${fakeModel.id}/pdfs/pdf2.pdf`,
         'article.pdf',
       )
@@ -276,7 +277,7 @@ describe('Model Controller - Unit Tests', () => {
       )
 
       expect(mockGeneratePresignedUrl).toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/thumbnail.png`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)
@@ -316,7 +317,7 @@ describe('Model Controller - Unit Tests', () => {
         select: { objFileType: true },
       })
       expect(mockGeneratePresignedUrl).toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/model.glb`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)
@@ -340,22 +341,22 @@ describe('Model Controller - Unit Tests', () => {
       expect(mockGeneratePresignedUrl).toHaveBeenCalledTimes(4)
       expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
         1,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/model.obj`,
       )
       expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
         2,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/materials.mtl`,
       )
       expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
         3,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/textures/diffuse.jpg`,
       )
       expect(mockGeneratePresignedUrl).toHaveBeenNthCalledWith(
         4,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/textures/normal.png`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)
@@ -403,12 +404,12 @@ describe('Model Controller - Unit Tests', () => {
       expect(mockGeneratePresignedUploadUrl).toBeCalledTimes(2)
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         1,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/thumbnail.png`,
       )
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         2,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/model.glb`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)
@@ -432,27 +433,27 @@ describe('Model Controller - Unit Tests', () => {
       expect(mockGeneratePresignedUploadUrl).toBeCalledTimes(5)
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         1,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/thumbnail.png`,
       )
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         2,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/model.obj`,
       )
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         3,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/materials.mtl`,
       )
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         4,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/textures/diffuse.jpg`,
       )
       expect(mockGeneratePresignedUploadUrl).toHaveBeenNthCalledWith(
         5,
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${modelId}/textures/normal.png`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)
@@ -490,7 +491,7 @@ describe('Model Controller - Unit Tests', () => {
       )
 
       expect(mockGeneratePresignedUploadUrl).toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${fakeModel.id}/thumbnail.png`,
       )
       expect(mockStatus).toHaveBeenCalledWith(200)

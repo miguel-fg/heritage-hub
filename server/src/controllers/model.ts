@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { Request, Response } from 'express'
 import prisma from '../services/prisma'
 import {
@@ -18,7 +19,7 @@ import {
   pdfKey,
 } from '../scripts/r2Keys'
 
-const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
+const BUCKET_NAME = ENV.CLOUDFLARE_R2_BUCKET_NAME
 
 export const getModels = async (req: Request, res: Response): Promise<void> => {
   try {
