@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { Request, Response } from 'express'
 import {
   PutObjectCommand,
@@ -8,8 +9,9 @@ import s3Client from '../services/s3Client'
 import prisma from '../services/prisma'
 import { type ModelPdfRequestBody } from '../scripts/validators'
 import { generateFilePresignedUrl } from '../scripts/r2Storage'
+import { pdfKey } from '../scripts/r2Keys'
 
-const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
+const BUCKET_NAME = ENV.CLOUDFLARE_R2_BUCKET_NAME
 
 export const createPdfs = async (
   req: Request<unknown, unknown, ModelPdfRequestBody>,
@@ -34,7 +36,7 @@ export const createPdfs = async (
         ...pdf,
         url: await generateFilePresignedUrl(
           BUCKET_NAME,
-          `${modelId}/pdfs/${pdf.id}.pdf`,
+          pdfKey(modelId, pdf.id),
           pdf.title ?? 'article.pdf',
         ),
       })),
@@ -85,7 +87,7 @@ export const deletePdf = async (req: Request, res: Response): Promise<void> => {
       s3Client.send(
         new DeleteObjectCommand({
           Bucket: BUCKET_NAME,
-          Key: `${modelId}/pdfs/${pdf.id}.pdf`,
+          Key: pdfKey(modelId, pdfId),
         }),
       ),
     ])
@@ -112,6 +114,7 @@ export const processPdf = async (
 
   if (!req.file) {
     res.status(400).json({ error: 'No file provided' })
+    return
   }
 
   const { modelId, pdfId } = req.body
@@ -125,7 +128,7 @@ export const processPdf = async (
     await s3Client.send(
       new PutObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: `${modelId}/pdfs/${pdfId}.pdf`,
+        Key: pdfKey(modelId, pdfId),
         Body: req.file!.buffer,
         ContentType: 'application/pdf',
       }),
@@ -160,7 +163,7 @@ export const cancelPdfs = async (
 
   try {
     const objects: { Key: string }[] = pdfIds.map((pdfId: string) => ({
-      Key: `${modelId}/pdfs/${pdfId}.pdf`,
+      Key: pdfKey(modelId, pdfId),
     }))
 
     await s3Client.send(

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
+import { ENV } from '../../env'
 
 const { stub } = vi.hoisted(() => ({
   stub: async (name: string) => {
@@ -24,21 +25,23 @@ vi.mock('../../src/routes/pdf', () => stub('pdfs'))
 
 vi.mock('morgan', () => ({ default: () => (_q: any, _s: any, n: any) => n() }))
 
-async function loadApp(env?: string) {
+const defaultEnv = { ...ENV }
+
+async function loadApp(env: (typeof ENV)['ENVIRONMENT'] = 'dev') {
   vi.resetModules()
 
-  vi.stubEnv('ENVIRONMENT', env)
+  ENV.ENVIRONMENT = env
   return (await import('../../src/app')).default
 }
 
 describe('Express App', () => {
   afterEach(() => {
-    vi.unstubAllEnvs()
+    Object.assign(ENV, defaultEnv)
   })
 
   describe('route mounting', () => {
     afterEach(() => {
-      vi.unstubAllEnvs()
+      Object.assign(ENV, defaultEnv)
     })
 
     it.each([
@@ -61,7 +64,7 @@ describe('Express App', () => {
 
   describe('allowedOrigins', () => {
     afterEach(() => {
-      vi.unstubAllEnvs()
+      Object.assign(ENV, defaultEnv)
     })
 
     it('allows `localhost` origin in development environments', async () => {

@@ -8,6 +8,8 @@ type SearchParams = {
   others?: string[]
 }
 
+const otherAllowList = new Set(['downloadable', 'isPublic', 'isFeatured'])
+
 // Builds WHERE conditions for model search
 export const buildModelSearchConditions = (
   params: SearchParams,
@@ -50,7 +52,9 @@ export const buildModelSearchConditions = (
   // Other filters
   if (params.others && params.others.length > 0) {
     params.others.forEach((attr) => {
-      otherConditions[attr] = true
+      if (otherAllowList.has(attr)) {
+        otherConditions[attr] = true
+      }
     })
   }
 

@@ -29,7 +29,7 @@ export const DIMENSION_UNITS = [
 ] as const
 
 export const modelSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(3).max(75),
   caption: z.string().min(1).max(250),
   description: z.string().min(20).max(2000),
@@ -51,7 +51,7 @@ export const modelSchema = z.object({
   ),
   dimensions: z.array(
     z.object({
-      modelId: z.string().uuid(),
+      modelId: z.uuid(),
       type: z.enum(DIMENSION_TYPES),
       value: z.number().positive(),
       unit: z.enum(DIMENSION_UNITS),
@@ -59,7 +59,7 @@ export const modelSchema = z.object({
   ),
   hotspots: z.array(
     z.object({
-      modelId: z.string().uuid(),
+      modelId: z.uuid(),
       label: z.string().min(1),
       content: z.string().min(1),
       posX: z.number(),
@@ -76,7 +76,7 @@ export const modelSchema = z.object({
   ),
   assets: z.array(
     z.object({
-      modelId: z.string().uuid(),
+      modelId: z.uuid(),
       type: z.enum(ASSET_TYPES),
       filename: z.string(),
     }),
@@ -86,7 +86,7 @@ export const modelSchema = z.object({
 export type ModelRequestBody = z.infer<typeof modelSchema>
 
 export const modelEditSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(3).max(75),
   caption: z.string().min(1).max(250),
   description: z.string().min(20).max(2000),
@@ -108,7 +108,7 @@ export const modelEditSchema = z.object({
   ),
   dimensions: z.array(
     z.object({
-      modelId: z.string().uuid(),
+      modelId: z.uuid(),
       type: z.enum(DIMENSION_TYPES),
       value: z.number().positive(),
       unit: z.enum(DIMENSION_UNITS),
@@ -116,7 +116,7 @@ export const modelEditSchema = z.object({
   ),
   hotspots: z.array(
     z.object({
-      modelId: z.string().uuid(),
+      modelId: z.uuid(),
       label: z.string().min(1),
       content: z.string().min(1),
       posX: z.number(),
@@ -136,11 +136,11 @@ export const modelEditSchema = z.object({
 export type ModelEditRequestBody = z.infer<typeof modelEditSchema>
 
 export const modelImagesSchema = z.object({
-  modelId: z.string().uuid(),
+  modelId: z.uuid(),
   images: z
     .array(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
         order: z.number().int().nonnegative(),
         alt: z.string().optional(),
         label: z.string().optional(),
@@ -153,7 +153,7 @@ export const modelImagesSchema = z.object({
 export type ModelImageRequestBody = z.infer<typeof modelImagesSchema>
 
 export const modelImageEditSchema = z.object({
-  modelId: z.string().uuid(),
+  modelId: z.uuid(),
   image: z.object({
     alt: z.string().optional().nullable(),
     label: z.string().optional().nullable(),
@@ -164,11 +164,11 @@ export const modelImageEditSchema = z.object({
 export type ModelImageEditRequestBody = z.infer<typeof modelImageEditSchema>
 
 export const modelPdfsSchema = z.object({
-  modelId: z.string().uuid(),
+  modelId: z.uuid(),
   pdfs: z
     .array(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
         title: z.string().optional(),
       }),
     )

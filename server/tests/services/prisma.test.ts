@@ -1,13 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { ENV } from '../../env'
 
 const { PrismaClient } = vi.hoisted(() => ({ PrismaClient: vi.fn() }))
 
 vi.mock('@prisma/client', () => ({ PrismaClient }))
 
-async function loadPrisma(env?: string) {
+const defaultEnv = { ...ENV }
+
+async function loadPrisma(env: (typeof ENV)['ENVIRONMENT'] = 'dev') {
   vi.resetModules()
 
-  vi.stubEnv('ENVIRONMENT', env)
+  ENV.ENVIRONMENT = env
   vi.stubEnv('DATABASE_URL', 'main-db-url')
   vi.stubEnv('DATABASE_TEST_URL', 'test-db-url')
 
@@ -19,15 +22,14 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.unstubAllEnvs()
+  Object.assign(ENV, defaultEnv)
 })
 
 describe('prisma client', () => {
   it.each([
-    ['DATABASE_URL', 'dev', 'main-db-url'],
-    ['DATABASE_URL', 'prod', 'main-db-url'],
-    ['DATABASE_URL', undefined, 'main-db-url'],
-    ['DATABASE_TEST_URL', 'test', 'test-db-url'],
+    ['DATABASE_URL', 'dev', ENV.DATABASE_URL],
+    ['DATABASE_URL', 'prod', ENV.DATABASE_URL],
+    ['DATABASE_TEST_URL', 'test', ENV.DATABASE_TEST_URL],
   ] as const)('uses %s when ENVIRONMENT is %s', async (_name, env, url) => {
     await loadPrisma(env)
 

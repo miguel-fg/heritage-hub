@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express'
-import { ZodSchema, ZodError } from 'zod'
+import { ZodType, ZodError } from 'zod'
 import { checkModelOwnership, ModelNotFoundError } from '../scripts/prisma'
 
-export const validateBody = (schema: ZodSchema) => {
+export const validateBody = (schema: ZodType) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       req.body = schema.parse(req.body)
@@ -11,7 +11,7 @@ export const validateBody = (schema: ZodSchema) => {
       if (err instanceof ZodError) {
         res.status(400).json({
           error: 'Invalid request body',
-          issues: err.errors,
+          issues: err.issues,
         })
       } else {
         next(err)

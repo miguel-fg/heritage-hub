@@ -130,11 +130,6 @@ export const useModelStore = defineStore('models', () => {
     }
   }
 
-  // Fake Thumbnail Url For Testing Only
-  const getFakeThumbnailUrl = (modelId: string) => {
-    return `https://picsum.photos/400/500?random=${modelId}`
-  }
-
   const getGLBUrl = async (
     modelId: string,
     editing = false,
@@ -315,7 +310,6 @@ export const useModelStore = defineStore('models', () => {
     fetchModels,
     presignedUrlCache,
     getThumbnailUrl,
-    getFakeThumbnailUrl,
     getGLBUrl,
     getOBJUrls,
     removeModelById,
