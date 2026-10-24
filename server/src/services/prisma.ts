@@ -1,11 +1,12 @@
 import { PrismaClient } from '@prisma/client'
+import { ENV } from '../../env'
 
-const isTest = process.env.ENVIRONMENT === 'test'
+const isTest = ENV.ENVIRONMENT === 'test'
 
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: isTest ? process.env.DATABASE_TEST_URL : process.env.DATABASE_URL,
+      url: isTest ? ENV.DATABASE_TEST_URL : ENV.DATABASE_URL,
     },
   },
 })

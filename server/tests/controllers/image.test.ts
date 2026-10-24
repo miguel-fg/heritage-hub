@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
 import {
@@ -130,12 +131,12 @@ describe('Image Controller - Unit Tests', () => {
       await createImages(mockRequest as Request, mockResponse as Response)
 
       expect(mockGeneratePresignedUrl).toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `model-id/images/${fakeModelImage.id}/full.webp`,
       )
 
       expect(mockGeneratePresignedUrl).toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `model-id/images/${fakeModelImage.id}/thumb.webp`,
       )
     })
@@ -176,11 +177,11 @@ describe('Image Controller - Unit Tests', () => {
 
       expect(prismaMock.modelImage.createManyAndReturn).toHaveBeenCalledTimes(1)
       expect(mockGeneratePresignedUrl).toHaveBeenCalledExactlyOnceWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${fakeModel.id}/images/${fakeModelImage.id}/full.webp`,
       )
       expect(mockGeneratePresignedUrl).not.toHaveBeenCalledWith(
-        undefined,
+        ENV.CLOUDFLARE_R2_BUCKET_NAME,
         `${fakeModel.id}/images/${fakeModelImage.id}/thumb.webp`,
       )
 
@@ -210,7 +211,7 @@ describe('Image Controller - Unit Tests', () => {
 
       expect(cmd).toBeInstanceOf(DeleteObjectsCommand)
       expect(cmd.input).toEqual({
-        Bucket: undefined,
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Delete: {
           Objects: [
             { Key: `${fakeModel.id}/images/${fakeModelImage.id}/thumb.webp` },
@@ -598,12 +599,14 @@ describe('Image Controller - Unit Tests', () => {
       commands.forEach((cmd) => expect(cmd).toBeInstanceOf(PutObjectCommand))
 
       expect(commands[0].input).toEqual({
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Key: `${fakeModel.id}/images/${fakeModelImage.id}/thumb.webp`,
         Body: Buffer.from('thumb'),
         ContentType: 'image/webp',
       })
 
       expect(commands[1].input).toEqual({
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Key: `${fakeModel.id}/images/${fakeModelImage.id}/full.webp`,
         Body: Buffer.from('full'),
         ContentType: 'image/webp',
@@ -743,7 +746,7 @@ describe('Image Controller - Unit Tests', () => {
 
       expect(cmd).toBeInstanceOf(DeleteObjectsCommand)
       expect(cmd.input).toEqual({
-        Bucket: undefined,
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Delete: {
           Objects: [
             { Key: `${fakeModel.id}/images/image-id-0/thumb.webp` },
@@ -839,7 +842,7 @@ describe('Image Controller - Unit Tests', () => {
 
       expect(cmd).toBeInstanceOf(DeleteObjectsCommand)
       expect(cmd.input).toEqual({
-        Bucket: undefined,
+        Bucket: ENV.CLOUDFLARE_R2_BUCKET_NAME,
         Delete: {
           Objects: [
             { Key: `${fakeModel.id}/images/image-id-0/thumb.webp` },

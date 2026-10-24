@@ -1,3 +1,4 @@
+import { ENV } from '../../env'
 import { Request, Response } from 'express'
 import prisma from '../services/prisma'
 import {
@@ -8,8 +9,9 @@ import sharp from 'sharp'
 import s3Client from '../services/s3Client'
 import { PutObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import { generatePresignedUrl } from '../scripts/r2Storage'
+import { imageKeys } from '../scripts/r2Keys'
 
-const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
+const BUCKET_NAME = ENV.CLOUDFLARE_R2_BUCKET_NAME
 
 export const createImages = async (
   req: Request<unknown, unknown, ModelImageRequestBody>,
@@ -30,17 +32,15 @@ export const createImages = async (
     })
 
     const imagesWithUrls = await Promise.all(
-      newImages.map(async (img) => ({
-        ...img,
-        fullUrl: await generatePresignedUrl(
-          BUCKET_NAME,
-          `${modelId}/images/${img.id}/full.webp`,
-        ),
-        thumbUrl: await generatePresignedUrl(
-          BUCKET_NAME,
-          `${modelId}/images/${img.id}/thumb.webp`,
-        ),
-      })),
+      newImages.map(async (img) => {
+        const { full, thumb } = imageKeys(modelId, img.id)
+
+        return {
+          ...img,
+          fullUrl: await generatePresignedUrl(BUCKET_NAME, full),
+          thumbUrl: await generatePresignedUrl(BUCKET_NAME, thumb),
+        }
+      }),
     )
 
     res.status(201).json({ images: imagesWithUrls })
@@ -86,16 +86,15 @@ export const deleteImage = async (
       return
     }
 
+    const { full, thumb } = imageKeys(image.modelId, image.id)
+
     await Promise.all([
       prisma.modelImage.delete({ where: { id: image.id } }),
       s3Client.send(
         new DeleteObjectsCommand({
           Bucket: BUCKET_NAME,
           Delete: {
-            Objects: [
-              { Key: `${image.modelId}/images/${image.id}/thumb.webp` },
-              { Key: `${image.modelId}/images/${image.id}/full.webp` },
-            ],
+            Objects: [{ Key: thumb }, { Key: full }],
           },
         }),
       ),
@@ -205,11 +204,13 @@ export const processImage = async (
         .toBuffer(),
     ])
 
+    const { full, thumb } = imageKeys(modelId, imageId)
+
     await Promise.all([
       s3Client.send(
         new PutObjectCommand({
           Bucket: BUCKET_NAME,
-          Key: `${modelId}/images/${imageId}/thumb.webp`,
+          Key: thumb,
           Body: thumbBuffer,
           ContentType: 'image/webp',
         }),
@@ -217,7 +218,7 @@ export const processImage = async (
       s3Client.send(
         new PutObjectCommand({
           Bucket: BUCKET_NAME,
-          Key: `${modelId}/images/${imageId}/full.webp`,
+          Key: full,
           Body: fullBuffer,
           ContentType: 'image/webp',
         }),
@@ -251,10 +252,10 @@ export const cancelImages = async (
   }
 
   try {
-    const objects: { Key: string }[] = imageIds.flatMap((imageId: string) => [
-      { Key: `${modelId}/images/${imageId}/thumb.webp` },
-      { Key: `${modelId}/images/${imageId}/full.webp` },
-    ])
+    const objects: { Key: string }[] = imageIds.flatMap((imageId: string) => {
+      const { full, thumb } = imageKeys(modelId, imageId)
+      return [{ Key: thumb }, { Key: full }]
+    })
 
     await s3Client.send(
       new DeleteObjectsCommand({

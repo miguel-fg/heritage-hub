@@ -336,7 +336,7 @@ describe('Auth Controller - Unit Tests', () => {
       expect(mockSend).toHaveBeenCalledWith('Authentication failed')
     })
 
-    it('should handle database errors during user upset', async () => {
+    it('should handle database errors during user upsert', async () => {
       mockRequest.query = { ticket }
 
       mockAxiosGet.mockResolvedValue({ data: '<xml />' })

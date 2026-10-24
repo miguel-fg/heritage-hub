@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { NextFunction, Request, Response } from 'express'
-import { z, ZodError } from 'zod'
+import { z } from 'zod'
 import { fakeUser } from '../fixtures/fakes'
 
 const prismaMock = vi.hoisted(() => ({
@@ -49,7 +49,7 @@ describe('Validate Middleware - Unit Tests', () => {
   describe('validateBody', () => {
     const testSchema = z.object({
       name: z.string(),
-      email: z.string().email(),
+      email: z.email(),
       age: z.number().min(0),
     })
 
@@ -66,7 +66,7 @@ describe('Validate Middleware - Unit Tests', () => {
       expect(mockNext).toHaveBeenCalledTimes(1)
     })
 
-    it('should block invalid data with ZodError', () => {
+    it('blocks invalid data with ZodError', () => {
       mockRequest.body = {
         name: 'John Doe',
         email: 'john@example.com',
@@ -79,7 +79,7 @@ describe('Validate Middleware - Unit Tests', () => {
       expect(mockStatus).toHaveBeenCalledWith(400)
       expect(mockJson).toHaveBeenCalledWith({
         error: 'Invalid request body',
-        issues: expect.any(Array),
+        issues: expect.any(Array<z.core.$ZodIssue>),
       })
       expect(mockNext).not.toHaveBeenCalled()
     })
@@ -89,7 +89,7 @@ describe('Validate Middleware - Unit Tests', () => {
         parse: () => {
           throw new Error('Non-Zod error')
         },
-      } as unknown as z.ZodSchema
+      } as unknown as z.ZodType
 
       mockRequest.body = {}
 
