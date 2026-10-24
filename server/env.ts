@@ -13,7 +13,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535),
 
   DATABASE_URL: postgresUrl,
-  DATABASE_TEST_URL: postgresUrl,
+  DATABASE_TEST_URL: postgresUrl.optional(),
 
   CLOUDFLARE_ACCOUNT_ID: hex32,
   CLOUDFLARE_R2_BUCKET_NAME: z
