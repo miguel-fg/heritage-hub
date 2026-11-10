@@ -59,12 +59,7 @@
             v-show="model.images.length > 0"
             :thumbnail="model.thumbnailUrl"
             :images="model.images"
-            class="opacity-0 group-hover:opacity-100 transition-all duration-300 z-40"
-            :class="
-              isMobileDevice
-                ? 'opacity-100'
-                : 'opacity-0 group-hover:opacity-100'
-            "
+            class="transition-all duration-300 z-40"
           />
         </div>
         <div class="flex flex-col gap-4 lg:w-4/9">
