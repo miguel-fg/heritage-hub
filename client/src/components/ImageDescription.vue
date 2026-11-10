@@ -1,8 +1,7 @@
 <template>
   <div
     v-show="openDescription && hasContent"
-    class="absolute z-30 bottom-2 right-2 px-2 py-3 bg-grayscale-100/90 rounded-xs shadow-sm w-[200px] md:w-[300px] xl:w-[400px] font-poppins max-h-3/7 overflow-y-auto transition-opacity duration-150"
-    :class="!visualizerStore.isImageDrawerOpen ? 'opacity-100' : 'opacity-0'"
+    class="absolute z-30 top-2 left-2 px-2 py-3 bg-grayscale-100/90 rounded-xs shadow-sm w-[200px] md:w-[300px] xl:w-[400px] font-poppins max-h-3/7 overflow-y-auto transition-opacity duration-150"
   >
     <div class="relative flex flex-col gap-4">
       <button
@@ -34,10 +33,22 @@
     </div>
   </div>
   <div
-    class="absolute z-50 bottom-2 right-2 p-1 flex flex-col gap-3"
-    :class="!visualizerStore.isImageDrawerOpen ? 'opacity-100' : 'opacity-0'"
+    class="absolute z-50 top-2 left-2 p-1 flex flex-col gap-3"
     v-show="!openDescription || !hasContent"
   >
+    <button
+      v-if="hasContent"
+      @click="toggleDescription"
+      title="Open image description"
+      aria-label="Open description"
+      class="cursor-pointer text-grayscale-700 bg-grayscale-100/40 hover:bg-grayscale-100 hover:text-grayscale-900 active:bg-grayscale-200 active:text-grayscale-900 size-8 rounded-xs"
+    >
+      <Icon
+        icon="bx:info-square"
+        :width="smallerThanMd ? '20' : '28'"
+        class="m-auto"
+      />
+    </button>
     <button
       v-if="permissions"
       @click="emit('edit')"
@@ -47,19 +58,6 @@
     >
       <Icon
         icon="bx:edit"
-        :width="smallerThanMd ? '20' : '28'"
-        class="m-auto"
-      />
-    </button>
-    <button
-      v-if="show"
-      @click="toggleDescription"
-      title="Open image description"
-      aria-label="Open description"
-      class="cursor-pointer text-grayscale-700 bg-grayscale-100/40 hover:bg-grayscale-100 hover:text-grayscale-900 active:bg-grayscale-200 active:text-grayscale-900 size-8 rounded-xs"
-    >
-      <Icon
-        icon="bx:info-square"
         :width="smallerThanMd ? '20' : '28'"
         class="m-auto"
       />
@@ -87,10 +85,6 @@ const hasContent = computed(
   () =>
     (props.description && props.description !== '') ||
     (props.label && props.label !== ''),
-)
-
-const show = computed(
-  () => hasContent.value && !visualizerStore.isImageDrawerOpen,
 )
 
 const openDescription = ref(true)

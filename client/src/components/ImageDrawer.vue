@@ -1,7 +1,6 @@
 <template>
   <div
     class="absolute bottom-0 w-full flex flex-col justify-center items-center"
-    :class="props.class"
   >
     <button
       @click="visualizerStore.toggleImageDrawer"
@@ -99,7 +98,6 @@ import { ref, computed, watch, nextTick, onBeforeUpdate } from 'vue'
 const props = defineProps<{
   thumbnail: string
   images: ModelImage[]
-  class?: string
 }>()
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
